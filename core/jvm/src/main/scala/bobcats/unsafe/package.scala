@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Daniel Spiewak
+ * Copyright 2021 Typelevel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,4 +14,8 @@
  * limitations under the License.
  */
 
-package object packagename
+package bobcats
+
+package object unsafe {
+  type SecureRandom = java.security.SecureRandom
+}

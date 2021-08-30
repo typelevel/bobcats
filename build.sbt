@@ -27,3 +27,22 @@ ThisBuild / crossScalaVersions := Seq("3.0.1", "2.12.14", "2.13.6")
 
 val catsVersion = "2.6.1"
 val catsEffectVersion = "3.2.5"
+val scodecBitsVersion = "1.1-52-b62e817"
+
+lazy val root =
+  project.in(file(".")).aggregate(core.js, core.jvm).enablePlugins(NoPublishPlugin)
+
+lazy val core = crossProject(JSPlatform, JVMPlatform)
+  .in(file("core"))
+  .settings(
+    name := "bobcats",
+    libraryDependencies ++= Seq(
+      "org.typelevel" %%% "cats-core" % catsVersion,
+      "org.scodec" %%% "scodec-bits" % scodecBitsVersion
+    )
+  )
+  .jsSettings(
+    libraryDependencies ++= Seq(
+      "org.typelevel" %%% "cats-effect" % catsEffectVersion
+    )
+  )
