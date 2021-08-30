@@ -14,20 +14,17 @@
  * limitations under the License.
  */
 
-package bobcats.facade.browser
+package bobcats.facade.node
 
-import scala.annotation.nowarn
 import scala.scalajs.js
-import scala.scalajs.js.annotation.JSGlobal
+import scala.annotation.nowarn
 
 @js.native
-@JSGlobal
 @nowarn("cat=unused")
-private[bobcats] object crypto extends js.Any {
+private[bobcats] trait Hash extends js.Any {
 
-  def subtle: SubtleCrypto = js.native
+  def digest(): js.typedarray.Uint8Array = js.native
 
-  def getRandomValues(typedArray: js.typedarray.Uint8Array): js.typedarray.Uint8Array =
-    js.native
+  def update(data: js.typedarray.Uint8Array): Unit = js.native
 
 }

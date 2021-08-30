@@ -16,18 +16,20 @@
 
 package bobcats.facade.browser
 
-import scala.annotation.nowarn
 import scala.scalajs.js
-import scala.scalajs.js.annotation.JSGlobal
 
 @js.native
-@JSGlobal
-@nowarn("cat=unused")
-private[bobcats] object crypto extends js.Any {
+private[bobcats] trait HmacCryptoKey extends CryptoKey
 
-  def subtle: SubtleCrypto = js.native
+@js.native
+private[bobcats] sealed trait HmacImportParams extends js.Any
 
-  def getRandomValues(typedArray: js.typedarray.Uint8Array): js.typedarray.Uint8Array =
-    js.native
-
+private[bobcats] object HmacImportParams {
+  def apply(hash: String): HmacImportParams =
+    js.Dynamic
+      .literal(
+        name = "HMAC",
+        hash = hash
+      )
+      .asInstanceOf[HmacImportParams]
 }

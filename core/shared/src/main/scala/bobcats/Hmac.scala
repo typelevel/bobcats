@@ -14,20 +14,16 @@
  * limitations under the License.
  */
 
-package bobcats.facade.browser
+package bobcats
 
-import scala.annotation.nowarn
-import scala.scalajs.js
-import scala.scalajs.js.annotation.JSGlobal
+import scodec.bits.ByteVector
 
-@js.native
-@JSGlobal
-@nowarn("cat=unused")
-private[bobcats] object crypto extends js.Any {
+trait Hmac[F[_]] {
+  def digest(algorithm: String, key: ByteVector, data: ByteVector): F[ByteVector]
+}
 
-  def subtle: SubtleCrypto = js.native
+object Hmac extends HmacCompanionPlatform {
 
-  def getRandomValues(typedArray: js.typedarray.Uint8Array): js.typedarray.Uint8Array =
-    js.native
+  def apply[F[_]](implicit hmac: Hmac[F]): hmac.type = hmac
 
 }

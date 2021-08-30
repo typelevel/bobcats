@@ -21,7 +21,7 @@ import scala.scalajs.js
 
 package object facade {
 
-  private[bobcats] lazy val isNodeJSRuntime: Boolean = Try(
+  private[bobcats] val isNodeJSRuntime: Boolean = Try(
     js.Dynamic.global.process.release.name.asInstanceOf[String]).toOption.exists(_ == "node")
 
   @inline private[bobcats] def isBrowserRuntime: Boolean = !isNodeJSRuntime

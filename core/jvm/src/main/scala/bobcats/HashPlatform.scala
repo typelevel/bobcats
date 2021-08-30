@@ -14,20 +14,23 @@
  * limitations under the License.
  */
 
-package bobcats.facade.browser
+package bobcats
 
-import scala.annotation.nowarn
-import scala.scalajs.js
-import scala.scalajs.js.annotation.JSGlobal
+import cats.ApplicativeThrow
+import scodec.bits.ByteVector
+import java.security.MessageDigest
 
-@js.native
-@JSGlobal
-@nowarn("cat=unused")
-private[bobcats] object crypto extends js.Any {
+private[bobcats] trait HashCompanionPlatform {
+  val SHA1 = "SHA-1"
+  val SHA256 = "SHA-256"
 
-  def subtle: SubtleCrypto = js.native
-
-  def getRandomValues(typedArray: js.typedarray.Uint8Array): js.typedarray.Uint8Array =
-    js.native
-
+  implicit def forApplicativeThrow[F[_]](implicit F: ApplicativeThrow[F]): Hash[F] =
+    new Hash[F] {
+      override def digest(algorithm: String, data: ByteVector): F[ByteVector] =
+        F.catchNonFatal {
+          val hash = MessageDigest.getInstance(algorithm)
+          hash.update(data.toByteBuffer)
+          ByteVector.view(hash.digest())
+        }
+    }
 }

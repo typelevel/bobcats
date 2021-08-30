@@ -16,13 +16,17 @@
 
 package bobcats.facade.node
 
-import scala.scalajs.js
 import scala.annotation.nowarn
+import scala.scalajs.js
 
 // https://nodejs.org/api/crypto.html
 @js.native
 @nowarn("cat=unused")
 private[bobcats] trait crypto extends js.Any {
+
+  def createHash(algorithm: String): Hash = js.native
+
+  def createHmac(algorithm: String, key: js.typedarray.Uint8Array): Hmac = js.native
 
   def randomBytes(size: Int): js.typedarray.Uint8Array = js.native
 
