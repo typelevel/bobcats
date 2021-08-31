@@ -45,8 +45,8 @@ object CI {
         rootProject = "rootJVM",
         jsEnv = None,
         testCommands = List("test"),
-        mimaReport = true,
-        suffixCommands = List("root/unidoc213", "exampleJVM/compile"))
+        mimaReport = false, // TODO
+        suffixCommands = List())
 
   case object NodeJS
       extends CI(
@@ -54,13 +54,13 @@ object CI {
         jsEnv = Some(JSEnv.NodeJS),
         testCommands = List("test"),
         mimaReport = false,
-        suffixCommands = List("exampleJS/compile"))
+        suffixCommands = List())
 
   case object Firefox
       extends CI(
         rootProject = "rootJS",
         jsEnv = Some(JSEnv.Firefox),
-        testCommands = List("testsJS/test", "webWorkerTests/test"),
+        testCommands = List("test"),
         mimaReport = false,
         suffixCommands = List())
 
@@ -68,7 +68,7 @@ object CI {
       extends CI(
         rootProject = "rootJS",
         jsEnv = Some(JSEnv.Chrome),
-        testCommands = List("testsJS/test", "webWorkerTests/test"),
+        testCommands = List("test"),
         mimaReport = false,
         suffixCommands = List())
 
