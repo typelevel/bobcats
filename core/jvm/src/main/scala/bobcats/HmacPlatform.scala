@@ -26,7 +26,7 @@ private[bobcats] trait HmacPlatform[F[_]] {
 
 private[bobcats] trait HmacCompanionPlatform {
   implicit def forApplicativeThrow[F[_]](implicit F: ApplicativeThrow[F]): Hmac[F] =
-    new Hmac[F] {
+    new UnsealedHmac[F] {
 
       override def digest(key: SecretKey[HmacAlgorithm], data: ByteVector): F[ByteVector] =
         F.catchNonFatal {

@@ -18,9 +18,11 @@ package bobcats
 
 import scodec.bits.ByteVector
 
-trait Hash[F[_]] {
+sealed trait Hash[F[_]] {
   def digest(algorithm: HashAlgorithm, data: ByteVector): F[ByteVector]
 }
+
+private[bobcats] trait UnsealedHash[F[_]] extends Hash[F]
 
 object Hash extends HashCompanionPlatform {
 

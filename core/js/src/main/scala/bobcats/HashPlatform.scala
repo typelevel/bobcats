@@ -23,7 +23,7 @@ import scodec.bits.ByteVector
 private[bobcats] trait HashCompanionPlatform {
   implicit def forAsync[F[_]](implicit F: Async[F]): Hash[F] =
     if (facade.isNodeJSRuntime)
-      new Hash[F] {
+      new UnsealedHash[F] {
         override def digest(algorithm: HashAlgorithm, data: ByteVector): F[ByteVector] =
           F.catchNonFatal {
             val hash = facade.node.crypto.createHash(algorithm.toStringNodeJS)
@@ -32,7 +32,7 @@ private[bobcats] trait HashCompanionPlatform {
           }
       }
     else
-      new Hash[F] {
+      new UnsealedHash[F] {
         import facade.browser._
         override def digest(algorithm: HashAlgorithm, data: ByteVector): F[ByteVector] =
           F.fromPromise(

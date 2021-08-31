@@ -16,18 +16,12 @@
 
 package bobcats
 
-import scodec.bits.ByteVector
+import cats.effect.kernel.Async
 
-sealed trait Hmac[F[_]] extends HmacPlatform[F] {
-  def digest(key: SecretKey[HmacAlgorithm], data: ByteVector): F[ByteVector]
-  def generateKey[A <: HmacAlgorithm](algorithm: A): F[SecretKey[A]]
-  def importKey[A <: HmacAlgorithm](key: ByteVector, algorithm: A): F[SecretKey[A]]
-}
-
-private[bobcats] trait UnsealedHmac[F[_]] extends Hmac[F]
-
-object Hmac extends HmacCompanionPlatform {
-
-  def apply[F[_]](implicit hmac: Hmac[F]): hmac.type = hmac
-
+private[bobcats] trait CryptoCompanionPlatform {
+  implicit def forMonadThrow[F[_]: Async]: Crypto[F] =
+    new UnsealedCrypto[F] {
+      override def hash: Hash[F] = Hash[F]
+      override def hmac: Hmac[F] = Hmac[F]
+    }
 }

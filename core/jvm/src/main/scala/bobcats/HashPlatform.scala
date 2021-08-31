@@ -22,7 +22,7 @@ import java.security.MessageDigest
 
 private[bobcats] trait HashCompanionPlatform {
   implicit def forApplicativeThrow[F[_]](implicit F: ApplicativeThrow[F]): Hash[F] =
-    new Hash[F] {
+    new UnsealedHash[F] {
       override def digest(algorithm: HashAlgorithm, data: ByteVector): F[ByteVector] =
         F.catchNonFatal {
           val hash = MessageDigest.getInstance(algorithm.toStringJava)

@@ -16,18 +16,15 @@
 
 package bobcats
 
-import scodec.bits.ByteVector
-
-sealed trait Hmac[F[_]] extends HmacPlatform[F] {
-  def digest(key: SecretKey[HmacAlgorithm], data: ByteVector): F[ByteVector]
-  def generateKey[A <: HmacAlgorithm](algorithm: A): F[SecretKey[A]]
-  def importKey[A <: HmacAlgorithm](key: ByteVector, algorithm: A): F[SecretKey[A]]
+sealed trait Crypto[F[_]] {
+  def hash: Hash[F]
+  def hmac: Hmac[F]
 }
 
-private[bobcats] trait UnsealedHmac[F[_]] extends Hmac[F]
+private[bobcats] trait UnsealedCrypto[F[_]] extends Crypto[F]
 
-object Hmac extends HmacCompanionPlatform {
+object Crypto extends CryptoCompanionPlatform {
 
-  def apply[F[_]](implicit hmac: Hmac[F]): hmac.type = hmac
+  def apply[F[_]](implicit crypto: Crypto[F]): crypto.type = crypto
 
 }
