@@ -24,18 +24,20 @@ private[bobcats] trait HashCompanionPlatform {
   implicit def forAsync[F[_]](implicit F: Async[F]): Hash[F] =
     if (facade.isNodeJSRuntime)
       new Hash[F] {
-        override def digest(algorithm: String, data: ByteVector): F[ByteVector] =
+        override def digest(algorithm: HashAlgorithm, data: ByteVector): F[ByteVector] =
           F.catchNonFatal {
-            val hash = facade.node.crypto.createHash(algorithm)
+            val hash = facade.node.crypto.createHash(algorithm.toStringNodeJS)
             hash.update(data.toUint8Array)
             ByteVector.view(hash.digest())
           }
       }
     else
       new Hash[F] {
-        override def digest(algorithm: String, data: ByteVector): F[ByteVector] =
+        import facade.browser._
+        override def digest(algorithm: HashAlgorithm, data: ByteVector): F[ByteVector] =
           F.fromPromise(
-            F.delay(facade.browser.crypto.subtle.digest(algorithm, data.toUint8Array.buffer)))
+            F.delay(
+              crypto.subtle.digest(algorithm.toStringWebCrypto, data.toUint8Array.buffer)))
             .map(ByteVector.view)
       }
 }

@@ -25,26 +25,26 @@ sealed trait Algorithm {
 sealed trait HashAlgorithm extends Algorithm
 object HashAlgorithm {
 
-  object MD5 extends HashAlgorithm {
+  case object MD5 extends HashAlgorithm {
     private[bobcats] override def toStringJava: String = "MD5"
     private[bobcats] override def toStringNodeJS: String = "md5"
     private[bobcats] override def toStringWebCrypto: String =
       throw new UnsupportedOperationException
   }
 
-  object SHA1 extends HashAlgorithm {
+  case object SHA1 extends HashAlgorithm {
     private[bobcats] override def toStringJava: String = "SHA-1"
     private[bobcats] override def toStringNodeJS: String = "sha1"
     private[bobcats] override def toStringWebCrypto: String = "SHA-1"
   }
 
-  object SHA256 extends HashAlgorithm {
+  case object SHA256 extends HashAlgorithm {
     private[bobcats] override def toStringJava: String = "SHA-256"
     private[bobcats] override def toStringNodeJS: String = "sha256"
     private[bobcats] override def toStringWebCrypto: String = "SHA-256"
   }
 
-  object SHA512 extends HashAlgorithm {
+  case object SHA512 extends HashAlgorithm {
     private[bobcats] override def toStringJava: String = "SHA-512"
     private[bobcats] override def toStringNodeJS: String = "sha512"
     private[bobcats] override def toStringWebCrypto: String = "SHA-512"
@@ -64,21 +64,21 @@ object HmacAlgorithm {
       case _ => None
     }
 
-  object SHA1 extends HmacAlgorithm {
+  case object SHA1 extends HmacAlgorithm {
     private[bobcats] override def toStringJava: String = "HmacSHA1"
     private[bobcats] override def toStringNodeJS: String = "sha1"
     private[bobcats] override def toStringWebCrypto: String = "SHA-1"
     private[bobcats] override def minimumKeyLength: Int = 20
   }
 
-  object SHA256 extends HmacAlgorithm {
+  case object SHA256 extends HmacAlgorithm {
     private[bobcats] override def toStringJava: String = "HmacSHA256"
     private[bobcats] override def toStringNodeJS: String = "sha256"
     private[bobcats] override def toStringWebCrypto: String = "SHA-256"
     private[bobcats] override def minimumKeyLength: Int = 32
   }
 
-  object SHA512 extends HmacAlgorithm {
+  case object SHA512 extends HmacAlgorithm {
     private[bobcats] override def toStringJava: String = "HmacSHA512"
     private[bobcats] override def toStringNodeJS: String = "sha512"
     private[bobcats] override def toStringWebCrypto: String = "SHA-512"

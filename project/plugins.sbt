@@ -1,3 +1,5 @@
+libraryDependencies += "org.scala-js" %% "scalajs-env-selenium" % "1.1.1"
+
 addSbtPlugin("com.codecommit" % "sbt-spiewak-sonatype" % "0.22.0")
 addSbtPlugin("org.scalameta" % "sbt-scalafmt" % "2.4.3")
 addSbtPlugin("org.portable-scala" % "sbt-scalajs-crossproject" % "1.1.0")

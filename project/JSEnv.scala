@@ -14,20 +14,9 @@
  * limitations under the License.
  */
 
-package bobcats
-
-import cats.ApplicativeThrow
-import scodec.bits.ByteVector
-import java.security.MessageDigest
-
-private[bobcats] trait HashCompanionPlatform {
-  implicit def forApplicativeThrow[F[_]](implicit F: ApplicativeThrow[F]): Hash[F] =
-    new Hash[F] {
-      override def digest(algorithm: HashAlgorithm, data: ByteVector): F[ByteVector] =
-        F.catchNonFatal {
-          val hash = MessageDigest.getInstance(algorithm.toStringJava)
-          hash.update(data.toByteBuffer)
-          ByteVector.view(hash.digest())
-        }
-    }
+sealed abstract class JSEnv
+object JSEnv {
+  case object Chrome extends JSEnv
+  case object Firefox extends JSEnv
+  case object NodeJS extends JSEnv
 }

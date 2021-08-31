@@ -19,7 +19,7 @@ package bobcats
 import scodec.bits.ByteVector
 
 trait Hash[F[_]] {
-  def digest(algorithm: String, data: ByteVector): F[ByteVector]
+  def digest(algorithm: HashAlgorithm, data: ByteVector): F[ByteVector]
 }
 
 object Hash extends HashCompanionPlatform {
