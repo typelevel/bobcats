@@ -84,6 +84,10 @@ val munitCEVersion = "1.0.5"
 
 lazy val root =
   project.in(file(".")).aggregate(core.js, core.jvm).enablePlugins(NoPublishPlugin)
+lazy val rootJVM =
+  project.in(file(".")).aggregate(core.jvm).enablePlugins(NoPublishPlugin)
+lazy val rootJS =
+  project.in(file(".")).aggregate(core.js).enablePlugins(NoPublishPlugin)
 
 lazy val core = crossProject(JSPlatform, JVMPlatform)
   .in(file("core"))
