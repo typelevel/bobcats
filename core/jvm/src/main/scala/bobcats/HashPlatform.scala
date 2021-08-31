@@ -21,9 +21,6 @@ import scodec.bits.ByteVector
 import java.security.MessageDigest
 
 private[bobcats] trait HashCompanionPlatform {
-  val SHA1 = "SHA-1"
-  val SHA256 = "SHA-256"
-
   implicit def forApplicativeThrow[F[_]](implicit F: ApplicativeThrow[F]): Hash[F] =
     new Hash[F] {
       override def digest(algorithm: String, data: ByteVector): F[ByteVector] =

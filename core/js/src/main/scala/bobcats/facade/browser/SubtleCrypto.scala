@@ -27,6 +27,14 @@ private[bobcats] trait SubtleCrypto extends js.Any {
       algorithm: String,
       data: js.typedarray.ArrayBuffer): js.Promise[js.typedarray.ArrayBuffer] = js.native
 
+  def exportKey(format: String, key: CryptoKey): js.Promise[js.typedarray.ArrayBuffer] =
+    js.native
+
+  def generateKey(
+      algorithm: HmacKeyGenParams,
+      extractable: Boolean,
+      keyUsages: js.Array[String]): js.Promise[HmacCryptoKey] = js.native
+
   def importKey(
       format: String,
       keyData: js.typedarray.Uint8Array,

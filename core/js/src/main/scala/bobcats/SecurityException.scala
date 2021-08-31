@@ -16,16 +16,11 @@
 
 package bobcats
 
-import scodec.bits.ByteVector
+class GeneralSecurityException(message: String = null, cause: Throwable = null)
+    extends Exception(message, cause)
 
-trait Hmac[F[_]] extends HmacPlatform[F] {
-  def digest(key: SecretKey[HmacAlgorithm], data: ByteVector): F[ByteVector]
-  def generateKey[A <: HmacAlgorithm](algorithm: A): F[SecretKey[A]]
-  def importKey[A <: HmacAlgorithm](key: ByteVector, algorithm: A): F[SecretKey[A]]
-}
+class KeyException(message: String = null, cause: Throwable = null)
+    extends GeneralSecurityException(message, cause)
 
-object Hmac extends HmacCompanionPlatform {
-
-  def apply[F[_]](implicit hmac: Hmac[F]): hmac.type = hmac
-
-}
+class InvalidKeyException(message: String = null, cause: Throwable = null)
+    extends KeyException(message, cause)

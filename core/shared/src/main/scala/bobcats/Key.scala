@@ -18,14 +18,14 @@ package bobcats
 
 import scodec.bits.ByteVector
 
-trait Hmac[F[_]] extends HmacPlatform[F] {
-  def digest(key: SecretKey[HmacAlgorithm], data: ByteVector): F[ByteVector]
-  def generateKey[A <: HmacAlgorithm](algorithm: A): F[SecretKey[A]]
-  def importKey[A <: HmacAlgorithm](key: ByteVector, algorithm: A): F[SecretKey[A]]
+sealed trait Key[+A <: Algorithm] extends KeyPlatform {
+  def algorithm: A
 }
 
-object Hmac extends HmacCompanionPlatform {
+sealed trait PublicKey[+A <: Algorithm] extends Key[A] with PublicKeyPlatform
+sealed trait PrivateKey[+A <: Algorithm] extends Key[A] with PrivateKeyPlatform
+sealed trait SecretKey[+A <: Algorithm] extends Key[A] with SecretKeyPlatform
 
-  def apply[F[_]](implicit hmac: Hmac[F]): hmac.type = hmac
-
-}
+final case class SecretKeySpec[+A <: Algorithm](key: ByteVector, algorithm: A)
+    extends SecretKey[A]
+    with SecretKeySpecPlatform[A]

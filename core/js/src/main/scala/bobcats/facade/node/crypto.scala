@@ -28,6 +28,13 @@ private[bobcats] trait crypto extends js.Any {
 
   def createHmac(algorithm: String, key: js.typedarray.Uint8Array): Hmac = js.native
 
+  def createSecretKey(key: js.typedarray.Uint8Array): SymmetricKeyObject = js.native
+
+  def generateKey(
+      `type`: String,
+      options: GenerateKeyOptions,
+      callback: js.Function2[js.Error, SymmetricKeyObject, Unit]): Unit = js.native
+
   def randomBytes(size: Int): js.typedarray.Uint8Array = js.native
 
   def randomBytes(
@@ -35,4 +42,11 @@ private[bobcats] trait crypto extends js.Any {
       callback: js.UndefOr[js.Function2[js.Error, js.typedarray.Uint8Array, Unit]]): Unit =
     js.native
 
+}
+
+@js.native
+private[bobcats] trait GenerateKeyOptions extends js.Any
+private[bobcats] object GenerateKeyOptions {
+  def apply(length: Int): GenerateKeyOptions =
+    js.Dynamic.literal(length = length).asInstanceOf[GenerateKeyOptions]
 }

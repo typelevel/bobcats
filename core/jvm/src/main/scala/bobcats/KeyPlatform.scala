@@ -16,16 +16,26 @@
 
 package bobcats
 
-import scodec.bits.ByteVector
+import java.security
+import javax.crypto
 
-trait Hmac[F[_]] extends HmacPlatform[F] {
-  def digest(key: SecretKey[HmacAlgorithm], data: ByteVector): F[ByteVector]
-  def generateKey[A <: HmacAlgorithm](algorithm: A): F[SecretKey[A]]
-  def importKey[A <: HmacAlgorithm](key: ByteVector, algorithm: A): F[SecretKey[A]]
+private[bobcats] trait KeyPlatform {
+  def toJava: security.Key
 }
 
-object Hmac extends HmacCompanionPlatform {
+private[bobcats] trait PublicKeyPlatform {
+  def toJava: security.PublicKey
+}
 
-  def apply[F[_]](implicit hmac: Hmac[F]): hmac.type = hmac
+private[bobcats] trait PrivateKeyPlatform {
+  def toJava: security.PrivateKey
+}
 
+private[bobcats] trait SecretKeyPlatform {
+  def toJava: crypto.SecretKey
+}
+
+private[bobcats] trait SecretKeySpecPlatform[+A <: Algorithm] { self: SecretKeySpec[A] =>
+  def toJava: crypto.spec.SecretKeySpec =
+    new crypto.spec.SecretKeySpec(key.toArray, algorithm.toStringJava)
 }

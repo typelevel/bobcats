@@ -21,10 +21,6 @@ import cats.syntax.all._
 import scodec.bits.ByteVector
 
 private[bobcats] trait HashCompanionPlatform {
-  val MD5 = if (facade.isNodeJSRuntime) "md5" else "" // No MD5 on browsers
-  val SHA1 = if (facade.isNodeJSRuntime) "sha1" else "SHA-1"
-  val SHA256 = if (facade.isNodeJSRuntime) "sha256" else "SHA-256"
-
   implicit def forAsync[F[_]](implicit F: Async[F]): Hash[F] =
     if (facade.isNodeJSRuntime)
       new Hash[F] {

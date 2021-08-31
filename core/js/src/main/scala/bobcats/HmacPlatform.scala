@@ -22,44 +22,83 @@ import scodec.bits.ByteVector
 
 import scala.scalajs.js
 
-private[bobcats] trait HmacCompanionPlatform {
-  val SHA1 = if (facade.isNodeJSRuntime) "sha1" else "SHA-1"
-  val SHA256 = if (facade.isNodeJSRuntime) "sha256" else "SHA-256"
-  val SHA512 = if (facade.isNodeJSRuntime) "sha512" else "SHA-512"
+private[bobcats] trait HmacPlatform[F[_]]
 
+private[bobcats] trait HmacCompanionPlatform {
   implicit def forAsync[F[_]](implicit F: Async[F]): Hmac[F] =
     if (facade.isNodeJSRuntime)
       new Hmac[F] {
-        override def digest(
-            algorithm: String,
-            key: ByteVector,
-            data: ByteVector): F[ByteVector] =
-          F.catchNonFatal {
-            val hmac = facade.node.crypto.createHmac(algorithm, key.toUint8Array)
-            hmac.update(data.toUint8Array)
-            ByteVector.view(hmac.digest())
+        import facade.node._
+
+        override def digest(key: SecretKey[HmacAlgorithm], data: ByteVector): F[ByteVector] =
+          key match {
+            case SecretKeySpec(key, algorithm) =>
+              F.catchNonFatal {
+                val hmac = crypto.createHmac(algorithm.toStringNodeJS, key.toUint8Array)
+                hmac.update(data.toUint8Array)
+                ByteVector.view(hmac.digest())
+              }
+            case _ => F.raiseError(new InvalidKeyException)
           }
+
+        override def generateKey[A <: HmacAlgorithm](algorithm: A): F[SecretKey[A]] =
+          F.async_ { cb =>
+            crypto.generateKey(
+              "hmac",
+              GenerateKeyOptions(algorithm.minimumKeyLength),
+              (err, key) =>
+                cb(
+                  Option(err)
+                    .map(js.JavaScriptException)
+                    .toLeft(SecretKeySpec(ByteVector.view(key.export()), algorithm)))
+            )
+          }
+
+        override def importKey[A <: HmacAlgorithm](
+            key: ByteVector,
+            algorithm: A): F[SecretKey[A]] =
+          F.pure(SecretKeySpec(key, algorithm))
+
       }
     else
       new Hmac[F] {
         import bobcats.facade.browser._
-        override def digest(
-            algorithm: String,
-            key: ByteVector,
-            data: ByteVector): F[ByteVector] =
+        override def digest(key: SecretKey[HmacAlgorithm], data: ByteVector): F[ByteVector] =
+          key match {
+            case SecretKeySpec(key, algorithm) =>
+              for {
+                key <- F.fromPromise(
+                  F.delay(
+                    crypto
+                      .subtle
+                      .importKey(
+                        "raw",
+                        key.toUint8Array,
+                        HmacImportParams(algorithm.toStringWebCrypto),
+                        false,
+                        js.Array("sign"))))
+                signature <- F.fromPromise(
+                  F.delay(crypto.subtle.sign("HMAC", key, data.toUint8Array.buffer)))
+              } yield ByteVector.view(signature)
+            case _ => F.raiseError(new InvalidKeyException)
+          }
+
+        override def generateKey[A <: HmacAlgorithm](algorithm: A): F[SecretKey[A]] =
           for {
             key <- F.fromPromise(
               F.delay(
                 crypto
                   .subtle
-                  .importKey(
-                    "raw",
-                    key.toUint8Array,
-                    HmacImportParams(algorithm),
-                    false,
+                  .generateKey(
+                    HmacKeyGenParams(algorithm.toStringWebCrypto),
+                    true,
                     js.Array("sign"))))
-            signature <- F.fromPromise(
-              F.delay(crypto.subtle.sign("HMAC", key, data.toUint8Array.buffer)))
-          } yield ByteVector.view(signature)
+            exported <- F.fromPromise(F.delay(crypto.subtle.exportKey("raw", key)))
+          } yield SecretKeySpec(ByteVector.view(exported), algorithm)
+
+        override def importKey[A <: HmacAlgorithm](
+            key: ByteVector,
+            algorithm: A): F[SecretKey[A]] =
+          F.pure(SecretKeySpec(key, algorithm))
       }
 }

@@ -14,18 +14,11 @@
  * limitations under the License.
  */
 
-package bobcats
+package bobcats.facade.node
 
-import scodec.bits.ByteVector
+import scala.scalajs.js
 
-trait Hmac[F[_]] extends HmacPlatform[F] {
-  def digest(key: SecretKey[HmacAlgorithm], data: ByteVector): F[ByteVector]
-  def generateKey[A <: HmacAlgorithm](algorithm: A): F[SecretKey[A]]
-  def importKey[A <: HmacAlgorithm](key: ByteVector, algorithm: A): F[SecretKey[A]]
-}
-
-object Hmac extends HmacCompanionPlatform {
-
-  def apply[F[_]](implicit hmac: Hmac[F]): hmac.type = hmac
-
+@js.native
+private[bobcats] trait SymmetricKeyObject extends js.Any {
+  def export(): js.typedarray.Uint8Array = js.native
 }

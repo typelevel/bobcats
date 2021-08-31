@@ -18,25 +18,43 @@ package bobcats
 
 import cats.ApplicativeThrow
 import scodec.bits.ByteVector
-import javax.crypto.Mac
-import javax.crypto.spec.SecretKeySpec
+import javax.crypto
+
+private[bobcats] trait HmacPlatform[F[_]] {
+  def importJavaKey(key: crypto.SecretKey): F[SecretKey[HmacAlgorithm]]
+}
 
 private[bobcats] trait HmacCompanionPlatform {
-  val SHA1 = "HmacSHA1"
-  val SHA256 = "HmacSHA256"
-  val SHA512 = "HmacSHA512"
-
   implicit def forApplicativeThrow[F[_]](implicit F: ApplicativeThrow[F]): Hmac[F] =
     new Hmac[F] {
 
-      override def digest(algorithm: String, key: ByteVector, data: ByteVector): F[ByteVector] =
+      override def digest(key: SecretKey[HmacAlgorithm], data: ByteVector): F[ByteVector] =
         F.catchNonFatal {
-          val mac = Mac.getInstance(algorithm)
-          val sk = new SecretKeySpec(key.toArray, algorithm)
+          val mac = crypto.Mac.getInstance(key.algorithm.toStringJava)
+          val sk = key.toJava
           mac.init(sk)
           mac.update(data.toByteBuffer)
           ByteVector.view(mac.doFinal())
         }
 
+      override def generateKey[A <: HmacAlgorithm](algorithm: A): F[SecretKey[A]] =
+        F.catchNonFatal {
+          val key = crypto.KeyGenerator.getInstance(algorithm.toStringJava).generateKey()
+          SecretKeySpec(ByteVector.view(key.getEncoded()), algorithm)
+        }
+
+      override def importKey[A <: HmacAlgorithm](
+          key: ByteVector,
+          algorithm: A): F[SecretKey[A]] =
+        F.pure(SecretKeySpec(key, algorithm))
+
+      override def importJavaKey(key: crypto.SecretKey): F[SecretKey[HmacAlgorithm]] =
+        F.fromOption(
+          for {
+            algorithm <- HmacAlgorithm.fromStringJava(key.getAlgorithm())
+            key <- Option(key.getEncoded())
+          } yield SecretKeySpec(ByteVector.view(key), algorithm),
+          new InvalidKeyException
+        )
     }
 }

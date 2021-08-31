@@ -14,18 +14,8 @@
  * limitations under the License.
  */
 
-package bobcats
-
-import scodec.bits.ByteVector
-
-trait Hmac[F[_]] extends HmacPlatform[F] {
-  def digest(key: SecretKey[HmacAlgorithm], data: ByteVector): F[ByteVector]
-  def generateKey[A <: HmacAlgorithm](algorithm: A): F[SecretKey[A]]
-  def importKey[A <: HmacAlgorithm](key: ByteVector, algorithm: A): F[SecretKey[A]]
-}
-
-object Hmac extends HmacCompanionPlatform {
-
-  def apply[F[_]](implicit hmac: Hmac[F]): hmac.type = hmac
-
+package object bobcats {
+  type GeneralSecurityException = java.security.GeneralSecurityException
+  type KeyException = java.security.KeyException
+  type InvalidKeyException = java.security.InvalidKeyException
 }

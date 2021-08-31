@@ -33,3 +33,16 @@ private[bobcats] object HmacImportParams {
       )
       .asInstanceOf[HmacImportParams]
 }
+
+@js.native
+private[bobcats] sealed trait HmacKeyGenParams extends js.Any
+
+private[bobcats] object HmacKeyGenParams {
+  def apply(hash: String): HmacKeyGenParams =
+    js.Dynamic
+      .literal(
+        name = "HMAC",
+        hash = hash
+      )
+      .asInstanceOf[HmacKeyGenParams]
+}
