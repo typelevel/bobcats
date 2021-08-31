@@ -48,7 +48,7 @@ object CI {
         mimaReport = true,
         suffixCommands = List("root/unidoc213", "exampleJVM/compile"))
 
-  case object JS
+  case object NodeJS
       extends CI(
         rootProject = "rootJS",
         jsEnv = Some(JSEnv.NodeJS),
@@ -72,5 +72,5 @@ object CI {
         mimaReport = false,
         suffixCommands = List())
 
-  val AllCIs: List[CI] = List(JVM, JS, Firefox, Chrome)
+  val AllCIs: List[CI] = List(JVM, NodeJS, Firefox, Chrome)
 }

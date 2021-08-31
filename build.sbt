@@ -50,7 +50,7 @@ ThisBuild / githubWorkflowBuild := Seq(
 
 replaceCommandAlias("ci", CI.AllCIs.map(_.toString).mkString)
 addCommandAlias("ciJVM", CI.JVM.toString)
-addCommandAlias("ciJS", CI.JS.toString)
+addCommandAlias("ciNodeJS", CI.NodeJS.toString)
 addCommandAlias("ciFirefox", CI.Firefox.toString)
 addCommandAlias("ciChrome", CI.Chrome.toString)
 
