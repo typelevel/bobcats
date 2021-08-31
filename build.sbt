@@ -33,7 +33,7 @@ ThisBuild / publishFullName := "Arman Bilge"
 
 ThisBuild / crossScalaVersions := Seq("3.0.1", "2.12.14", "2.13.6")
 
-val ciVariants = List("ciJVM", "ciNodeJS", "ciFirefox", "ciChrome", "ciJSDOMNodeJS")
+val ciVariants = List("ciJVM", "ciNodeJS", "ciFirefox", "ciChrome")
 val jsCiVariants = ciVariants.tail
 ThisBuild / githubWorkflowBuildMatrixAdditions += "ci" -> ciVariants
 ThisBuild / githubWorkflowBuildPreamble ++= Seq(

@@ -24,7 +24,7 @@ jobs:
         os: [ubuntu-latest]
         scala: [3.0.1, 2.12.14, 2.13.6]
         java: [adopt@1.8]
-        ci: [ciJVM, ciNodeJS, ciFirefox, ciChrome, ciJSDOMNodeJS]
+        ci: [ciJVM, ciNodeJS, ciFirefox, ciChrome]
     runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout current branch (full)
