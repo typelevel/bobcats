@@ -45,19 +45,12 @@ sonatypeCredentialHost := "s01.oss.sonatype.org" // TODO remove
 
 ThisBuild / crossScalaVersions := Seq("3.0.1", "2.12.14", "2.13.6")
 
-val ciVariants = List("ciJVM", "ciNodeJS", "ciFirefox", "ciChrome")
-val jsCiVariants = ciVariants.tail
-ThisBuild / githubWorkflowBuildMatrixAdditions += "ci" -> ciVariants
 ThisBuild / githubWorkflowBuildPreamble ++= Seq(
   WorkflowStep.Use(
     UseRef.Public("actions", "setup-node", "v2.1.2"),
     name = Some("Setup NodeJS v14 LTS"),
     params = Map("node-version" -> "14"),
-    cond = Some("matrix.ci == 'ciNodeJS'")
   )
-)
-ThisBuild / githubWorkflowBuild := Seq(
-  WorkflowStep.Sbt(List("${{ matrix.ci }}"))
 )
 
 replaceCommandAlias("ci", CI.AllCIs.map(_.toString).mkString)
