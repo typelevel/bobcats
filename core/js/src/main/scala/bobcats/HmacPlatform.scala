@@ -50,7 +50,7 @@ private[bobcats] trait HmacCompanionPlatform {
                 cb(
                   Option(err)
                     .map(js.JavaScriptException)
-                    .toLeft(SecretKeySpec(ByteVector.view(key.export()), algorithm)))
+                    .toLeft(SecretKeySpec(ByteVector.view(key.`export`()), algorithm)))
             )
           }
 

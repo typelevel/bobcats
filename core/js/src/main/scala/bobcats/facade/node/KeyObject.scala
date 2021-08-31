@@ -20,5 +20,5 @@ import scala.scalajs.js
 
 @js.native
 private[bobcats] trait SymmetricKeyObject extends js.Any {
-  def export(): js.typedarray.Uint8Array = js.native
+  def `export`(): js.typedarray.Uint8Array = js.native
 }

@@ -35,8 +35,8 @@ object SecureEq {
   implicit val secureEqForByteVector: SecureEq[ByteVector] = new SecureEq[ByteVector] {
     override def eqv(digesta: ByteVector, digestb: ByteVector): Boolean =
       (digesta eq digestb) || {
-        val lenA = math.toIntExact(digesta.length)
-        val lenB = math.toIntExact(digestb.length)
+        val lenA = Math.toIntExact(digesta.length)
+        val lenB = Math.toIntExact(digestb.length)
 
         if (lenB == 0) {
           lenA == 0
