@@ -26,10 +26,22 @@ name := "bobcats"
 
 ThisBuild / baseVersion := "0.1"
 
-ThisBuild / organization := "org.typelevel"
+// ThisBuild / organization := "org.typelevel"
+ThisBuild / organization := "com.armanbilge" // TODO remove
 ThisBuild / organizationName := "Typelevel"
 ThisBuild / publishGithubUser := "armanbilge"
 ThisBuild / publishFullName := "Arman Bilge"
+
+enablePlugins(SonatypeCiReleasePlugin)
+ThisBuild / spiewakCiReleaseSnapshots := true
+ThisBuild / spiewakMainBranches := Seq("main")
+
+ThisBuild / homepage := Some(url("https://github.com/typelevel/bobcats"))
+ThisBuild / scmInfo := Some(
+  ScmInfo(
+    url("https://github.com/typelevel/bobcats"),
+    "git@github.com:typelevel/bobcats.git"))
+sonatypeCredentialHost := "s01.oss.sonatype.org" // TODO remove
 
 ThisBuild / crossScalaVersions := Seq("3.0.1", "2.12.14", "2.13.6")
 
@@ -93,6 +105,7 @@ lazy val core = crossProject(JSPlatform, JVMPlatform)
   .in(file("core"))
   .settings(
     name := "bobcats",
+    sonatypeCredentialHost := "s01.oss.sonatype.org", // TODO remove
     libraryDependencies ++= Seq(
       "org.typelevel" %%% "cats-core" % catsVersion,
       "org.scodec" %%% "scodec-bits" % scodecBitsVersion,
