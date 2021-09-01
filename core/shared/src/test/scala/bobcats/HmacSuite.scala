@@ -46,7 +46,7 @@ class HmacSuite extends CatsEffectSuite {
       Hmac[IO].generateKey(algorithm).map {
         case SecretKeySpec(key, keyAlgorithm) =>
           assertEquals(algorithm, keyAlgorithm)
-          assert(key.intSize.get > algorithm.minimumKeyLength)
+          assert(key.intSize.get >= algorithm.minimumKeyLength)
       }
     }
 
