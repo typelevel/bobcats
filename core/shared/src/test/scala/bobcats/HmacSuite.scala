@@ -41,4 +41,16 @@ class HmacSuite extends CatsEffectSuite {
     SHA512,
     "b42af09057bac1e2d41708e48a902e09b5ff7f12ab428a4fe86653c73dd248fb82f948a549f7b791a5b41915ee4d1ec3935357e4e2317250d0372afa2ebeeb3a")
 
+  def testGenerateKey(algorithm: HmacAlgorithm) =
+    test(s"generate key for ${algorithm}") {
+      Hmac[IO].generateKey(algorithm).map {
+        case SecretKeySpec(key, keyAlgorithm) =>
+          assertEquals(algorithm, keyAlgorithm)
+          assert(key.intSize.get > algorithm.minimumKeyLength)
+      }
+    }
+
+  if (BuildInfo.runtime != "NodeJS") // Disabled until testing against Node 16
+    List(SHA1, SHA256, SHA512).foreach(testGenerateKey)
+
 }
