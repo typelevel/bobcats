@@ -24,22 +24,21 @@ import scodec.bits.ByteVector
 
 final class SecureRandom extends Random {
 
-  override def nextBytes(bytes: Array[Byte]): Unit = {
-    val b =
-      if (facade.isNodeJSRuntime)
-        facade.node.crypto.randomBytes(bytes.length)
-      else
-        facade.browser.crypto.getRandomValues(new js.typedarray.Uint8Array(bytes.length))
-    ByteVector.view(b).copyToArray(bytes, 0)
-  }
+  private def nextBytes(numBytes: Int): js.typedarray.Uint8Array =
+    if (facade.isNodeJSRuntime)
+      facade.node.crypto.randomBytes(numBytes)
+    else
+      facade.browser.crypto.getRandomValues(new js.typedarray.Uint8Array(numBytes))
+
+  override def nextBytes(bytes: Array[Byte]): Unit =
+    ByteVector.view(nextBytes(bytes.length)).copyToArray(bytes, 0)
 
   // Java's SecureRandom overrides this and thus so do we
   override protected final def next(numBits: Int): Int = {
     val numBytes = (numBits + 7) / 8;
-    val b = new Array[Byte](numBytes);
+    val b = new js.typedarray.Int8Array(nextBytes(numBytes).buffer);
     var next = 0;
 
-    nextBytes(b);
     var i = 0
     while (i < numBytes) {
       next = (next << 8) + (b(i) & 0xff)
