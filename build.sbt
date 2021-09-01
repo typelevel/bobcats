@@ -41,7 +41,7 @@ ThisBuild / scmInfo := Some(
   ScmInfo(url("https://github.com/typelevel/bobcats"), "git@github.com:typelevel/bobcats.git"))
 sonatypeCredentialHost := "s01.oss.sonatype.org" // TODO remove
 
-ThisBuild / crossScalaVersions := Seq("3.0.1", "2.12.14", "2.13.6")
+ThisBuild / crossScalaVersions := Seq("3.0.2", "2.12.14", "2.13.6")
 
 ThisBuild / githubWorkflowBuildPreamble ++= Seq(
   WorkflowStep.Use(
