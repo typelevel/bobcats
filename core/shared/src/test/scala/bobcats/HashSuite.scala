@@ -34,6 +34,8 @@ class HashSuite extends CatsEffectSuite {
       )
     }
 
+  if (Set("JVM", "NodeJS").contains(BuildInfo.runtime))
+    testHash(MD5, "9e107d9d372bb6826bd81d3542a419d6")
   testHash(SHA1, "2fd4e1c67a2d28fced849ee1bb76e7391b93eb12")
   testHash(SHA256, "d7a8fbb307d7809469ca9abcb0082e4f8d5651e46d3cdb762d02d0bf37c9e592")
   testHash(

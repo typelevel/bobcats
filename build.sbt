@@ -38,9 +38,7 @@ ThisBuild / spiewakMainBranches := Seq("main")
 
 ThisBuild / homepage := Some(url("https://github.com/typelevel/bobcats"))
 ThisBuild / scmInfo := Some(
-  ScmInfo(
-    url("https://github.com/typelevel/bobcats"),
-    "git@github.com:typelevel/bobcats.git"))
+  ScmInfo(url("https://github.com/typelevel/bobcats"), "git@github.com:typelevel/bobcats.git"))
 sonatypeCredentialHost := "s01.oss.sonatype.org" // TODO remove
 
 ThisBuild / crossScalaVersions := Seq("3.0.1", "2.12.14", "2.13.6")
@@ -49,7 +47,7 @@ ThisBuild / githubWorkflowBuildPreamble ++= Seq(
   WorkflowStep.Use(
     UseRef.Public("actions", "setup-node", "v2.1.2"),
     name = Some("Setup NodeJS v14 LTS"),
-    params = Map("node-version" -> "14"),
+    params = Map("node-version" -> "14")
   )
 )
 
@@ -90,9 +88,9 @@ val munitCEVersion = "1.0.5"
 lazy val root =
   project.in(file(".")).aggregate(rootJS, rootJVM).enablePlugins(NoPublishPlugin)
 lazy val rootJVM =
-  project.aggregate(core.jvm).enablePlugins(NoPublishPlugin)
+  project.aggregate(core.jvm, testRuntime.jvm).enablePlugins(NoPublishPlugin)
 lazy val rootJS =
-  project.aggregate(core.js).enablePlugins(NoPublishPlugin)
+  project.aggregate(core.js, testRuntime.js).enablePlugins(NoPublishPlugin)
 
 lazy val core = crossProject(JSPlatform, JVMPlatform)
   .in(file("core"))
@@ -110,5 +108,24 @@ lazy val core = crossProject(JSPlatform, JVMPlatform)
   .jsSettings(
     libraryDependencies ++= Seq(
       "org.typelevel" %%% "cats-effect" % catsEffectVersion
+    )
+  )
+  .dependsOn(testRuntime % Test)
+
+lazy val testRuntime = crossProject(JSPlatform, JVMPlatform)
+  .crossType(CrossType.Pure)
+  .in(file("test-runtime"))
+  .enablePlugins(BuildInfoPlugin, NoPublishPlugin)
+  .settings(
+    buildInfoPackage := "bobcats"
+  )
+  .jvmSettings(
+    buildInfoKeys := Seq(
+      BuildInfoKey.sbtbuildinfoConstantEntry("runtime" -> "JVM")
+    )
+  )
+  .jsSettings(
+    buildInfoKeys := Seq(
+      BuildInfoKey("runtime" -> useJSEnv.value.toString)
     )
   )
