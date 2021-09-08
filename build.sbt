@@ -45,7 +45,7 @@ ThisBuild / crossScalaVersions := Seq("3.0.2", "2.12.14", "2.13.6")
 
 ThisBuild / githubWorkflowBuildPreamble ++= Seq(
   WorkflowStep.Use(
-    UseRef.Public("actions", "setup-node", "v2.1.2"),
+    UseRef.Public("actions", "setup-node", "v2.4.0"),
     name = Some("Setup NodeJS v14 LTS"),
     params = Map("node-version" -> "14")
   )
