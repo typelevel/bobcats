@@ -84,6 +84,7 @@ val catsEffectVersion = "3.2.8"
 val scodecBitsVersion = "1.1.28"
 val munitVersion = "0.7.29"
 val munitCEVersion = "1.0.5"
+val disciplineMUnitVersion = "1.0.9"
 
 lazy val root =
   project.in(file(".")).aggregate(rootJS, rootJVM).enablePlugins(NoPublishPlugin)
@@ -100,14 +101,16 @@ lazy val core = crossProject(JSPlatform, JVMPlatform)
     libraryDependencies ++= Seq(
       "org.typelevel" %%% "cats-core" % catsVersion,
       "org.scodec" %%% "scodec-bits" % scodecBitsVersion,
-      "org.scalameta" %%% "munit" % "0.7.29" % Test,
+      "org.scalameta" %%% "munit" % munitVersion % Test,
+      "org.typelevel" %%% "cats-laws" % catsVersion % Test,
       "org.typelevel" %%% "cats-effect" % catsEffectVersion % Test,
+      "org.typelevel" %%% "discipline-munit" % disciplineMUnitVersion % Test,
       "org.typelevel" %%% "munit-cats-effect-3" % munitCEVersion % Test
     )
   )
   .jsSettings(
     libraryDependencies ++= Seq(
-      "org.typelevel" %%% "cats-effect" % catsEffectVersion
+      "org.typelevel" %%% "cats-effect-kernel" % catsEffectVersion
     )
   )
   .dependsOn(testRuntime % Test)
