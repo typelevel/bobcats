@@ -23,10 +23,10 @@ import org.scalacheck.Arbitrary
 
 class SecureEqSuite extends DisciplineSuite {
 
-  implicit val arbitraryByteVector = Arbitrary(
+  implicit val arbitraryByteVector: Arbitrary[ByteVector] = Arbitrary(
     Arbitrary.arbitrary[Vector[Byte]].map(ByteVector(_)))
 
-  implicit val arbitraryByteVectorFunction = Arbitrary(
+  implicit val arbitraryByteVectorFunction: Arbitrary[ByteVector => ByteVector] = Arbitrary(
     Arbitrary
       .arbitrary[Vector[Byte] => Vector[Byte]]
       .map(
