@@ -35,7 +35,7 @@ private[bobcats] trait HashCompanionPlatform {
       }
     else
       F.getPreferred
-        .map { implicit F =>
+        .map { implicit F: Async[F] =>
           new UnsealedHash[F] {
             import facade.browser._
             override def digest(algorithm: HashAlgorithm, data: ByteVector): F[ByteVector] =

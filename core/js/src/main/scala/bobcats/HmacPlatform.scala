@@ -30,7 +30,7 @@ private[bobcats] trait HmacCompanionPlatform {
     if (facade.isNodeJSRuntime)
       new UnsealedHmac[F] {
         import facade.node._
-        implicit val F = F0.join[Sync[F]]
+        implicit val F: Sync[F] = F0.join[Sync[F]]
 
         override def digest(key: SecretKey[HmacAlgorithm], data: ByteVector): F[ByteVector] =
           key match {
@@ -72,7 +72,7 @@ private[bobcats] trait HmacCompanionPlatform {
       }
     else
       F0.getPreferred
-        .map { implicit F =>
+        .map { implicit F: Async[F] =>
           new UnsealedHmac[F] {
             import bobcats.facade.browser._
             override def digest(
