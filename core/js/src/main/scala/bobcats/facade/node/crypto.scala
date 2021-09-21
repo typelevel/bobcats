@@ -35,6 +35,8 @@ private[bobcats] trait crypto extends js.Any {
       options: GenerateKeyOptions,
       callback: js.Function2[js.Error, SymmetricKeyObject, Unit]): Unit = js.native
 
+  def generateKeySync(`type`: String, options: GenerateKeyOptions): Unit = js.native
+
   def randomBytes(size: Int): js.typedarray.Uint8Array = js.native
 
   def randomBytes(
