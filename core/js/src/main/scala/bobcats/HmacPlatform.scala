@@ -57,8 +57,10 @@ private[bobcats] trait HmacCompanionPlatform {
               )
             }
           } { F =>
-            F.catchNonFatal {
-              crypto.generateKeySync("hmac", GenerateKeyOptions(algorithm.minimumKeyLength))
+            F.delay {
+              val key =
+                crypto.generateKeySync("hmac", GenerateKeyOptions(algorithm.minimumKeyLength))
+              SecretKeySpec(ByteVector.view(key.`export`()), algorithm)
             }
           }
 
