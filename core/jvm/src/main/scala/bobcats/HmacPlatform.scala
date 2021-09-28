@@ -16,7 +16,7 @@
 
 package bobcats
 
-import cats.ApplicativeThrow
+import cats.effect.kernel.Sync
 import scodec.bits.ByteVector
 import javax.crypto
 
@@ -25,7 +25,7 @@ private[bobcats] trait HmacPlatform[F[_]] {
 }
 
 private[bobcats] trait HmacCompanionPlatform {
-  implicit def forApplicativeThrow[F[_]](implicit F: ApplicativeThrow[F]): Hmac[F] =
+  implicit def forSync[F[_]](implicit F: Sync[F]): Hmac[F] =
     new UnsealedHmac[F] {
 
       override def digest(key: SecretKey[HmacAlgorithm], data: ByteVector): F[ByteVector] =
@@ -38,7 +38,7 @@ private[bobcats] trait HmacCompanionPlatform {
         }
 
       override def generateKey[A <: HmacAlgorithm](algorithm: A): F[SecretKey[A]] =
-        F.catchNonFatal {
+        F.delay {
           val key = crypto.KeyGenerator.getInstance(algorithm.toStringJava).generateKey()
           SecretKeySpec(ByteVector.view(key.getEncoded()), algorithm)
         }
