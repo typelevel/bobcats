@@ -19,7 +19,7 @@ package bobcats
 import cats.effect.kernel.Sync
 
 private[bobcats] trait CryptoCompanionPlatform {
-  implicit def forMonadThrow[F[_]: Sync]: Crypto[F] =
+  implicit def forSync[F[_]: Sync]: Crypto[F] =
     new UnsealedCrypto[F] {
       override def hash: Hash[F] = Hash[F]
       override def hmac: Hmac[F] = Hmac[F]
