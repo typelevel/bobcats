@@ -29,3 +29,10 @@ sealed trait SecretKey[+A <: Algorithm] extends Key[A] with SecretKeyPlatform
 final case class SecretKeySpec[+A <: Algorithm](key: ByteVector, algorithm: A)
     extends SecretKey[A]
     with SecretKeySpecPlatform[A]
+
+final case class PrivateKeySpec[+A <: PrivateKeyAlg](key: ByteVector, algorithm: A)
+  extends PrivateKey[A] with PrivateKeySpecPlatform[A]
+
+final case class PublicKeySpec[+A <: PKA](key: ByteVector, algorithm: A)
+  extends PublicKey[A] with PublicKeySpecPlatform[A]
+

@@ -85,6 +85,7 @@ val scodecBitsVersion = "1.1.30"
 val munitVersion = "0.7.29"
 val munitCEVersion = "1.0.7"
 val disciplineMUnitVersion = "1.0.9"
+val bouncyVersion = "1.68"
 
 lazy val root =
   project.in(file(".")).aggregate(rootJS, rootJVM).enablePlugins(NoPublishPlugin)
@@ -106,8 +107,11 @@ lazy val core = crossProject(JSPlatform, JVMPlatform)
       "org.typelevel" %%% "cats-laws" % catsVersion % Test,
       "org.typelevel" %%% "cats-effect" % catsEffectVersion % Test,
       "org.typelevel" %%% "discipline-munit" % disciplineMUnitVersion % Test,
-      "org.typelevel" %%% "munit-cats-effect-3" % munitCEVersion % Test
+      "org.typelevel" %%% "munit-cats-effect-3" % munitCEVersion % Test,
     )
+  )
+  .jvmSettings(
+    libraryDependencies +="org.bouncycastle" % "bcpkix-jdk15to18" % bouncyVersion % Test
   )
   .dependsOn(testRuntime % Test)
 

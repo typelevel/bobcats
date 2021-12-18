@@ -85,3 +85,45 @@ object HmacAlgorithm {
     private[bobcats] override def minimumKeyLength: Int = 64
   }
 }
+
+// Public Key Algorithm
+sealed trait PKA extends Algorithm {
+  type Private <: PrivateKeyAlg //matching private key type
+  val Private: Private
+}
+
+object PKA {
+  sealed trait Signature extends Algorithm
+  trait RSA
+  //not sure what a good name for this is, or if that is the right object
+  case object RSA extends PKA with RSA {
+    override type Private = PrivateKeyAlg.RSA.type
+    override val Private = PrivateKeyAlg.RSA
+
+    override private[bobcats] def toStringJava = "RSA"
+    override private[bobcats] def toStringNodeJS = ???
+    override private[bobcats] def toStringWebCrypto = ???
+  }
+
+  case object SHA512 extends Signature with RSA {
+    override private[bobcats] def toStringJava = "SHA512withRSA"
+    override private[bobcats] def toStringNodeJS = ???
+    override private[bobcats] def toStringWebCrypto = ???
+  }
+}
+
+sealed trait PrivateKeyAlg extends Algorithm
+
+object PrivateKeyAlg {
+
+  //not sure what a good name for this is, or if that is the right object, should it perhaps just be RSA?
+  //like the matching private key?
+  //it may be good for Public/Private keys to have them defined clearly as pairs, so as to
+  //help developers find the matching piece via the type system.
+  case object RSA extends PrivateKeyAlg {
+    override private[bobcats] def toStringJava = "RSASSA-PSS"
+    override private[bobcats] def toStringNodeJS = ???
+    override private[bobcats] def toStringWebCrypto = ???
+  }
+}
+

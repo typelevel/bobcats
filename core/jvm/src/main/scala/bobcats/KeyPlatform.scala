@@ -16,19 +16,17 @@
 
 package bobcats
 
-import java.security
 import javax.crypto
 
-private[bobcats] trait KeyPlatform {
-  def toJava: security.Key
-}
+private[bobcats] trait KeyPlatform
 
 private[bobcats] trait PublicKeyPlatform {
-  def toJava: security.PublicKey
+  def toJava: java.security.spec.X509EncodedKeySpec
 }
 
 private[bobcats] trait PrivateKeyPlatform {
-  def toJava: security.PrivateKey
+  // which encoding should one use? PKCS8 or X509? or other
+  def toJava: java.security.spec.PKCS8EncodedKeySpec
 }
 
 private[bobcats] trait SecretKeyPlatform {
@@ -38,4 +36,22 @@ private[bobcats] trait SecretKeyPlatform {
 private[bobcats] trait SecretKeySpecPlatform[+A <: Algorithm] { self: SecretKeySpec[A] =>
   def toJava: crypto.spec.SecretKeySpec =
     new crypto.spec.SecretKeySpec(key.toArray, algorithm.toStringJava)
+}
+
+private[bobcats] trait PrivateKeySpecPlatform[+A <: PrivateKeyAlg] { self: PrivateKeySpec[A] =>
+  // we see here that something is not quite right. If there is an encoding of a key - an tuple
+  // of numbers essentially, then there can be many encodings. Which one should one use?
+  // I would not be surprised if there are more than one.
+  def toJava: java.security.spec.PKCS8EncodedKeySpec =
+    new java.security.spec.PKCS8EncodedKeySpec(key.toArray)
+}
+
+private[bobcats] trait PublicKeySpecPlatform[+A <: PKA] { self: PublicKeySpec[A] =>
+  // we see here that something is not quite right. If there is an encoding of a key - an tuple
+  // of numbers essentially, then there can be many encodings. Which one should one use?
+  // I would not be surprised if there are more than one ways to encode this number.
+  // If so we should have a constructor such as `(Array, type) => Option[PubKey]`
+  // but perhaps that is what this is...
+  def toJava: java.security.spec.X509EncodedKeySpec =
+    new java.security.spec.X509EncodedKeySpec(key.toArray)
 }
