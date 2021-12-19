@@ -93,7 +93,7 @@ sealed trait PKA extends Algorithm {
 }
 
 object PKA {
-  sealed trait Signature extends Algorithm
+  sealed trait Signature extends Algorithm with SignaturePlatform
   trait RSA
   //not sure what a good name for this is, or if that is the right object
   case object RSA extends PKA with RSA {
@@ -107,6 +107,12 @@ object PKA {
 
   case object SHA512 extends Signature with RSA {
     override private[bobcats] def toStringJava = "SHA512withRSA"
+    override private[bobcats] def toStringNodeJS = ???
+    override private[bobcats] def toStringWebCrypto = ???
+  }
+  // this makes one think if perhaps all the methods should not go the the SignaturePlatform?
+  case object `rsa-pss-sha512` extends Signature with RSA {
+    override private[bobcats] def toStringJava = ???
     override private[bobcats] def toStringNodeJS = ???
     override private[bobcats] def toStringWebCrypto = ???
   }

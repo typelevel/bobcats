@@ -1,0 +1,4 @@
+package bobcats
+
+
+trait SignaturePlatform

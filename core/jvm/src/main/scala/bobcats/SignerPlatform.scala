@@ -20,11 +20,13 @@ import cats.effect.kernel.Sync
 import scodec.bits.ByteVector
 
 import java.security
+import java.security.spec.{MGF1ParameterSpec, PSSParameterSpec}
 import java.security.{KeyFactory, Signature}
 
 private[bobcats] trait SignerPlatform[F[_]]
 
 private[bobcats] trait SignerCompanionPlatform {
+
 	implicit def forSync[F[_]](implicit F: Sync[F]): Signer[F] =
 		new UnsealedSigner[F] {
 			//one would really want a type that pairs the PKA and Sig, so as not to leave impossible combinations open
@@ -34,27 +36,22 @@ private[bobcats] trait SignerCompanionPlatform {
 			  data: ByteVector
 			): F[ByteVector] =
 				F.catchNonFatal{
-					val kf: KeyFactory = KeyFactory.getInstance(spec.algorithm.toStringJava)
-					val privSpec: java.security.spec.KeySpec = spec.toJava
-					val priv: security.PrivateKey = kf.generatePrivate(privSpec)
-					// we don't use the provider here! Should we? How would we?
-					// sig is not thread safe, so we can't reuse one
-					// we had the following
-					//val sig = Signature.getInstance(sigType.toStringJava)
-					// but RSASSA-PSS needs this:
-					val sig = {
-						val rsapss = Signature.getInstance("RSASSA-PSS")
-						import java.security.spec.{PSSParameterSpec, MGF1ParameterSpec}
-						val pssSpec = new PSSParameterSpec(
-							"SHA-512", "MGF1", MGF1ParameterSpec.SHA512, 512 / 8, 1)
-						println("PSSParameterSpec="+pssSpec)
-						rsapss.setParameter(pssSpec)
-						rsapss
-					}
+					val priv: security.PrivateKey = spec.toJava
+					val sig : java.security.Signature = sigType.toJava
 					sig.initSign(priv)
 					sig.update(data.toByteBuffer)
 					ByteVector.view(sig.sign())
 				}
 		}
+}
+
+object SignerCompanionPlatform {
+	// these are the values set in sun.security.util.SignatureUtil.PSSParamsHolder.PSS_512_SPEC
+	val PSS_512_SPEC = new PSSParameterSpec(
+		"SHA-512",
+		"MGF1",
+		MGF1ParameterSpec.SHA512,
+		64,
+		1)
 }
 

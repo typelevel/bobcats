@@ -17,16 +17,20 @@
 package bobcats
 
 import javax.crypto
+import java.security
+import java.security.KeyFactory
 
-private[bobcats] trait KeyPlatform
+private[bobcats] trait KeyPlatform {
+  def toJava: security.Key
+}
 
 private[bobcats] trait PublicKeyPlatform {
-  def toJava: java.security.spec.X509EncodedKeySpec
+  def toJavaSpec: java.security.spec.X509EncodedKeySpec
 }
 
 private[bobcats] trait PrivateKeyPlatform {
   // which encoding should one use? PKCS8 or X509? or other
-  def toJava: java.security.spec.PKCS8EncodedKeySpec
+  def toJavaSpec: java.security.spec.PKCS8EncodedKeySpec
 }
 
 private[bobcats] trait SecretKeyPlatform {
@@ -36,22 +40,29 @@ private[bobcats] trait SecretKeyPlatform {
 private[bobcats] trait SecretKeySpecPlatform[+A <: Algorithm] { self: SecretKeySpec[A] =>
   def toJava: crypto.spec.SecretKeySpec =
     new crypto.spec.SecretKeySpec(key.toArray, algorithm.toStringJava)
+
 }
 
 private[bobcats] trait PrivateKeySpecPlatform[+A <: PrivateKeyAlg] { self: PrivateKeySpec[A] =>
+  def toJava: security.PrivateKey = {
+    val kf: KeyFactory = KeyFactory.getInstance(algorithm.toStringJava)
+    kf.generatePrivate(toJavaSpec)
+  }
+
   // we see here that something is not quite right. If there is an encoding of a key - an tuple
   // of numbers essentially, then there can be many encodings. Which one should one use?
   // I would not be surprised if there are more than one.
-  def toJava: java.security.spec.PKCS8EncodedKeySpec =
+  def toJavaSpec: java.security.spec.PKCS8EncodedKeySpec =
     new java.security.spec.PKCS8EncodedKeySpec(key.toArray)
 }
 
 private[bobcats] trait PublicKeySpecPlatform[+A <: PKA] { self: PublicKeySpec[A] =>
+  def toJava: crypto.SecretKey = ???
   // we see here that something is not quite right. If there is an encoding of a key - an tuple
   // of numbers essentially, then there can be many encodings. Which one should one use?
   // I would not be surprised if there are more than one ways to encode this number.
   // If so we should have a constructor such as `(Array, type) => Option[PubKey]`
   // but perhaps that is what this is...
-  def toJava: java.security.spec.X509EncodedKeySpec =
+  def toJavaSpec: java.security.spec.X509EncodedKeySpec =
     new java.security.spec.X509EncodedKeySpec(key.toArray)
 }
