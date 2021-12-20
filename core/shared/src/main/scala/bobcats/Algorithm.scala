@@ -95,6 +95,7 @@ sealed trait PKA extends Algorithm {
 object PKA {
   sealed trait Signature extends Algorithm with SignaturePlatform
   trait RSA
+  trait EC
   //not sure what a good name for this is, or if that is the right object
   case object RSA extends PKA with RSA {
     override type Private = PrivateKeyAlg.RSA.type
@@ -105,14 +106,37 @@ object PKA {
     override private[bobcats] def toStringWebCrypto = ???
   }
 
+  case object EC extends PKA with EC {
+    override type Private = PrivateKeyAlg.EC.type
+    override val Private = PrivateKeyAlg.EC
+
+    override private[bobcats] def toStringJava = "EC"
+    override private[bobcats] def toStringNodeJS = ???
+    override private[bobcats] def toStringWebCrypto = ???
+  }
+
   case object SHA512 extends Signature with RSA {
     override private[bobcats] def toStringJava = "SHA512withRSA"
     override private[bobcats] def toStringNodeJS = ???
     override private[bobcats] def toStringWebCrypto = ???
   }
   // this makes one think if perhaps all the methods should not go the the SignaturePlatform?
+  // this is defined here:
+  // https://httpwg.org/http-extensions/draft-ietf-httpbis-message-signatures.html#section-3.3.1
   case object `rsa-pss-sha512` extends Signature with RSA {
     override private[bobcats] def toStringJava = ???
+    override private[bobcats] def toStringNodeJS = ???
+    override private[bobcats] def toStringWebCrypto = ???
+  }
+
+  case object `rsa-v1_5-sha256` extends Signature with RSA {
+    override private[bobcats] def toStringJava = "SHA256withRSA"
+    override private[bobcats] def toStringNodeJS = ???
+    override private[bobcats] def toStringWebCrypto = ???
+  }
+
+  case object `ecdsa-p256-sha256` extends Signature with EC {
+    override private[bobcats] def toStringJava = "SHA256withECDSA"
     override private[bobcats] def toStringNodeJS = ???
     override private[bobcats] def toStringWebCrypto = ???
   }
@@ -128,6 +152,12 @@ object PrivateKeyAlg {
   //help developers find the matching piece via the type system.
   case object RSA extends PrivateKeyAlg {
     override private[bobcats] def toStringJava = "RSASSA-PSS"
+    override private[bobcats] def toStringNodeJS = ???
+    override private[bobcats] def toStringWebCrypto = ???
+  }
+
+  case object EC extends PrivateKeyAlg {
+    override private[bobcats] def toStringJava = "EC"
     override private[bobcats] def toStringNodeJS = ???
     override private[bobcats] def toStringWebCrypto = ???
   }

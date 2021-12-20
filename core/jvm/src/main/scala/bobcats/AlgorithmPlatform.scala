@@ -23,10 +23,9 @@ trait SignaturePlatform { self: bobcats.Algorithm =>
 	def toJava: java.security.Signature = {
 		// how could one get this to be added directly to the object?
 		if (this == PKA.`rsa-pss-sha512`) {
-			println("using sepecial rsa-pss-sha512 sig")
 			// sig is not thread safe, so we can't reuse one
 
-			// the paramters here have to be set manually as below
+			// the parameters set below are defined clearly here
 			// https://httpwg.org/http-extensions/draft-ietf-httpbis-message-signatures.html#section-3.3.1
 			// we will need to have a function on the PKA.Signature objects that returns a signature.
 

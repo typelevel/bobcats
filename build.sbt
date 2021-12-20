@@ -85,7 +85,7 @@ val scodecBitsVersion = "1.1.30"
 val munitVersion = "0.7.29"
 val munitCEVersion = "1.0.7"
 val disciplineMUnitVersion = "1.0.9"
-val bouncyVersion = "1.68"
+val bouncyVersion = "1.69"
 
 lazy val root =
   project.in(file(".")).aggregate(rootJS, rootJVM).enablePlugins(NoPublishPlugin)
@@ -111,7 +111,11 @@ lazy val core = crossProject(JSPlatform, JVMPlatform)
     )
   )
   .jvmSettings(
-    libraryDependencies +="org.bouncycastle" % "bcpkix-jdk15to18" % bouncyVersion % Test
+    libraryDependencies ++=Seq(
+      "org.bouncycastle" % "bcpkix-jdk15to18" % bouncyVersion % Test,
+      "org.bouncycastle" % "bcprov-jdk15to18" % bouncyVersion % Test,
+      "org.bouncycastle" % "bctls-jdk15to18" % bouncyVersion % Test
+    )
   )
   .dependsOn(testRuntime % Test)
 

@@ -53,7 +53,7 @@ private[bobcats] trait PrivateKeySpecPlatform[+A <: PrivateKeyAlg] { self: Priva
   // of numbers essentially, then there can be many encodings. Which one should one use?
   // I would not be surprised if there are more than one.
   def toJavaSpec: java.security.spec.PKCS8EncodedKeySpec =
-    new java.security.spec.PKCS8EncodedKeySpec(key.toArray)
+    new java.security.spec.PKCS8EncodedKeySpec(key.toArray,algorithm.toStringJava)
 }
 
 private[bobcats] trait PublicKeySpecPlatform[+A <: PKA] { self: PublicKeySpec[A] =>

@@ -21,7 +21,6 @@ import scodec.bits.ByteVector
 
 import java.security
 import java.security.spec.{MGF1ParameterSpec, PSSParameterSpec}
-import java.security.{KeyFactory, Signature}
 
 private[bobcats] trait SignerPlatform[F[_]]
 
@@ -30,9 +29,9 @@ private[bobcats] trait SignerCompanionPlatform {
 	implicit def forSync[F[_]](implicit F: Sync[F]): Signer[F] =
 		new UnsealedSigner[F] {
 			//one would really want a type that pairs the PKA and Sig, so as not to leave impossible combinations open
-			override def sign[A <: PrivateKeyAlg, S <: PKA.Signature](
-			  spec: PrivateKeySpec[A],
-			  sigType: S,
+			override def sign( // it is not clear that adding [A <: PrivateKeyAlg, S <: PKA.Signature] helps
+			  spec: PrivateKeySpec[_],
+			  sigType: PKA.Signature,
 			  data: ByteVector
 			): F[ByteVector] =
 				F.catchNonFatal{
