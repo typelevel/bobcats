@@ -18,13 +18,15 @@ package bobcats
 
 import bobcats.SigningHttpMessages.SignatureTest
 import bobcats.util.StringUtils._
-import cats.Functor
+import cats.{FlatMap, Functor}
 import cats.effect.SyncIO
 import cats.syntax.all._
 import munit.CatsEffectSuite
 import scodec.bits.Bases.Alphabets
 import scodec.bits.ByteVector
 
+import java.io.StringReader
+import java.security
 import scala.reflect.ClassTag
 import scala.util.Try
 
@@ -37,20 +39,41 @@ class SignerSuite extends CatsEffectSuite {
 	java.security.Security.addProvider(new org.bouncycastle.jce.provider.BouncyCastleProvider)
 
 
-	def testSigner[F[_]: Signer: Functor](
+	def testSigner[F[_] : Signer : Verifier : Functor: FlatMap](
 	  sigTest: SignatureTest
-	)(implicit ct: ClassTag[F[_]]): Unit =
-		test(s"${sigTest.description} using ${sigTest.alg} with ${ct.runtimeClass.getSimpleName()}") {
-			val pks: PrivateKeySpec[_] = sigTest.keySpec.get
-			val bytes = ByteVector.encodeAscii(sigTest.text).toOption.get
+	)(implicit ct: ClassTag[F[_]]): Unit = {
+		def privKey: PrivateKeySpec[_] = sigTest.privateKeySpec.get
+		def pubKey: PublicKeySpec[_] = sigTest.pubKeySpec.get
 
-		Signer[F].sign(pks, sigTest.alg, bytes).map { signed =>
-					 assertEquals(
-						 signed.toBase64(Alphabets.Base64), sigTest.sig,
-						 s"inputStr was >>${sigTest.text}<<"
-					 )
-				}
+		test(s"preconditions for ${sigTest.description} using ${sigTest.alg} with ${ct.runtimeClass.getSimpleName()}") {
+			assert(sigTest.privateKeySpec.isSuccess)
+			assert(sigTest.pubKeySpec.isSuccess)
 		}
+
+		val signature: F[ByteVector] = 	{
+			val bytes: ByteVector = ByteVector.encodeAscii(sigTest.text).toOption.get
+			Signer[F].sign(privKey, sigTest.alg, bytes)
+		}
+
+		test(s"signature verification with public key for ${sigTest.description}") {
+			val headersVec = ByteVector.encodeAscii(sigTest.text).toOption.get //because these are headers!
+			for {
+				signedTxt <- signature
+				b <- Verifier[F].verify(pubKey, sigTest.alg)(headersVec, signedTxt)
+			} yield assertEquals(b, true,
+					s"expected verify(>>${sigTest.text}<<, >>$signedTxt<<)=true)"
+				)
+		}
+
+		test(s"test ${sigTest.description} against expected value"){
+		   signature.map { signed =>
+				assertEquals(
+					signed.toBase64(Alphabets.Base64), sigTest.sig,
+					s"inputStr was >>${sigTest.text}<<"
+				)
+			}
+		}
+	}
 
 	if (BuildInfo.runtime == "JVM") {
 		SigningHttpMessages.signatureTests.map { sigTest =>
@@ -67,7 +90,8 @@ object SigningHttpMessages {
 
 	case class SignatureTest(
 	  text: SigningString,  sig: Signature,
-	  keySpec: Try[PrivateKeySpec[_]], alg: PKA.Signature,
+	  privateKeySpec: Try[PrivateKeySpec[_]], alg: PKA.Signature,
+	  pubKeySpec: Try[PublicKeySpec[_]],
 	  description: String
 	)
 
@@ -87,8 +111,12 @@ object SigningHttpMessages {
 		def privateKeyAlg: PrivateKeyAlg
 		def publicKeyAlg: PKA
 
-		lazy val pkspec: Try[PrivateKeySpec[_]] = getPrivateKeyFromPEM(privateKey).map( pk =>
+		lazy val privateKeySpec: Try[PrivateKeySpec[_]] = getPrivateKeyFromPEM(privateKey).map( pk =>
 			PrivateKeySpec(ByteVector.view(pk.getEncoded),privateKeyAlg)
+		)
+
+		lazy val publicKeySpec: Try[PublicKeySpec[_]] = getPublicKeyFromPEM(publicKey).map( pk =>
+			PublicKeySpec(ByteVector.view(pk.getEncoded),publicKeyAlg)
 		)
 
 		// the keys in the Signing HTTP messages Spec are PEM encoded.
@@ -99,8 +127,8 @@ object SigningHttpMessages {
 		// spec when debugging the tests.
 
 		import org.bouncycastle.asn1.pkcs.PrivateKeyInfo
-		import org.bouncycastle.openssl.{PEMKeyPair, PEMParser}
 		import org.bouncycastle.openssl.jcajce.JcaPEMKeyConverter
+		import org.bouncycastle.openssl.{PEMKeyPair, PEMParser}
 
 		import java.io.IOException
 
@@ -121,8 +149,35 @@ object SigningHttpMessages {
 				}
 				else throw new IllegalArgumentException("Unsupported private key format '" + pemContent.getClass.getSimpleName + '"')
 			}
-	}
 
+		import org.bouncycastle.asn1.x509.SubjectPublicKeyInfo
+		import org.bouncycastle.cert.X509CertificateHolder
+
+		@throws[IOException]
+		def getPublicKeyFromPEM(publicKeyPem: PublicKeyPEM): Try[security.PublicKey] = {
+			Try {
+				val pem = new PEMParser(new StringReader(publicKeyPem))
+				try {
+					val jcaPEMKeyConverter = new JcaPEMKeyConverter
+					val pemContent = pem.readObject
+					if (pemContent.isInstanceOf[PEMKeyPair]) {
+						val pemKeyPair = pemContent.asInstanceOf[PEMKeyPair]
+						val keyPair = jcaPEMKeyConverter.getKeyPair(pemKeyPair)
+						keyPair.getPublic
+					}
+					else if (pemContent.isInstanceOf[SubjectPublicKeyInfo]) {
+						val keyInfo = pemContent.asInstanceOf[SubjectPublicKeyInfo]
+						jcaPEMKeyConverter.getPublicKey(keyInfo)
+					}
+					else if (pemContent.isInstanceOf[X509CertificateHolder]) {
+						val cert = pemContent.asInstanceOf[X509CertificateHolder]
+						jcaPEMKeyConverter.getPublicKey(cert.getSubjectPublicKeyInfo)
+					}
+					else throw new IllegalArgumentException("Unsupported public key format '" + pemContent.getClass.getSimpleName + '"')
+				}
+			}
+		}
+	}
 
 	trait SignatureExample {
 		val description: String
@@ -130,13 +185,13 @@ object SigningHttpMessages {
 		val signature: Signature
 		val test: SignatureTest
 		def sigtest(keys: TestKeys, sig: PKA.Signature): SignatureTest =
-			SignatureTest(sigtext,signature,keys.pkspec,sig,description)
+			SignatureTest(sigtext, signature, keys.privateKeySpec, sig, keys.publicKeySpec, description)
 	}
 
 	lazy val signatureTests: Seq[SignatureTest] = Seq(
 		`§3.1_Signature`,
 		`§4.3_Example`,
-		`Appendix_B.2.1` ,
+		`Appendix_B.2.1`,
 		`Appendix_B.2.4`
 	).map(_.test)
 

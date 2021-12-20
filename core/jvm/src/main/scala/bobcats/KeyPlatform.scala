@@ -57,7 +57,10 @@ private[bobcats] trait PrivateKeySpecPlatform[+A <: PrivateKeyAlg] { self: Priva
 }
 
 private[bobcats] trait PublicKeySpecPlatform[+A <: PKA] { self: PublicKeySpec[A] =>
-  def toJava: crypto.SecretKey = ???
+  def toJava: security.PublicKey = {
+    val kf: KeyFactory = KeyFactory.getInstance(algorithm.toStringJava)
+    kf.generatePublic(toJavaSpec)
+  }
   // we see here that something is not quite right. If there is an encoding of a key - an tuple
   // of numbers essentially, then there can be many encodings. Which one should one use?
   // I would not be surprised if there are more than one ways to encode this number.
