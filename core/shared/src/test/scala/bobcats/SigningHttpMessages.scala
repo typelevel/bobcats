@@ -16,80 +16,16 @@
 
 package bobcats
 
-import bobcats.SigningHttpMessages.SignatureTest
-import bobcats.util.StringUtils._
-import cats.FlatMap
-import cats.effect.SyncIO
-import cats.syntax.all._
-import munit.CatsEffectSuite
-import scodec.bits.Bases.Alphabets
-import scodec.bits.ByteVector
+import bobcats.util.StringUtils.StringW
 
-import java.io.StringReader
-import java.security
-import scala.reflect.ClassTag
 import scala.util.Try
-
-/* this is in the jvm tree until the public key parsing is done
- * Examples keys and signatures are taken from
- * https://httpwg.org/http-extensions/draft-ietf-httpbis-message-signatures.html#name-signature-parameters
- */
-class SignerSuite extends CatsEffectSuite {
-
-	java.security.Security.addProvider(new org.bouncycastle.jce.provider.BouncyCastleProvider)
-
-
-	def testSigner[F[_] : Signer : Verifier : FlatMap](
-	  sigTest: SignatureTest
-	)(implicit ct: ClassTag[F[_]]): Unit = {
-		def privKey: PrivateKeySpec[_] = sigTest.privateKeySpec.get
-		def pubKey: PublicKeySpec[_] = sigTest.pubKeySpec.get
-
-		test(s"preconditions for ${sigTest.description} using ${sigTest.alg} with ${ct.runtimeClass.getSimpleName()}") {
-			assert(sigTest.privateKeySpec.isSuccess)
-			assert(sigTest.pubKeySpec.isSuccess)
-		}
-
-		val signature: F[ByteVector] = 	{
-			val bytes: ByteVector = ByteVector.encodeAscii(sigTest.text).toOption.get
-			Signer[F].sign(privKey, sigTest.alg)(bytes)
-		}
-
-		test(s"signature verification with public key for ${sigTest.description}") {
-			val headersVec = ByteVector.encodeAscii(sigTest.text).toOption.get //because these are headers!
-			for {
-				signedTxt <- signature
-				b <- Verifier[F].verify(pubKey, sigTest.alg)(headersVec, signedTxt)
-			} yield {
-				println(s"verified '${sigTest.description}' signature")
-				assertEquals(b, true,
-					s"expected verify(>>${sigTest.text}<<, >>$signedTxt<<)=true)"
-				)
-			}
-		}
-
-		test(s"test ${sigTest.description} against expected value"){
-		   signature.map { signed =>
-				assertEquals(
-					signed.toBase64(Alphabets.Base64), sigTest.sig,
-					s"inputStr was >>${sigTest.text}<<"
-				)
-			}
-		}
-	}
-
-	if (BuildInfo.runtime == "JVM") {
-		SigningHttpMessages.signatureTests.map { sigTest =>
-			testSigner[SyncIO](sigTest)
-		}
-	}
-}
 
 /**
  * Examples taken from Signing HTTP Messages RFC draft
+ *
  * @see https://httpwg.org/http-extensions/draft-ietf-httpbis-message-signatures.html
  */
-object SigningHttpMessages {
+class SigningHttpMessages(pem: util.PEMUtils) {
 
 	case class SignatureTest(
 	  text: SigningString,  sig: Signature,
@@ -109,74 +45,25 @@ object SigningHttpMessages {
 	 * So place them here to make them available in other tests.
 	 **/
 	trait TestKeys {
-		def privateKey: PrivateKeyPEM
-		def publicKey: PublicKeyPEM
-		def privateKeyAlg: PrivateKeyAlg
-		def publicKeyAlg: PKA
-
-		lazy val privateKeySpec: Try[PrivateKeySpec[_]] = getPrivateKeyFromPEM(privateKey).map( pk =>
-			PrivateKeySpec(ByteVector.view(pk.getEncoded),privateKeyAlg)
-		)
-
-		lazy val publicKeySpec: Try[PublicKeySpec[_]] = getPublicKeyFromPEM(publicKey).map( pk =>
-			PublicKeySpec(ByteVector.view(pk.getEncoded),publicKeyAlg)
-		)
-
 		// the keys in the Signing HTTP messages Spec are PEM encoded.
 		// One could transform the keys from PKCS#1 to PKCS#8 using
 		// openssl pkcs8 -topk8 -inform PEM -in spec.private.pem -out private.pem -nocrypt
 		// see https://stackoverflow.com/questions/6559272/algid-parse-error-not-a-sequence
 		// but then it would not be easy to compare the keys used here with those in the
-		// spec when debugging the tests.
+		// spec when debugging the tests, and it would make it more difficult to send in
+		// feedback to the IETF HttpBis WG.
 
-		import org.bouncycastle.asn1.pkcs.PrivateKeyInfo
-		import org.bouncycastle.openssl.jcajce.JcaPEMKeyConverter
-		import org.bouncycastle.openssl.{PEMKeyPair, PEMParser}
+		def privateKey: PrivateKeyPEM
 
-		import java.io.IOException
+		def publicKey: PublicKeyPEM
 
-		@throws[IOException]
-		def getPrivateKeyFromPEM(pemStr: String): Try[java.security.PrivateKey] =
-			Try {
-				val pem = new PEMParser(new java.io.StringReader(pemStr))
-				val jcaPEMKeyConverter = new JcaPEMKeyConverter
-				val pemContent = pem.readObject
-				if (pemContent.isInstanceOf[PEMKeyPair]) {
-					val pemKeyPair = pemContent.asInstanceOf[PEMKeyPair]
-					val keyPair = jcaPEMKeyConverter.getKeyPair(pemKeyPair)
-					keyPair.getPrivate
-				}
-				else if (pemContent.isInstanceOf[PrivateKeyInfo]) {
-					val privateKeyInfo = pemContent.asInstanceOf[PrivateKeyInfo]
-					jcaPEMKeyConverter.getPrivateKey(privateKeyInfo)
-				}
-				else throw new IllegalArgumentException("Unsupported private key format '" + pemContent.getClass.getSimpleName + '"')
-			}
+		def privateKeyAlg: PrivateKeyAlg
 
-		import org.bouncycastle.asn1.x509.SubjectPublicKeyInfo
-		import org.bouncycastle.cert.X509CertificateHolder
+		def publicKeyAlg: PKA
 
-		def getPublicKeyFromPEM(publicKeyPem: PublicKeyPEM): Try[security.PublicKey] =
-			Try {
-				val pem = new PEMParser(new StringReader(publicKeyPem))
-				val jcaPEMKeyConverter = new JcaPEMKeyConverter
-				val pemContent = pem.readObject
-				if (pemContent.isInstanceOf[PEMKeyPair]) {
-					val pemKeyPair = pemContent.asInstanceOf[PEMKeyPair]
-					val keyPair = jcaPEMKeyConverter.getKeyPair(pemKeyPair)
-					keyPair.getPublic
-				}
-				else if (pemContent.isInstanceOf[SubjectPublicKeyInfo]) {
-					val keyInfo = pemContent.asInstanceOf[SubjectPublicKeyInfo]
-					jcaPEMKeyConverter.getPublicKey(keyInfo)
-				}
-				else if (pemContent.isInstanceOf[X509CertificateHolder]) {
-					val cert = pemContent.asInstanceOf[X509CertificateHolder]
-					jcaPEMKeyConverter.getPublicKey(cert.getSubjectPublicKeyInfo)
-				}
-				else throw new IllegalArgumentException("Unsupported public key format '" + pemContent.getClass.getSimpleName + '"')
-			}
+		lazy val privateKeySpec: Try[PrivateKeySpec[_]] = pem.getPrivateKeyFromPEM(privateKey)
 
+		lazy val publicKeySpec: Try[PublicKeySpec[_]] = pem.getPublicKeyFromPEM(publicKey)
 	}
 
 	trait SignatureExample {
@@ -228,12 +115,12 @@ object SigningHttpMessages {
 			  |  ;keyid="test-key-rsa-pss";alg="rsa-pss-sha512"""".rfc8792single
 
 		override val signature: Signature =
-		"""HWP69ZNiom9Obu1KIdqPPcu/C1a5ZUMBbqS/xwJECV8bhIQVmE\
-		  |AAAzz8LQPvtP1iFSxxluDO1KE9b8L+O64LEOvhwYdDctV5+E39Jy1eJiD7nYREBgx\
-		  |TpdUfzTO+Trath0vZdTylFlxK4H3l3s/cuFhnOCxmFYgEa+cw+StBRgY1JtafSFwN\
-		  |cZgLxVwialuH5VnqJS4JN8PHD91XLfkjMscTo4jmVMpFd3iLVe0hqVFl7MDt6TMkw\
-		  |IyVFnEZ7B/VIQofdShO+C/7MuupCSLVjQz5xA+Zs6Hw+W9ESD/6BuGs6LF1TcKLxW\
-		  |+5K+2zvDY/Cia34HNpRW5io7Iv9/b7iQ==""".rfc8792single
+			"""HWP69ZNiom9Obu1KIdqPPcu/C1a5ZUMBbqS/xwJECV8bhIQVmE\
+			  |AAAzz8LQPvtP1iFSxxluDO1KE9b8L+O64LEOvhwYdDctV5+E39Jy1eJiD7nYREBgx\
+			  |TpdUfzTO+Trath0vZdTylFlxK4H3l3s/cuFhnOCxmFYgEa+cw+StBRgY1JtafSFwN\
+			  |cZgLxVwialuH5VnqJS4JN8PHD91XLfkjMscTo4jmVMpFd3iLVe0hqVFl7MDt6TMkw\
+			  |IyVFnEZ7B/VIQofdShO+C/7MuupCSLVjQz5xA+Zs6Hw+W9ESD/6BuGs6LF1TcKLxW\
+			  |+5K+2zvDY/Cia34HNpRW5io7Iv9/b7iQ==""".rfc8792single
 
 		override val test: SignatureTest = sigtest(
 			`test-key-rsa-pss`, PKA.`rsa-pss-sha512`

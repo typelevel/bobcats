@@ -93,6 +93,16 @@ sealed trait PKA extends Algorithm {
 }
 
 object PKA {
+  def fromStringJava(name: String): Option[PKA] =
+    name match {
+      case "RSA" => Some(RSA)
+      case "ECDSA" => Some(EC)
+      case _ =>
+          println(s"PKA.fromStringJava($name)")
+          None
+    }
+
+
   sealed trait Signature extends Algorithm with SignaturePlatform
   trait RSA
   trait EC
@@ -145,12 +155,28 @@ object PKA {
 sealed trait PrivateKeyAlg extends Algorithm
 
 object PrivateKeyAlg {
+  def fromStringJava(name: String): Option[PrivateKeyAlg] =
+    name match {
+      case "RSA" => Some(RSA)
+      case "ECDSA" => Some(EC)
+      case "RSASSA-PSS" => Some(`RSASSA-PSS`)
+      case _ =>
+        println(s"PrivateKeyAlg.fromStringJava($name)")
+        None
+    }
 
   //not sure what a good name for this is, or if that is the right object, should it perhaps just be RSA?
   //like the matching private key?
   //it may be good for Public/Private keys to have them defined clearly as pairs, so as to
   //help developers find the matching piece via the type system.
   case object RSA extends PrivateKeyAlg {
+    override private[bobcats] def toStringJava = "RSA"
+    override private[bobcats] def toStringNodeJS = ???
+    override private[bobcats] def toStringWebCrypto = ???
+  }
+
+  //todo: Is this really different from RSA PrivateKey?
+  case object `RSASSA-PSS` extends PrivateKeyAlg {
     override private[bobcats] def toStringJava = "RSASSA-PSS"
     override private[bobcats] def toStringNodeJS = ???
     override private[bobcats] def toStringWebCrypto = ???
