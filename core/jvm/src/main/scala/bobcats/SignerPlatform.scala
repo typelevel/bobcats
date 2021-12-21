@@ -31,7 +31,7 @@ private[bobcats] trait SignerCompanionPlatform {
 			//one would really want a type that pairs the PKA and Sig, so as not to leave impossible combinations open
 			override def sign( // it is not clear that adding [A <: PrivateKeyAlg, S <: PKA.Signature] helps
 			  spec: PrivateKeySpec[_],
-			  sigType: PKA.Signature,
+			  sigType: PKA.Signature)(
 			  data: ByteVector
 			): F[ByteVector] =
 				F.catchNonFatal{

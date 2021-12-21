@@ -21,8 +21,13 @@ import scodec.bits.ByteVector
 /** Signer must be created with a PrivateKey and a Signature Algorithm */
 sealed trait Signer[F[_]] extends SignerPlatform[F] {
 	//todo: the type of the signature should dependent on the private key type
+	/** Given a Private Key specification and a Signature type,
+	 * return a function from Byte Vector to signatures
+	 **/
 	def sign( //[A<:PrivateKeyAlg, S<: PKA.Signature] <- these make coding difficult for no benefit
-	  spec: PrivateKeySpec[_], sig: PKA.Signature, data: ByteVector
+	  spec: PrivateKeySpec[_], sig: PKA.Signature
+	)(
+	  data: ByteVector
 	): F[ByteVector]
 }
 

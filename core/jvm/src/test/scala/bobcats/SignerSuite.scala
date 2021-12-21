@@ -18,7 +18,7 @@ package bobcats
 
 import bobcats.SigningHttpMessages.SignatureTest
 import bobcats.util.StringUtils._
-import cats.{FlatMap, Functor}
+import cats.FlatMap
 import cats.effect.SyncIO
 import cats.syntax.all._
 import munit.CatsEffectSuite
@@ -39,7 +39,7 @@ class SignerSuite extends CatsEffectSuite {
 	java.security.Security.addProvider(new org.bouncycastle.jce.provider.BouncyCastleProvider)
 
 
-	def testSigner[F[_] : Signer : Verifier : Functor: FlatMap](
+	def testSigner[F[_] : Signer : Verifier : FlatMap](
 	  sigTest: SignatureTest
 	)(implicit ct: ClassTag[F[_]]): Unit = {
 		def privKey: PrivateKeySpec[_] = sigTest.privateKeySpec.get
@@ -52,7 +52,7 @@ class SignerSuite extends CatsEffectSuite {
 
 		val signature: F[ByteVector] = 	{
 			val bytes: ByteVector = ByteVector.encodeAscii(sigTest.text).toOption.get
-			Signer[F].sign(privKey, sigTest.alg, bytes)
+			Signer[F].sign(privKey, sigTest.alg)(bytes)
 		}
 
 		test(s"signature verification with public key for ${sigTest.description}") {
@@ -60,9 +60,12 @@ class SignerSuite extends CatsEffectSuite {
 			for {
 				signedTxt <- signature
 				b <- Verifier[F].verify(pubKey, sigTest.alg)(headersVec, signedTxt)
-			} yield assertEquals(b, true,
+			} yield {
+				println(s"verified '${sigTest.description}' signature")
+				assertEquals(b, true,
 					s"expected verify(>>${sigTest.text}<<, >>$signedTxt<<)=true)"
 				)
+			}
 		}
 
 		test(s"test ${sigTest.description} against expected value"){
@@ -153,30 +156,27 @@ object SigningHttpMessages {
 		import org.bouncycastle.asn1.x509.SubjectPublicKeyInfo
 		import org.bouncycastle.cert.X509CertificateHolder
 
-		@throws[IOException]
-		def getPublicKeyFromPEM(publicKeyPem: PublicKeyPEM): Try[security.PublicKey] = {
+		def getPublicKeyFromPEM(publicKeyPem: PublicKeyPEM): Try[security.PublicKey] =
 			Try {
 				val pem = new PEMParser(new StringReader(publicKeyPem))
-				try {
-					val jcaPEMKeyConverter = new JcaPEMKeyConverter
-					val pemContent = pem.readObject
-					if (pemContent.isInstanceOf[PEMKeyPair]) {
-						val pemKeyPair = pemContent.asInstanceOf[PEMKeyPair]
-						val keyPair = jcaPEMKeyConverter.getKeyPair(pemKeyPair)
-						keyPair.getPublic
-					}
-					else if (pemContent.isInstanceOf[SubjectPublicKeyInfo]) {
-						val keyInfo = pemContent.asInstanceOf[SubjectPublicKeyInfo]
-						jcaPEMKeyConverter.getPublicKey(keyInfo)
-					}
-					else if (pemContent.isInstanceOf[X509CertificateHolder]) {
-						val cert = pemContent.asInstanceOf[X509CertificateHolder]
-						jcaPEMKeyConverter.getPublicKey(cert.getSubjectPublicKeyInfo)
-					}
-					else throw new IllegalArgumentException("Unsupported public key format '" + pemContent.getClass.getSimpleName + '"')
+				val jcaPEMKeyConverter = new JcaPEMKeyConverter
+				val pemContent = pem.readObject
+				if (pemContent.isInstanceOf[PEMKeyPair]) {
+					val pemKeyPair = pemContent.asInstanceOf[PEMKeyPair]
+					val keyPair = jcaPEMKeyConverter.getKeyPair(pemKeyPair)
+					keyPair.getPublic
 				}
+				else if (pemContent.isInstanceOf[SubjectPublicKeyInfo]) {
+					val keyInfo = pemContent.asInstanceOf[SubjectPublicKeyInfo]
+					jcaPEMKeyConverter.getPublicKey(keyInfo)
+				}
+				else if (pemContent.isInstanceOf[X509CertificateHolder]) {
+					val cert = pemContent.asInstanceOf[X509CertificateHolder]
+					jcaPEMKeyConverter.getPublicKey(cert.getSubjectPublicKeyInfo)
+				}
+				else throw new IllegalArgumentException("Unsupported public key format '" + pemContent.getClass.getSimpleName + '"')
 			}
-		}
+
 	}
 
 	trait SignatureExample {
