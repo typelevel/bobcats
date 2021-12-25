@@ -16,7 +16,8 @@
 
 package bobcats
 
-import cats.FlatMap
+import bobcats.util.PEMUtils
+import cats.MonadError
 import cats.effect.SyncIO
 import cats.syntax.all._
 import munit.CatsEffectSuite
@@ -30,51 +31,51 @@ import scala.reflect.ClassTag
  *  other test examples from other specs to be added.
  */
 trait SignerSuite extends CatsEffectSuite {
-	val tests: SigningHttpMessages
-	import tests._
+	type MonadErr[T[_]] = MonadError[T, Throwable]
 
-	def testSigner[F[_] : Signer : Verifier : FlatMap](
-	  sigTest: SignatureTest
+	val tests: Seq[SignatureExample]
+
+	implicit def signer: Signer[cats.effect.SyncIO]
+	implicit def verifier: Verifier[cats.effect.SyncIO]
+	implicit def pemutils: PEMUtils[cats.effect.SyncIO]
+
+
+	def testSigner[F[_] : Signer : Verifier : MonadErr](
+	  sigTest: SignatureExample, pubKey: PublicKeySpec[_], privKey: PrivateKeySpec[_]
 	)(implicit ct: ClassTag[F[_]]): Unit = {
-		def privKey: PrivateKeySpec[_] = sigTest.privateKeySpec.get
-		def pubKey: PublicKeySpec[_] = sigTest.pubKeySpec.get
 
-		test(s"preconditions for ${sigTest.description} using ${sigTest.alg} with ${ct.runtimeClass.getSimpleName()}") {
-			assert(sigTest.privateKeySpec.isSuccess)
-			assert(sigTest.pubKeySpec.isSuccess)
-		}
-
-		val signature: F[ByteVector] = 	{
-			val bytes: ByteVector = ByteVector.encodeAscii(sigTest.text).toOption.get
-			Signer[F].sign(privKey, sigTest.alg)(bytes)
+		val signature: F[ByteVector] = {
+			val bytes: ByteVector = ByteVector.encodeAscii(sigTest.sigtext).toOption.get
+			Signer[F].sign(privKey, sigTest.signatureAlg)(bytes)
 		}
 
 		test(s"signature verification with public key for ${sigTest.description}") {
-			val headersVec = ByteVector.encodeAscii(sigTest.text).toOption.get //because these are headers!
+			val headersVec = ByteVector.encodeAscii(sigTest.sigtext).toOption.get //because these are headers!
 			for {
 				signedTxt <- signature
-				b <- Verifier[F].verify(pubKey, sigTest.alg)(headersVec, signedTxt)
+				b <- Verifier[F].verify(pubKey, sigTest.signatureAlg)(headersVec, signedTxt)
 			} yield {
-				println(s"verified '${sigTest.description}' signature")
 				assertEquals(b, true,
-					s"expected verify(>>${sigTest.text}<<, >>$signedTxt<<)=true)"
+					s"expected verify(>>${sigTest.sigtext}<<, >>$signedTxt<<)=true)"
 				)
 			}
 		}
 
-		test(s"test ${sigTest.description} against expected value"){
-		   signature.map { signed =>
+		test(s"test ${sigTest.description} against expected value") {
+			signature.map { signed =>
 				assertEquals(
-					signed.toBase64(Alphabets.Base64), sigTest.sig,
-					s"inputStr was >>${sigTest.text}<<"
+					signed.toBase64(Alphabets.Base64), sigTest.signature,
+					s"inputStr was >>${sigTest.sigtext}<<"
 				)
 			}
 		}
 	}
 
 	if (BuildInfo.runtime == "JVM") {
-		tests.signatureTests.map { sigTest =>
-			testSigner[SyncIO](sigTest)
+		tests.foreach { sigTest =>
+			val pub: PublicKeySpec[_] = pemutils.getPublicKeyFromPEM(sigTest.keys.publicKey).unsafeRunSync()
+			val priv: PrivateKeySpec[_] = pemutils.getPrivateKeyFromPEM(sigTest.keys.privateKey).unsafeRunSync()
+			testSigner[SyncIO](sigTest, pub, priv)
 		}
 	}
 }

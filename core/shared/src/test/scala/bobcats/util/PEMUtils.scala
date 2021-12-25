@@ -18,11 +18,7 @@ package bobcats.util
 
 import bobcats.{PrivateKeySpec, PublicKeySpec}
 
-import scala.util.Try
-
-trait PEMUtils {
-	//todo
-	//def pemToKey(pemStr: String): Try[Either[PrivateKeySpec[_],PublicKeySpec[_]]]
-	def getPrivateKeyFromPEM(pemStr: String): Try[PrivateKeySpec[_]]
-	def getPublicKeyFromPEM(pemStr: String): Try[PublicKeySpec[_]]
+trait PEMUtils[F[_]] {
+	def getPrivateKeyFromPEM(pemStr: String): F[PrivateKeySpec[_]]
+	def getPublicKeyFromPEM(pemStr: String): F[PublicKeySpec[_]]
 }

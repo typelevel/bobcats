@@ -16,10 +16,6 @@
 
 package bobcats
 
-private[bobcats] trait KeyPlatform
-private[bobcats] trait PublicKeyPlatform
-private[bobcats] trait PrivateKeyPlatform
-private[bobcats] trait SecretKeyPlatform
-private[bobcats] trait SecretKeySpecPlatform[+A <: Algorithm]
-private[bobcats] trait PrivateKeySpecPlatform[+A <: Algorithm]
-private[bobcats] trait PublicKeySpecPlatform[+A <: Algorithm]
+private[bobcats] trait VerifierPlatform[F[_]]
+
+private[bobcats] trait VerifierCompanionPlatform

@@ -17,74 +17,25 @@
 package bobcats
 
 import bobcats.util.StringUtils.StringW
-
-import scala.util.Try
+import bobcats.SignatureExample._
 
 /**
  * Examples taken from Signing HTTP Messages RFC draft
  *
  * @see https://httpwg.org/http-extensions/draft-ietf-httpbis-message-signatures.html
  */
-class SigningHttpMessages(pem: util.PEMUtils) {
+object SigningHttpMessages extends SignatureExamples {
 
-	case class SignatureTest(
-	  text: SigningString,  sig: Signature,
-	  privateKeySpec: Try[PrivateKeySpec[_]], alg: PKA.Signature,
-	  pubKeySpec: Try[PublicKeySpec[_]],
-	  description: String
-	)
-
-	type SigningString = String
-	type Signature = String
-	type PrivateKeyPEM = String
-	type PublicKeyPEM = String
-
-	/**
-	 * Public and Private keys from [[https://www.ietf.org/archive/id/draft-ietf-httpbis-message-signatures-04.html#section-b.1.1 Message Signatures §Appendix B.1.1]]
-	 * Obviously, these should not be used other than for test cases!
-	 * So place them here to make them available in other tests.
-	 **/
-	trait TestKeys {
-		// the keys in the Signing HTTP messages Spec are PEM encoded.
-		// One could transform the keys from PKCS#1 to PKCS#8 using
-		// openssl pkcs8 -topk8 -inform PEM -in spec.private.pem -out private.pem -nocrypt
-		// see https://stackoverflow.com/questions/6559272/algid-parse-error-not-a-sequence
-		// but then it would not be easy to compare the keys used here with those in the
-		// spec when debugging the tests, and it would make it more difficult to send in
-		// feedback to the IETF HttpBis WG.
-
-		def privateKey: PrivateKeyPEM
-
-		def publicKey: PublicKeyPEM
-
-		def privateKeyAlg: PrivateKeyAlg
-
-		def publicKeyAlg: PKA
-
-		lazy val privateKeySpec: Try[PrivateKeySpec[_]] = pem.getPrivateKeyFromPEM(privateKey)
-
-		lazy val publicKeySpec: Try[PublicKeySpec[_]] = pem.getPublicKeyFromPEM(publicKey)
-	}
-
-	trait SignatureExample {
-		val description: String
-		val sigtext: SigningString
-		val signature: Signature
-		val test: SignatureTest
-		def sigtest(keys: TestKeys, sig: PKA.Signature): SignatureTest =
-			SignatureTest(sigtext, signature, keys.privateKeySpec, sig, keys.publicKeySpec, description)
-	}
-
-	lazy val signatureTests: Seq[SignatureTest] = Seq(
+	def signatureExamples: Seq[SignatureExample] = Seq(
 		`§3.1_Signature`,
 		`§4.3_Example`,
 		`Appendix_B.2.1`,
 		`Appendix_B.2.4`
-	).map(_.test)
+	)
 
-	object `§3.1_Signature` extends SignatureExample {
-		val description = "§3.1_Signature example"
-		val sigtext: SigningString =
+	object `§3.1_Signature` extends SignatureExample(
+		description = "§3.1_Signature example",
+		sigtext =
 			""""@method": GET
 			  |"@path": /foo
 			  |"@authority": example.org
@@ -93,64 +44,55 @@ class SigningHttpMessages(pem: util.PEMUtils) {
 			  |"x-example": Example header with some whitespace.
 			  |"@signature-params": ("@method" "@path" "@authority" \
 			  |  "cache-control" "x-empty-header" "x-example");created=1618884475\
-			  |  ;keyid="test-key-rsa-pss"""".rfc8792single
-
-		val signature: Signature =
+			  |  ;keyid="test-key-rsa-pss"""".rfc8792single,
+		signature =
 			"""P0wLUszWQjoi54udOtydf9IWTfNhy+r53jGFj9XZuP4uKwxyJo1RSHi+oEF1FuX6O29\
 			  |d+lbxwwBao1BAgadijW+7O/PyezlTnqAOVPWx9GlyntiCiHzC87qmSQjvu1CFyFuWSj\
 			  |dGa3qLYYlNm7pVaJFalQiKWnUaqfT4LyttaXyoyZW84jS8gyarxAiWI97mPXU+OVM64\
 			  |+HVBHmnEsS+lTeIsEQo36T3NFf2CujWARPQg53r58RmpZ+J9eKR2CD6IJQvacn5A4Ix\
 			  |5BUAVGqlyp8JYm+S/CWJi31PNUjRRCusCVRj05NrxABNFv3r5S9IXf2fYJK+eyW4AiG\
-			  |VMvMcOg==""".rfc8792single
+			  |VMvMcOg==""".rfc8792single,
+		keys =	`test-key-rsa-pss`,
+		signatureAlg = PKA.`rsa-pss-sha512`
+	)
 
-		lazy val test: SignatureTest = sigtest(
-			`test-key-rsa-pss`, PKA.`rsa-pss-sha512`
-		)
-	}
-
-	object `Appendix_B.2.1` extends SignatureExample {
-		val description = "Appendix_B.2.1 minimal example"
-		override val sigtext: SigningString =
+	object `Appendix_B.2.1` extends SignatureExample(
+		description = "Appendix_B.2.1 minimal example",
+		sigtext =
 			""""@signature-params": ();created=1618884475\
-			  |  ;keyid="test-key-rsa-pss";alg="rsa-pss-sha512"""".rfc8792single
-
-		override val signature: Signature =
+			  |  ;keyid="test-key-rsa-pss";alg="rsa-pss-sha512"""".rfc8792single,
+		signature =
 			"""HWP69ZNiom9Obu1KIdqPPcu/C1a5ZUMBbqS/xwJECV8bhIQVmE\
 			  |AAAzz8LQPvtP1iFSxxluDO1KE9b8L+O64LEOvhwYdDctV5+E39Jy1eJiD7nYREBgx\
 			  |TpdUfzTO+Trath0vZdTylFlxK4H3l3s/cuFhnOCxmFYgEa+cw+StBRgY1JtafSFwN\
 			  |cZgLxVwialuH5VnqJS4JN8PHD91XLfkjMscTo4jmVMpFd3iLVe0hqVFl7MDt6TMkw\
 			  |IyVFnEZ7B/VIQofdShO+C/7MuupCSLVjQz5xA+Zs6Hw+W9ESD/6BuGs6LF1TcKLxW\
-			  |+5K+2zvDY/Cia34HNpRW5io7Iv9/b7iQ==""".rfc8792single
+			  |+5K+2zvDY/Cia34HNpRW5io7Iv9/b7iQ==""".rfc8792single,
+		keys = `test-key-rsa-pss`,
+		signatureAlg = PKA.`rsa-pss-sha512`
+	)
 
-		override val test: SignatureTest = sigtest(
-			`test-key-rsa-pss`, PKA.`rsa-pss-sha512`
-		)
-	}
-
-	object `Appendix_B.2.2` extends SignatureExample {
-		val description = "Appendix_B.2.2 selective header example"
-		override val sigtext: SigningString =
+	object `Appendix_B.2.2` extends SignatureExample(
+		description = "Appendix_B.2.2 selective header example",
+		sigtext =
 			""""@authority": example.com
 			  |"content-type": application/json
 			  |"@signature-params": ("@authority" "content-type")\
-			  |  ;created=1618884475;keyid="test-key-rsa-pss"""".rfc8792single
-
-		override val signature: Signature =
+			  |  ;created=1618884475;keyid="test-key-rsa-pss"""".rfc8792single,
+		signature =
 			"""ik+OtGmM/kFqENDf9Plm8AmPtqtC7C9a+zYSaxr58b/E6h81gh\
 			  |  JS3PcH+m1asiMp8yvccnO/RfaexnqanVB3C72WRNZN7skPTJmUVmoIeqZncdP2mlf\
 			  |  xlLP6UbkrgYsk91NS6nwkKC6RRgLhBFqzP42oq8D2336OiQPDAo/04SxZt4Wx9nDG\
 			  |  uy2SfZJUhsJqZyEWRk4204x7YEB3VxDAAlVgGt8ewilWbIKKTOKp3ymUeQIwptqYw\
 			  |  v0l8mN404PPzRBTpB7+HpClyK4CNp+SVv46+6sHMfJU4taz10s/NoYRmYCGXyadzY\
-			  |  YDj0BYnFdERB6NblI/AOWFGl5Axhhmjg==""".rfc8792single
+			  |  YDj0BYnFdERB6NblI/AOWFGl5Axhhmjg==""".rfc8792single,
+		keys = `test-key-rsa-pss`,
+		signatureAlg = PKA.`rsa-pss-sha512`
+	)
 
-		override val test: SignatureTest = sigtest(
-			`test-key-rsa-pss`, PKA.`rsa-pss-sha512`
-		)
-	}
-
-	object `Appendix_B.2.3` extends SignatureExample {
-		val description = "Appendix_B.2.3 full coverage example"
-		override val sigtext: SigningString =
+	object `Appendix_B.2.3` extends SignatureExample(
+		description = "Appendix_B.2.3 full coverage example",
+		sigtext =
 			""""date": Tue, 20 Apr 2021 02:07:56 GMT
 			  |"@method": POST
 			  |"@path": /foo
@@ -161,43 +103,38 @@ class SigningHttpMessages(pem: util.PEMUtils) {
 			  |"content-length": 18
 			  |"@signature-params": ("date" "@method" "@path" "@query" \
 			  |  "@authority" "content-type" "digest" "content-length")\
-			  |  ;created=1618884475;keyid="test-key-rsa-pss"""".rfc8792single
-
-		override val signature: Signature =
+			  |  ;created=1618884475;keyid="test-key-rsa-pss"""".rfc8792single,
+		signature =
 			"""JuJnJMFGD4HMysAGsfOY6N5ZTZUknsQUdClNG51VezDgPUOW03\
 			  |  QMe74vbIdndKwW1BBrHOHR3NzKGYZJ7X3ur23FMCdANe4VmKb3Rc1Q/5YxOO8p7Ko\
 			  |  yfVa4uUcMk5jB9KAn1M1MbgBnqwZkRWsbv8ocCqrnD85Kavr73lx51k1/gU8w673W\
 			  |  T/oBtxPtAn1eFjUyIKyA+XD7kYph82I+ahvm0pSgDPagu917SlqUjeaQaNnlZzO03\
 			  |  Iy1RZ5XpgbNeDLCqSLuZFVID80EohC2CQ1cL5svjslrlCNstd2JCLmhjL7xV3NYXe\
-			  |  rLim4bqUQGRgDwNJRnqobpS6C1NBns/Q==""".rfc8792single
+			  |  rLim4bqUQGRgDwNJRnqobpS6C1NBns/Q==""".rfc8792single,
+		keys = `test-key-rsa-pss`,
+		signatureAlg = PKA.`rsa-pss-sha512`
+	)
 
-		override val test: SignatureTest = sigtest(
-			`test-key-rsa-pss`, PKA.`rsa-pss-sha512`
-		)
-	}
-
-	object `Appendix_B.2.4` extends SignatureExample {
-		val description = "Appendix_B.2.4 Elliptic Curve example"
-		override val sigtext: SigningString =
+	object `Appendix_B.2.4` extends SignatureExample(
+		description = "Appendix_B.2.4 Elliptic Curve example",
+		sigtext =
 			""""content-type": application/json
 			  |"digest": SHA-256=X48E9qOokqqrvdts8nOJRJN3OWDUoyWxBf7kbu9DBPE=
 			  |"content-length": 18
 			  |"@signature-params": ("content-type" "digest" "content-length")\
-			  |  ;created=1618884475;keyid="test-key-ecc-p256"""".rfc8792single
-
-		override val signature: Signature =
+			  |  ;created=1618884475;keyid="test-key-ecc-p256"""".rfc8792single,
+		signature =
 			"""n8RKXkj0iseWDmC6PNSQ1GX2R9650v+lhbb6rTGoSrSSx18zmn\
-			  |  6fPOtBx48/WffYLO0n1RHHf9scvNGAgGq52Q==""".rfc8792single
-
-		override val test: SignatureTest = sigtest(
-			`test-key-ecc-p256`, PKA.`ecdsa-p256-sha256`
-		)
-	}
+			  |  6fPOtBx48/WffYLO0n1RHHf9scvNGAgGq52Q==""".rfc8792single,
+		keys = `test-key-ecc-p256`,
+		signatureAlg = PKA.`ecdsa-p256-sha256`
+	)
 
 
-	object `§4.3_Example` extends SignatureExample {
-		val description = "§4.3 Example"
-		override val sigtext: SigningString =
+
+	object `§4.3_Example` extends SignatureExample(
+		description = "§4.3 Example",
+		sigtext =
 			""""signature";key="sig1": :P0wLUszWQjoi54udOtydf9IWTfNhy+r53jGFj9XZuP\
 			  |  4uKwxyJo1RSHi+oEF1FuX6O29d+lbxwwBao1BAgadijW+7O/PyezlTnqAOVPWx9Gl\
 			  |  yntiCiHzC87qmSQjvu1CFyFuWSjdGa3qLYYlNm7pVaJFalQiKWnUaqfT4LyttaXyo\
@@ -206,20 +143,18 @@ class SigningHttpMessages(pem: util.PEMUtils) {
 			  |  Rj05NrxABNFv3r5S9IXf2fYJK+eyW4AiGVMvMcOg==:
 			  |"forwarded": for=192.0.2.123
 			  |"@signature-params": ("signature";key="sig1" "forwarded")\
-			  |  ;created=1618884480;keyid="test-key-rsa";alg="rsa-v1_5-sha256"""".rfc8792single
-
-		override val signature: Signature =
+			  |  ;created=1618884480;keyid="test-key-rsa";alg="rsa-v1_5-sha256"""".rfc8792single,
+		signature =
 			"""cjGvZwbsq9JwexP9TIvdLiivxqLINwp/ybAc19KOSQuLvtmMt3EnZxNiE+797dXK2cj\
 			  |PPUFqoZxO8WWx1SnKhAU9SiXBr99NTXRmA1qGBjqus/1Yxwr8keB8xzFt4inv3J3zP0\
 			  |k6TlLkRJstkVnNjuhRIUA/ZQCo8jDYAl4zWJJjppy6Gd1XSg03iUa0sju1yj6rcKbMA\
 			  |BBuzhUz4G0u1hZkIGbQprCnk/FOsqZHpwaWvY8P3hmcDHkNaavcokmq+3EBDCQTzgwL\
 			  |qfDmV0vLCXtDda6CNO2Zyum/pMGboCnQn/VkQ+j8kSydKoFg6EbVuGbrQijth6I0dDX\
-			  |2/HYcJg==""".rfc8792single
+			  |2/HYcJg==""".rfc8792single,
+		keys= `test-key-rsa`,
+		signatureAlg = PKA.`rsa-v1_5-sha256`
+	)
 
-		override val test: SignatureTest = sigtest(
-			`test-key-rsa`, PKA.`rsa-v1_5-sha256`
-		)
-	}
 
 	// 2048-bit RSA public and private key pair,
 	// given in https://httpwg.org/http-extensions/draft-ietf-httpbis-message-signatures.html#appendix-B.1.1
@@ -338,7 +273,5 @@ class SigningHttpMessages(pem: util.PEMUtils) {
 
 		override def publicKeyAlg: PKA = PKA.EC
 	}
-
-
 
 }

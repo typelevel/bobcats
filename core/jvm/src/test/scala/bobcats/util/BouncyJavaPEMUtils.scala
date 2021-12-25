@@ -17,6 +17,7 @@
 package bobcats.util
 
 import bobcats.{PKA, PrivateKeyAlg, PrivateKeySpec, PublicKeySpec, util}
+import cats.MonadError
 import org.bouncycastle.asn1.pkcs.PrivateKeyInfo
 import org.bouncycastle.asn1.x509.SubjectPublicKeyInfo
 import org.bouncycastle.cert.X509CertificateHolder
@@ -26,64 +27,74 @@ import scodec.bits.ByteVector
 
 import java.io.StringReader
 import java.security
-import scala.util.Try
 
+import cats.syntax.all._
 
-object BouncyJavaPEMUtils extends util.PEMUtils {
+/**
+ * BouncyCastle supports PKCS1 formatted PEM files.
+ * But there is an answer that does not require Bouncy given here to try out later
+ * https://stackoverflow.com/questions/7216969/getting-rsa-private-key-from-pem-base64-encoded-private-key-file/55339208#55339208
+ * */
+object BouncyJavaPEMUtils {
 	java.security.Security.addProvider(new org.bouncycastle.jce.provider.BouncyCastleProvider)
 
-	override def getPrivateKeyFromPEM(pemStr: String): Try[PrivateKeySpec[_]] =
-		for {
-			privateKey <- PEMtoPrivateKey(pemStr)
-			alg <- PrivateKeyAlg.fromStringJava(privateKey.getAlgorithm).toRight(
-				new Exception(s"could not find bobcats.Algorithm object for ${privateKey.getAlgorithm}")
-			).toTry
-		} yield
-			PrivateKeySpec(ByteVector.view(privateKey.getEncoded), alg)
+	implicit def forMonadError[F[_]](implicit F0: MonadError[F, Throwable]): PEMUtils[F] =
+		new util.PEMUtils[F] {
+			override def getPrivateKeyFromPEM(pemStr: String): F[PrivateKeySpec[_]] =
+				for {
+					privateKey <- PEMtoPrivateKey(pemStr)
+					alg <- F0.fromEither(PrivateKeyAlg.fromStringJava(privateKey.getAlgorithm).toRight(
+						new Exception(s"could not find bobcats.Algorithm object for ${privateKey.getAlgorithm}")
+					))
+				} yield
+					PrivateKeySpec(ByteVector.view(privateKey.getEncoded), alg)
 
-	override def getPublicKeyFromPEM(pemStr: String): Try[PublicKeySpec[_]] =
-		for {
-			publicKey <- PEMToPublicKey(pemStr)
-			alg <- PKA.fromStringJava(publicKey.getAlgorithm).toRight(
-				new Exception(s"could not find bobcats.Algorithm object for ${publicKey.getAlgorithm}")
-			).toTry
-		} yield
-			PublicKeySpec(ByteVector.view(publicKey.getEncoded), alg)
+			override def getPublicKeyFromPEM(pemStr: String): F[PublicKeySpec[_]] =
+				for {
+					publicKey <- PEMToPublicKey(pemStr)
+					alg <- F0.fromEither(PKA.fromStringJava(publicKey.getAlgorithm).toRight(
+						new Exception(s"could not find bobcats.Algorithm object for ${publicKey.getAlgorithm}")
+					))
+				} yield
+					PublicKeySpec(ByteVector.view(publicKey.getEncoded), alg)
 
+			def PEMtoPrivateKey(privateKeyPem: String): F[security.PrivateKey] =
+				F0.catchNonFatal {
+					val pem = new PEMParser(new java.io.StringReader(privateKeyPem))
+					val jcaPEMKeyConverter = new JcaPEMKeyConverter
+					val pemContent = pem.readObject
+					if (pemContent.isInstanceOf[PEMKeyPair]) {
+						val pemKeyPair = pemContent.asInstanceOf[PEMKeyPair]
+						val keyPair = jcaPEMKeyConverter.getKeyPair(pemKeyPair)
+						keyPair.getPrivate
+					}
+					else if (pemContent.isInstanceOf[PrivateKeyInfo]) {
+						val privateKeyInfo = pemContent.asInstanceOf[PrivateKeyInfo]
+						jcaPEMKeyConverter.getPrivateKey(privateKeyInfo)
+					}
+					else throw new IllegalArgumentException("Unsupported private key format '" + pemContent.getClass.getSimpleName + '"')
+				}
 
-	def PEMtoPrivateKey(privateKeyPem: String): Try[security.PrivateKey] = Try {
-		val pem = new PEMParser(new java.io.StringReader(privateKeyPem))
-		val jcaPEMKeyConverter = new JcaPEMKeyConverter
-		val pemContent = pem.readObject
-		if (pemContent.isInstanceOf[PEMKeyPair]) {
-			val pemKeyPair = pemContent.asInstanceOf[PEMKeyPair]
-			val keyPair = jcaPEMKeyConverter.getKeyPair(pemKeyPair)
-			keyPair.getPrivate
+			def PEMToPublicKey(publicKeyPem: String): F[security.PublicKey] =
+				F0.catchNonFatal {
+					val pem = new PEMParser(new StringReader(publicKeyPem))
+					val jcaPEMKeyConverter = new JcaPEMKeyConverter
+					val pemContent = pem.readObject
+					if (pemContent.isInstanceOf[PEMKeyPair]) {
+						val pemKeyPair = pemContent.asInstanceOf[PEMKeyPair]
+						val keyPair = jcaPEMKeyConverter.getKeyPair(pemKeyPair)
+						keyPair.getPublic
+					}
+					else if (pemContent.isInstanceOf[SubjectPublicKeyInfo]) {
+						val keyInfo = pemContent.asInstanceOf[SubjectPublicKeyInfo]
+						jcaPEMKeyConverter.getPublicKey(keyInfo)
+					}
+					else if (pemContent.isInstanceOf[X509CertificateHolder]) {
+						val cert = pemContent.asInstanceOf[X509CertificateHolder]
+						jcaPEMKeyConverter.getPublicKey(cert.getSubjectPublicKeyInfo)
+					}
+					else throw new IllegalArgumentException("Unsupported public key format '" + pemContent.getClass.getSimpleName + '"')
+				}
 		}
-		else if (pemContent.isInstanceOf[PrivateKeyInfo]) {
-			val privateKeyInfo = pemContent.asInstanceOf[PrivateKeyInfo]
-			jcaPEMKeyConverter.getPrivateKey(privateKeyInfo)
-		}
-		else throw new IllegalArgumentException("Unsupported private key format '" + pemContent.getClass.getSimpleName + '"')
-	}
 
-	def PEMToPublicKey(publicKeyPem: String): Try[security.PublicKey] = Try {
-		val pem = new PEMParser(new StringReader(publicKeyPem))
-		val jcaPEMKeyConverter = new JcaPEMKeyConverter
-		val pemContent = pem.readObject
-		if (pemContent.isInstanceOf[PEMKeyPair]) {
-			val pemKeyPair = pemContent.asInstanceOf[PEMKeyPair]
-			val keyPair = jcaPEMKeyConverter.getKeyPair(pemKeyPair)
-			keyPair.getPublic
-		}
-		else if (pemContent.isInstanceOf[SubjectPublicKeyInfo]) {
-			val keyInfo = pemContent.asInstanceOf[SubjectPublicKeyInfo]
-			jcaPEMKeyConverter.getPublicKey(keyInfo)
-		}
-		else if (pemContent.isInstanceOf[X509CertificateHolder]) {
-			val cert = pemContent.asInstanceOf[X509CertificateHolder]
-			jcaPEMKeyConverter.getPublicKey(cert.getSubjectPublicKeyInfo)
-		}
-		else throw new IllegalArgumentException("Unsupported public key format '" + pemContent.getClass.getSimpleName + '"')
-	}
 }

@@ -16,8 +16,12 @@
 
 package bobcats
 
-import bobcats.util.BouncyJavaPEMUtils
+import bobcats.util.{BouncyJavaPEMUtils, PEMUtils}
+import cats.effect.SyncIO
 
 class JavaSignerSuite extends SignerSuite {
-	override lazy val tests: SigningHttpMessages = new SigningHttpMessages(BouncyJavaPEMUtils)
+	override lazy val tests: Seq[SignatureExample] =
+		SigningHttpMessages.signatureExamples
+	override implicit def pemutils: PEMUtils[SyncIO] =
+		BouncyJavaPEMUtils.forMonadError[SyncIO](cats.effect.SyncIO.syncForSyncIO)
 }
