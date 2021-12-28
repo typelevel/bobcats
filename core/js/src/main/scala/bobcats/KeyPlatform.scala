@@ -16,8 +16,69 @@
 
 package bobcats
 
+import bobcats.PKA.RSA
+import cats.effect.kernel.Async
+import org.scalajs.dom
+import org.scalajs.dom.{EcKeyImportParams, HashAlgorithmIdentifier, RsaHashedImportParams}
+
+import scala.scalajs.js
+
 private[bobcats] trait KeyPlatform
 private[bobcats] trait PublicKeyPlatform
 private[bobcats] trait PrivateKeyPlatform
 private[bobcats] trait SecretKeyPlatform
+
 private[bobcats] trait SecretKeySpecPlatform[+A <: Algorithm]
+private[bobcats] trait PrivateKeySpecPlatform[+A <: PrivateKeyAlg] { self: PrivateKeySpec[A] =>
+	def toWebCryptoKey[F[_]](signature: PKA.Signature)(
+	  implicit F0: Async[F]
+	): F[org.scalajs.dom.CryptoKey] = {
+		def toDomHash(hash: HashAlgorithm): dom.HashAlgorithm = hash match {
+			case HashAlgorithm.SHA512 => dom.HashAlgorithm.`SHA-512`
+			case HashAlgorithm.SHA256 => dom.HashAlgorithm.`SHA-256`
+			case HashAlgorithm.SHA1 => dom.HashAlgorithm.`SHA-1`
+			case HashAlgorithm.SHA384 => dom.HashAlgorithm.`SHA-384`
+		}
+		val alg: org.scalajs.dom.KeyAlgorithm = algorithm  match {
+			case rsaAlg: RSA => new RsaHashedImportParams {
+				override val hash: HashAlgorithmIdentifier = toDomHash(signature.hash)
+				override val name: String = rsaAlg.toStringWebCrypto
+			}
+			case ecAlg: bobcats.PKA.EC => new EcKeyImportParams {
+				override val namedCurve: String = ecAlg.toStringWebCrypto
+				override val name: String = "P-256" //<- todo this should not be hard-coded!
+			}
+		}
+		F0.fromPromise(F0.delay(dom.crypto.subtle.importKey(
+			dom.KeyFormat.pkcs8, key.toUint8Array, alg, true,
+			js.Array(dom.KeyUsage.sign)
+		)))
+	}
+
+}
+private[bobcats] trait PublicKeySpecPlatform[+A <: PKA] { self: PublicKeySpec[A] =>
+		def toWebCryptoKey[F[_]](signature: PKA.Signature)(
+		  implicit F0: Async[F]
+		): F[org.scalajs.dom.CryptoKey] = {
+			def toDomHash(hash: HashAlgorithm): dom.HashAlgorithm = hash match {
+				case HashAlgorithm.SHA512 => dom.HashAlgorithm.`SHA-512`
+				case HashAlgorithm.SHA256 => dom.HashAlgorithm.`SHA-256`
+				case HashAlgorithm.SHA1 => dom.HashAlgorithm.`SHA-1`
+				case HashAlgorithm.SHA384 => dom.HashAlgorithm.`SHA-384`
+			}
+			val alg: org.scalajs.dom.KeyAlgorithm = algorithm  match {
+				case rsaAlg: RSA => new RsaHashedImportParams {
+					override val hash: HashAlgorithmIdentifier = toDomHash(signature.hash)
+					override val name: String = rsaAlg.toStringWebCrypto
+				}
+				case ecAlg: bobcats.PKA.EC => new EcKeyImportParams {
+					override val namedCurve: String = ecAlg.toStringWebCrypto
+					override val name: String = "P-256" //<- todo this should not be hard-coded!
+				}
+			}
+			F0.fromPromise(F0.delay(dom.crypto.subtle.importKey(
+				dom.KeyFormat.spki, key.toUint8Array, alg, true,
+				js.Array(dom.KeyUsage.sign)
+			)))
+		}
+}

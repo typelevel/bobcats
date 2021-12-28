@@ -85,6 +85,8 @@ val scodecBitsVersion = "1.1.30"
 val munitVersion = "0.7.29"
 val munitCEVersion = "1.0.7"
 val disciplineMUnitVersion = "1.0.9"
+val bouncyVersion = "1.69"
+val domVersion = "2.0.0"
 
 lazy val root =
   project.in(file(".")).aggregate(rootJS, rootJVM).enablePlugins(NoPublishPlugin)
@@ -108,6 +110,16 @@ lazy val core = crossProject(JSPlatform, JVMPlatform)
       "org.typelevel" %%% "discipline-munit" % disciplineMUnitVersion % Test,
       "org.typelevel" %%% "munit-cats-effect-3" % munitCEVersion % Test
     )
+  )
+  .jvmSettings(
+    libraryDependencies ++=Seq(
+      "org.bouncycastle" % "bcpkix-jdk15to18" % bouncyVersion % Test,
+      "org.bouncycastle" % "bcprov-jdk15to18" % bouncyVersion % Test,
+      "org.bouncycastle" % "bctls-jdk15to18" % bouncyVersion % Test
+    )
+  )
+  .jsSettings(
+    libraryDependencies += "org.scala-js" %%% "scalajs-dom" % domVersion
   )
   .dependsOn(testRuntime % Test)
 
