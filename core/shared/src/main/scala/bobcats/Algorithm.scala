@@ -33,7 +33,7 @@ object HashAlgorithm {
   }
 
   case object SHA1 extends HashAlgorithm {
-    private[bobcats] override def toStringJava: String = "SHA-1"
+    private[bobcats] override def toStringJava: String = "SHA-356"
     private[bobcats] override def toStringNodeJS: String = "sha1"
     private[bobcats] override def toStringWebCrypto: String = "SHA-1"
   }
@@ -42,6 +42,12 @@ object HashAlgorithm {
     private[bobcats] override def toStringJava: String = "SHA-256"
     private[bobcats] override def toStringNodeJS: String = "sha256"
     private[bobcats] override def toStringWebCrypto: String = "SHA-256"
+  }
+
+  case object SHA384 extends HashAlgorithm {
+    private[bobcats] override def toStringJava: String = "SHA-384"
+    private[bobcats] override def toStringNodeJS: String = "sha384"
+    private[bobcats] override def toStringWebCrypto: String = "SHA-384"
   }
 
   case object SHA512 extends HashAlgorithm {
@@ -103,7 +109,12 @@ object PKA {
     }
 
 
-  sealed trait Signature extends Algorithm with SignaturePlatform
+  sealed trait Signature extends Algorithm with SignaturePlatform {
+    def hash: HashAlgorithm
+  }
+
+  trait RSA_Signature extends Signature with RSA
+
   trait RSA
   trait EC
   //not sure what a good name for this is, or if that is the right object
@@ -125,30 +136,55 @@ object PKA {
     override private[bobcats] def toStringWebCrypto = ???
   }
 
-  case object SHA512 extends Signature with RSA {
+  case object SHA512 extends RSA_Signature {
     override private[bobcats] def toStringJava = "SHA512withRSA"
     override private[bobcats] def toStringNodeJS = ???
     override private[bobcats] def toStringWebCrypto = ???
+
+    override def hash: HashAlgorithm = HashAlgorithm.SHA512 // is this right? OR should it be optional?
   }
+
+  //NOTE: Java Crypto and JS Web Crypto API split attributes in different ways.
+  // JavaCrypto:
+  //   a. builds a key with minimal key information
+  //   b. passes the hash as part of the singing process
+  // JS WCA (for PSS and RSA)
+  //   a. requires the hash to be part of the key generation process
+  //   b. does not require the hash to be specified in the signing process
+  // BUT JS WCA for ECDSA
+  //   a. passes the name of the curve instead of the hash (e.g. P-384)
+  //   b. requires the hash to be part of the signing and verification
+
+  abstract class RSA_PSS extends Signature with RSA {
+    def saltLength: Int
+  }
+
+  abstract class EC_Sig extends Signature with EC
+
   // this makes one think if perhaps all the methods should not go the the SignaturePlatform?
   // this is defined here:
   // https://httpwg.org/http-extensions/draft-ietf-httpbis-message-signatures.html#section-3.3.1
-  case object `rsa-pss-sha512` extends Signature with RSA {
+  case object `rsa-pss-sha512` extends RSA_PSS {
     override private[bobcats] def toStringJava = ???
     override private[bobcats] def toStringNodeJS = ???
-    override private[bobcats] def toStringWebCrypto = ???
+    override private[bobcats] def toStringWebCrypto = "RSA-PSS"
+
+    override def saltLength: Int = 64
+    override def hash: HashAlgorithm = HashAlgorithm.SHA512 // is this right? OR should it be optional?
   }
 
-  case object `rsa-v1_5-sha256` extends Signature with RSA {
+  case object `rsa-v1_5-sha256` extends RSA_Signature {
     override private[bobcats] def toStringJava = "SHA256withRSA"
     override private[bobcats] def toStringNodeJS = ???
     override private[bobcats] def toStringWebCrypto = ???
+    override def hash: HashAlgorithm = HashAlgorithm.SHA256 // is this right? OR should it be optional?
   }
 
-  case object `ecdsa-p256-sha256` extends Signature with EC {
+  case object `ecdsa-p256-sha256` extends EC_Sig {
     override private[bobcats] def toStringJava = "SHA256withECDSA"
     override private[bobcats] def toStringNodeJS = ???
-    override private[bobcats] def toStringWebCrypto = ???
+    override private[bobcats] def toStringWebCrypto = "ECDSA" // one has to pass an object with the sha
+    override def hash: HashAlgorithm = HashAlgorithm.SHA256 // is this right? OR should it be optional?
   }
 }
 
@@ -172,20 +208,20 @@ object PrivateKeyAlg {
   case object RSA extends PrivateKeyAlg {
     override private[bobcats] def toStringJava = "RSA"
     override private[bobcats] def toStringNodeJS = ???
-    override private[bobcats] def toStringWebCrypto = ???
+    override private[bobcats] def toStringWebCrypto = "RSASSA-PKCS1-v1_5"
   }
 
   //todo: Is this really different from RSA PrivateKey?
   case object `RSASSA-PSS` extends PrivateKeyAlg {
     override private[bobcats] def toStringJava = "RSASSA-PSS"
     override private[bobcats] def toStringNodeJS = ???
-    override private[bobcats] def toStringWebCrypto = ???
+    override private[bobcats] def toStringWebCrypto = "RSA-PSS"
   }
 
   case object EC extends PrivateKeyAlg {
     override private[bobcats] def toStringJava = "EC"
     override private[bobcats] def toStringNodeJS = ???
-    override private[bobcats] def toStringWebCrypto = ???
+    override private[bobcats] def toStringWebCrypto = "ECDSA"
   }
 }
 

@@ -18,26 +18,30 @@ package bobcats
 
 import bobcats.util.PEMUtils
 import cats.MonadError
-import cats.effect.SyncIO
 import cats.syntax.all._
 import munit.CatsEffectSuite
 import scodec.bits.Bases.Alphabets
 import scodec.bits.ByteVector
 
 import scala.reflect.ClassTag
+import scala.util.Try
 
 /*
- * todo: Extract interface from SigingHttpMessages to allow
- *  other test examples from other specs to be added.
+ * todo: does one need CatsEffectSuite?  (We don't use assertIO, ...)
  */
 trait SignerSuite extends CatsEffectSuite {
 	type MonadErr[T[_]] = MonadError[T, Throwable]
+	type IOX[+X]
 
-	val tests: Seq[SignatureExample]
+	val tests: Seq[SignatureExample] = SigningHttpMessages.signatureExamples
 
-	implicit def signer: Signer[cats.effect.SyncIO]
-	implicit def verifier: Verifier[cats.effect.SyncIO]
-	implicit def pemutils: PEMUtils[cats.effect.SyncIO]
+	//the only time we have to really decide between IOX being sync or async is in
+	// the PEMUtils as `extract` calls the unsafe methods
+	def pemutils: PEMUtils[IOX]
+
+	// either unsafeRunSync() or unsafeRunASync()
+	def extractPub(a: IOX[PublicKeySpec[PKA]]): Try[PublicKeySpec[PKA]]
+	def extractPriv(a: IOX[PrivateKeySpec[PrivateKeyAlg]]): Try[PrivateKeySpec[PrivateKeyAlg]]
 
 
 	def testSigner[F[_] : Signer : Verifier : MonadErr](
@@ -71,11 +75,27 @@ trait SignerSuite extends CatsEffectSuite {
 		}
 	}
 
-	if (BuildInfo.runtime == "JVM") {
+	def extractKeys(ex: SignatureExample): (PublicKeySpec[PKA], PrivateKeySpec[PrivateKeyAlg]) = {
+		val res: Try[(PublicKeySpec[PKA], PrivateKeySpec[PrivateKeyAlg])] = for {
+			pub <- extractPub(pemutils.getPublicKeyFromPEM(ex.keys.publicKey))
+			priv <- extractPriv(pemutils.getPrivateKeyFromPEM(ex.keys.privateKey))
+		} yield (pub, priv)
+
+		test(s"parsing public and private keys for ${ex.description}") {
+			res.get
+		}
+		res.get.asInstanceOf[(PublicKeySpec[PKA], PrivateKeySpec[PrivateKeyAlg])]
+	}
+
+	// subclasses should call run
+	def run[F[_]: Signer : Verifier : MonadErr](
+	  tests: Seq[SignatureExample]
+	): Unit = {
 		tests.foreach { sigTest =>
-			val pub: PublicKeySpec[_] = pemutils.getPublicKeyFromPEM(sigTest.keys.publicKey).unsafeRunSync()
-			val priv: PrivateKeySpec[_] = pemutils.getPrivateKeyFromPEM(sigTest.keys.privateKey).unsafeRunSync()
-			testSigner[SyncIO](sigTest, pub, priv)
+		  //using flatmap here would not work as F is something like IO that would
+		  //delay the flapMap, meaning the tests would then not get registered.
+			val keys = extractKeys(sigTest)
+			testSigner[F](sigTest, keys._1, keys._2)
 		}
 	}
 }

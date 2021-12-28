@@ -18,6 +18,7 @@ package bobcats.util
 
 import bobcats.{PKA, PrivateKeyAlg, PrivateKeySpec, PublicKeySpec, util}
 import cats.MonadError
+import cats.syntax.all._
 import org.bouncycastle.asn1.pkcs.PrivateKeyInfo
 import org.bouncycastle.asn1.x509.SubjectPublicKeyInfo
 import org.bouncycastle.cert.X509CertificateHolder
@@ -27,8 +28,6 @@ import scodec.bits.ByteVector
 
 import java.io.StringReader
 import java.security
-
-import cats.syntax.all._
 
 /**
  * BouncyCastle supports PKCS1 formatted PEM files.
@@ -40,16 +39,25 @@ object BouncyJavaPEMUtils {
 
 	implicit def forMonadError[F[_]](implicit F0: MonadError[F, Throwable]): PEMUtils[F] =
 		new util.PEMUtils[F] {
-			override def getPrivateKeyFromPEM(pemStr: String): F[PrivateKeySpec[_]] =
+			override def getPrivateKeyFromPEM(pemStr: String, keyType: String): F[PrivateKeySpec[PrivateKeyAlg]] =
 				for {
 					privateKey <- PEMtoPrivateKey(pemStr)
 					alg <- F0.fromEither(PrivateKeyAlg.fromStringJava(privateKey.getAlgorithm).toRight(
 						new Exception(s"could not find bobcats.Algorithm object for ${privateKey.getAlgorithm}")
 					))
-				} yield
+				} yield {
+//					val sw = new StringWriter()
+//					val pw = new org.bouncycastle.openssl.jcajce.JcaPEMWriter(sw)
+////					val pw = new org.bouncycastle.util.io.pem.PemWriter(sw)
+//					val pem = new PemObject("PRIVATE KEY", privateKey.getEncoded())
+//
+//					pw.writeObject(pem)
+//					pw.flush()
+//					println(">>>>>PEM="+sw.toString)
 					PrivateKeySpec(ByteVector.view(privateKey.getEncoded), alg)
+				}
 
-			override def getPublicKeyFromPEM(pemStr: String): F[PublicKeySpec[_]] =
+			override def getPublicKeyFromPEM(pemStr: String): F[PublicKeySpec[PKA]] =
 				for {
 					publicKey <- PEMToPublicKey(pemStr)
 					alg <- F0.fromEither(PKA.fromStringJava(publicKey.getAlgorithm).toRight(

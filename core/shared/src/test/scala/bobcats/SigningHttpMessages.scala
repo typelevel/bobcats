@@ -22,7 +22,7 @@ import bobcats.SignatureExample._
 /**
  * Examples taken from Signing HTTP Messages RFC draft
  *
- * @see https://httpwg.org/http-extensions/draft-ietf-httpbis-message-signatures.html
+ * @see https://www.ietf.org/archive/id/draft-ietf-httpbis-message-signatures-07.html
  */
 object SigningHttpMessages extends SignatureExamples {
 
@@ -188,6 +188,36 @@ object SigningHttpMessages extends SignatureExamples {
 			  |EQeNC8fHGg4UXU8mhHnSBt3EA10qQJfRDs15M38eG2cYwB1PZpDHScDnDA0=
 			  |-----END RSA PRIVATE KEY-----""".stripMargin
 
+		override def privatePk8Key: PrivateKeyPEM =
+		"""-----BEGIN PRIVATE KEY-----
+		  |MIIEwgIBADANBgkqhkiG9w0BAQEFAASCBKwwggSoAgEAAoIBAQCEAph22h6jLzNw
+		  |BxHzvgvxydnErMAbB3u/foA+ns+/pDaN2w8FGvBYQGd7Pp3RQMoPAZtzqfF8RcDL
+		  |mZuGBqPOvDcw4S3y4Dm3FIqhsGkoN4Es6x0koWowaZcJC8Qbth6ZzENNE/ECV4gC
+		  |BhhGNNJ39AHBVb07A0WF6SujdG2WKdXRrvmN9mCSd79iKS1K8sbfiXDbOpcENMLk
+		  |0dE5SoZOUwvg+U1lLlGLZThoI3HatQ9FwoiUTQ+4rEjhP4choWm/z6t1Xp5SA6sH
+		  |bF4jV1IUWf+ee/k6hkkQgH5Wa4qfcMJRwJlIWVA9JdJ8EOJQaHA7Dvpa5JKx/UPh
+		  |v+8ugnXTAgMBAAECggEAb8lm5JZ2hUduLnq+OAKCSODeWQ7Uqs7eet2bqeuAD0/2
+		  |po+PG4qhZoo7VwFCUTWlJan9wqdxiAPlbEQKkCdFRcbakbjN2TMJjMCHWL5zfgvq
+		  |hmgeyKsrqg1wSce97J1/Mkvn3fh6CbqnwNb6bVFDvTJS3i5FzRhKiv6rUsYm8ZAd
+		  |F4XRaYkFkeuHPl7rc+ruUTSAjC4GovxIxoDJFe0r4kbFmkiZOr40e8RZYK7T1IKr
+		  |Svzfxx5AjnlK/OZOTCq0L7wBPbMW+IxmQpFCjpI+yuoi3FlZG3LaLNrBMXQF/lLZ
+		  |UDHs77q3fAGxDWwum2hKBfdBuUQtjlqwjQlgXPsskQKBiQCyp5QmapcTcs/y1igi
+		  |MwgAqJOb2jqmw+VzwKssj0IfRRu5oDYkI4xwI2rxLJhtOqCdaUH1l9wCb9wWkDy1
+		  |hyL2bm9grwc3FCv7wVLdCjw31Enx3RTkKzAPMxh9GCEB9QbCaVaPmGnWlDMC6HBs
+		  |5cW3EodWww+HPUgG0X1jyO+CqBgctubKK7WbAnkAvSlgXQbvHzWmuUBFRHAejRh/
+		  |naQTDV3GnH4lcRHuFBFZCSLn82xQS2/7xFOqfabqq17kNcvKfzdvWpGxxJ2cILAq
+		  |0pZS6DmrZlvBU4IkK2ZHCac/XfWVZFh+PrsH/EnVkDpfcYR/iw1F40C1q5w8R6WB
+		  |Haew3SApAoGIaiodZsrWpi8HFfZfeRs8OS/0L5x6WBl3Y9btoZgsIeruc9uZ8NXT
+		  |IdxaM6FdnyNEyOYA1VH94tDYR+xEt1br1ud/dkPslLV/Aac7d7EaYc7cdkb7oC9t
+		  |6sphVg0dqE0UTDlOwBxBYMtGmQbJsFzGpmjzVgKqWqJ3B947li2U7t63HXEvKprY
+		  |2wJ4b0DzpSMb5p42dcQgOTU8Mr4S6JOEhRr/YjErMkpaXUEqvZ3jEB9HRmcRi5Gt
+		  |t4NBiBMiY6V9br8a5gjEpiAQoIUcWokBMAYjEeurU8M6JLBd3YaZVVjISaFmdtyn
+		  |wLFoQxCh6/EC1rSywwrfDpSwO29S9i8XbaapAoGIPkbARLOwU/LcZrQy9mmfcPoQ
+		  |lAuCyeu1Q9nH7PYSnbHTFzmiud4Hl8bIXU9a0/58blDoOl3PctF+b4rAEJYUpCOD
+		  |u5PFyN6uEFYRg+YQwpjBMkXk8Eb39128ctARB40Lx8caDhRdTyaEedIG3cQDXSpA
+		  |l9EOzXkzfx4bZxjAHU9mkMdJwOcMDQ==
+		  |-----END PRIVATE KEY-----""".stripMargin
+
 		override def publicKey: PublicKeyPEM =
 			"""-----BEGIN RSA PUBLIC KEY-----
 			  |MIIBCgKCAQEAhAKYdtoeoy8zcAcR874L8cnZxKzAGwd7v36APp7Pv6Q2jdsPBRrw
@@ -205,7 +235,7 @@ object SigningHttpMessages extends SignatureExamples {
 	}
 
 	// 2048-bit RSA public and private key pair
-	// taken from https://httpwg.org/http-extensions/draft-ietf-httpbis-message-signatures.html#appendix-B.1.2
+	// taken from https://www.ietf.org/archive/id/draft-ietf-httpbis-message-signatures-07.html#name-example-rsa-pss-key
 	object `test-key-rsa-pss` extends TestKeys {
 		override def privateKey: PrivateKeyPEM =
 			"""-----BEGIN PRIVATE KEY-----
@@ -262,6 +292,13 @@ object SigningHttpMessages extends SignatureExamples {
 			  |AwEHoUQDQgAEqIVYZVLCrPZHGHjP17CTW0/+D9Lfw0EkjqF7xB4FivAxzic30tMM
 			  |4GF+hR6Dxh71Z50VGGdldkkDXZCnTNnoXQ==
 			  |-----END EC PRIVATE KEY-----""".stripMargin
+
+		override def privatePk8Key: PrivateKeyPEM =
+			"""-----BEGIN PRIVATE KEY-----
+			  |MIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQgUpuF81l+kOxbjf7T
+			  |4mNSv0r5tN67Gim7rnf6EFpcYDuhRANCAASohVhlUsKs9kcYeM/XsJNbT/4P0t/D
+			  |QSSOoXvEHgWK8DHOJzfS0wzgYX6FHoPGHvVnnRUYZ2V2SQNdkKdM2ehd
+			  |-----END PRIVATE KEY-----""".stripMargin
 
 		override def publicKey: PublicKeyPEM =
 			"""-----BEGIN PUBLIC KEY-----

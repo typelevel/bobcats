@@ -29,7 +29,6 @@ private[bobcats] trait PublicKeyPlatform {
 }
 
 private[bobcats] trait PrivateKeyPlatform {
-  // which encoding should one use? PKCS8 or X509? or other
   def toJavaSpec: java.security.spec.PKCS8EncodedKeySpec
 }
 
@@ -49,9 +48,7 @@ private[bobcats] trait PrivateKeySpecPlatform[+A <: PrivateKeyAlg] { self: Priva
     kf.generatePrivate(toJavaSpec)
   }
 
-  // we see here that something is not quite right. If there is an encoding of a key - an tuple
-  // of numbers essentially, then there can be many encodings. Which one should one use?
-  // I would not be surprised if there are more than one.
+  // this class should be renamed PKCS8PrivateKeySpec
   def toJavaSpec: java.security.spec.PKCS8EncodedKeySpec =
     new java.security.spec.PKCS8EncodedKeySpec(key.toArray,algorithm.toStringJava)
 }

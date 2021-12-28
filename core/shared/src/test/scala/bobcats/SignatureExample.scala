@@ -75,6 +75,9 @@ trait TestKeys {
 
 	def privateKey: SignatureExample.PrivateKeyPEM
 
+	// PKCS8 version of the private key
+	def privatePk8Key: SignatureExample.PrivateKeyPEM = privateKey
+
 	def publicKey: SignatureExample.PublicKeyPEM
 
 	def privateKeyAlg: PrivateKeyAlg

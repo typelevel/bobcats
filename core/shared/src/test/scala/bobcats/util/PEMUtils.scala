@@ -16,9 +16,9 @@
 
 package bobcats.util
 
-import bobcats.{PrivateKeySpec, PublicKeySpec}
+import bobcats.{PKA, PrivateKeyAlg, PrivateKeySpec, PublicKeySpec}
 
 trait PEMUtils[F[_]] {
-	def getPrivateKeyFromPEM(pemStr: String): F[PrivateKeySpec[_]]
-	def getPublicKeyFromPEM(pemStr: String): F[PublicKeySpec[_]]
+	def getPrivateKeyFromPEM(pemStr: String, keyType: String=""): F[PrivateKeySpec[PrivateKeyAlg]]
+	def getPublicKeyFromPEM(pemStr: String): F[PublicKeySpec[PKA]]
 }
