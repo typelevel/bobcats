@@ -21,7 +21,7 @@ import cats.effect.kernel.Async
 import cats.implicits.toFunctorOps
 import cats.syntax.all._
 import org.scalajs.dom
-import org.scalajs.dom.{EcdsaParams, HashAlgorithmIdentifier, crypto}
+import org.scalajs.dom.{EcdsaParams, HashAlgorithmIdentifier, RsaPssParams, crypto}
 import scodec.bits.ByteVector
 
 import scala.scalajs.js
@@ -35,27 +35,14 @@ private[bobcats] trait VerifierCompanionPlatform {
 				  signingStr: ByteVector, signature: ByteVector
 				): F[Boolean] = {
 					//todo: optimise so that key is only calculated once
-					val algId: org.scalajs.dom.Algorithm = sig match {
-						case rsapss: RSA_PSS_Sig => new org.scalajs.dom.RsaPssParams {
-								override val saltLength: Double = rsapss.saltLength
-								override val name: String = rsapss.toStringWebCrypto
-							}
-						case sig: RSA_PKCS_Sig => new org.scalajs.dom.Algorithm {
-							override val name: String = sig.toStringWebCrypto
-						}
-						case ec: bobcats.AsymmetricKeyAlg.EC_Sig => {
-							new EcdsaParams {
-								override val hash: HashAlgorithmIdentifier = ec.hash.toStringWebCrypto
-								override val name: String = ec.toStringWebCrypto
-							}
-						}
-					}
 					spec.toWebCryptoKey(sig).flatMap { (key: dom.CryptoKey) =>
 						FA.fromPromise(FA.delay {
 							crypto.subtle.verify( //todo: report to dom that this should really return a Boolean promise
-								algId, key, signature.toJSArrayBuffer, signingStr.toJSArrayBuffer
+								JSKeySpec.signatureAlgorithm(sig),
+								key, signature.toJSArrayBuffer, signingStr.toJSArrayBuffer
 							)
 						}).fmap[Boolean] { (any: js.Any) =>
+						  // see https://github.com/scala-js/scala-js-dom/issues/660
 							any.toString match { //attempting transformation to bool
 								case "true" => true
 								case 	_ => false

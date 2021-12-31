@@ -149,6 +149,8 @@ object AsymmetricKeyAlg {
   //   b. requires the hash to be part of the signing and verification
 
   trait RSA_PSS_Sig extends Signature with RSA {
+    override private[bobcats] def toStringJava = "RSASSA-PSS"
+    override private[bobcats] def toStringNodeJS = ???
     override private[bobcats] def toStringWebCrypto =  "RSA-PSS"
     def saltLength: Int
   }
@@ -166,10 +168,6 @@ object AsymmetricKeyAlg {
   // https://httpwg.org/http-extensions/draft-ietf-httpbis-message-signatures.html#section-3.3.1
   // note PSS requires extra arguments to be passed.
   case object `rsa-pss-sha512` extends RSA_PSS_Sig {
-    override private[bobcats] def toStringJava = "RSASSA-PSS"
-    override private[bobcats] def toStringNodeJS = ???
-    override private[bobcats] def toStringWebCrypto = "RSA-PSS"
-
     override def saltLength: Int = 64
     override def hash: HashAlgorithm = HashAlgorithm.SHA512 // is this right? OR should it be optional?
   }

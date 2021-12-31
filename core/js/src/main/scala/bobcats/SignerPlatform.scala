@@ -38,21 +38,15 @@ private[bobcats] trait SignerCompanionPlatform {
 			): F[ByteVector] = {
 				spec.toWebCryptoKey(sig).flatMap{ (key: dom.CryptoKey) =>
 					//todo: optimise so that key is only calculated once
-					val algId: org.scalajs.dom.Algorithm = sig match {
-						case rsapss: RSA_PSS_Sig => new org.scalajs.dom.RsaPssParams {
-							override val saltLength: Double = rsapss.saltLength
-							override val name: String = "RSA-PSS"
-						}
-						case _: RSA_PKCS_Sig => new org.scalajs.dom.Algorithm {
-							override val name: String = "RSASSA-PKCS1-v1_5"
-						}
-						case ec: bobcats.AsymmetricKeyAlg.EC_Sig => new EcdsaParams {
-								override val hash: HashAlgorithmIdentifier = ec.hash.toStringWebCrypto
-								override val name: String = ec.toStringWebCrypto
-							}
-					}
-					FA.fromPromise(FA.delay(crypto.subtle.sign(algId,key,data.toUint8Array)))
-					  .map(any => ByteVector.fromJSArrayBuffer(any.asInstanceOf[js.typedarray.ArrayBuffer]))
+					FA.fromPromise(FA.delay(
+						crypto.subtle.sign(
+							bobcats.JSKeySpec.signatureAlgorithm(sig),
+							key,
+							data.toJSArrayBuffer
+						))).map(any =>
+						//see https://github.com/scala-js/scala-js-dom/issues/660
+					  	ByteVector.fromJSArrayBuffer(any.asInstanceOf[js.typedarray.ArrayBuffer])
+					)
 				}
 			}
 		}

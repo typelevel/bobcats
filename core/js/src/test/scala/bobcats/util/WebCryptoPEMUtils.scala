@@ -46,7 +46,6 @@ object WebCryptoPEMUtils extends util.PEMUtils {
 	  pemStr: PKCS8_PEM,
 	  keyType: AsymmetricKeyAlg
 	): Try[PrivateKeySpec[AsymmetricKeyAlg]]= {
-		println("in getPrivateKeyFromPEM")
 		for {
 			base64data <- pemData(pemStr)
 			bytes: ByteVector <- ByteVector.fromBase64(base64data).toRight(
@@ -69,7 +68,6 @@ object WebCryptoPEMUtils extends util.PEMUtils {
 	  pemStr: SPKI_PEM,
 	  keyType: AsymmetricKeyAlg
 	): Try[PublicKeySpec[AsymmetricKeyAlg]] = {
-		println("in getPrivateKeyFromPEM")
 		for {
 			base64data <- pemData(pemStr)
 			bytes: ByteVector <- (ByteVector.fromBase64(base64data).toRight(
