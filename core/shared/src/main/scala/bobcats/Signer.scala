@@ -18,25 +18,26 @@ package bobcats
 
 import scodec.bits.ByteVector
 
-/** Signer must be created with a PrivateKey and a Signature Algorithm */
+/**
+ * Signer must be created with a PrivateKey and a Signature Algorithm
+ */
 sealed trait Signer[F[_]] extends SignerPlatform[F] {
-	//todo: the type of the signature should dependent on the private key type
-	/** Given a Private Key specification and a Signature type,
-	 * return a function from Byte Vector to signatures
-	 **/
-	def sign( //[A<:PrivateKeyAlg, S<: PKA.Signature] <- these make coding difficult for no benefit
-	  spec: PrivateKeySpec[_], sig: AsymmetricKeyAlg.Signature
-	)(
-	  data: ByteVector
-	): F[ByteVector]
+  // todo: the type of the signature should dependent on the private key type
+  /**
+   * Given a Private Key specification and a Signature type, return a function from Byte Vector
+   * to signatures
+   */
+  def sign( // [A<:PrivateKeyAlg, S<: PKA.Signature] <- these make coding difficult for no benefit
+      spec: PrivateKeySpec[_],
+      sig: AsymmetricKeyAlg.Signature)(
+      data: ByteVector
+  ): F[ByteVector]
 }
 
 private[bobcats] trait UnsealedSigner[F[_]] extends Signer[F]
 
 object Signer extends SignerCompanionPlatform {
 
-	def apply[F[_]](implicit signer: Signer[F]): signer.type = signer
+  def apply[F[_]](implicit signer: Signer[F]): signer.type = signer
 
 }
-
-

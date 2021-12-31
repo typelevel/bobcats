@@ -18,31 +18,28 @@ package bobcats
 
 import bobcats.SignatureExample.{Signature, SigningString}
 
-
 object SignatureExample {
-	type SigningString = String
-	type Signature = String
-	type PrivateKeyPEM = String
-	type PublicKeyPEM = String
+  type SigningString = String
+  type Signature = String
+  type PrivateKeyPEM = String
+  type PublicKeyPEM = String
 }
 
 case class SignatureExample(
-  description: String,
-  sigtext: SigningString,
-  signature: Signature,
-  keys: TestKeys,
-  signatureAlg: AsymmetricKeyAlg.Signature,
-)
-{
-	//		def sigtest(keys: TestKeys, sig: PKA.Signature): SignatureTest =
-	//			SignatureTest(sigtext, signature, keys.privateKeySpec, sig, keys.publicKeySpec, description)
+    description: String,
+    sigtext: SigningString,
+    signature: Signature,
+    keys: TestKeys,
+    signatureAlg: AsymmetricKeyAlg.Signature
+) {
+  //		def sigtest(keys: TestKeys, sig: PKA.Signature): SignatureTest =
+  //			SignatureTest(sigtext, signature, keys.privateKeySpec, sig, keys.publicKeySpec, description)
 }
 
 trait SignatureExamples {
-	def signatureExamples: Seq[SignatureExample]
-	def keyExamples: Seq[TestKeys]
+  def signatureExamples: Seq[SignatureExample]
+  def keyExamples: Seq[TestKeys]
 }
-
 
 //	case class SignatureTest(
 //	  text: SignatureTest.SigningString,  sig: SignatureTest.Signature,
@@ -52,7 +49,6 @@ trait SignatureExamples {
 //	)
 //
 
-
 object X {
 //	lazy val privateKeySpec: Try[PrivateKeySpec[_]] = pem.getPrivateKeyFromPEM(privateKey)
 //
@@ -61,28 +57,29 @@ object X {
 }
 
 /**
- * Public and Private keys from [[https://www.ietf.org/archive/id/draft-ietf-httpbis-message-signatures-04.html#section-b.1.1 Message Signatures §Appendix B.1.1]]
- * Obviously, these should not be used other than for test cases!
- * So place them here to make them available in other tests.
- **/
+ * Public and Private keys from
+ * [[https://www.ietf.org/archive/id/draft-ietf-httpbis-message-signatures-04.html#section-b.1.1 Message Signatures §Appendix B.1.1]]
+ * Obviously, these should not be used other than for test cases! So place them here to make
+ * them available in other tests.
+ */
 trait TestKeys {
-	def description: String
-	// the keys in the Signing HTTP messages Spec are PEM encoded.
-	// One could transform the keys from PKCS#1 to PKCS#8 using
-	// openssl pkcs8 -topk8 -inform PEM -in spec.private.pem -out private.pem -nocrypt
-	// see https://stackoverflow.com/questions/6559272/algid-parse-error-not-a-sequence
-	// but then it would not be easy to compare the keys used here with those in the
-	// spec when debugging the tests, and it would make it more difficult to send in
-	// feedback to the IETF HttpBis WG.
+  def description: String
+  // the keys in the Signing HTTP messages Spec are PEM encoded.
+  // One could transform the keys from PKCS#1 to PKCS#8 using
+  // openssl pkcs8 -topk8 -inform PEM -in spec.private.pem -out private.pem -nocrypt
+  // see https://stackoverflow.com/questions/6559272/algid-parse-error-not-a-sequence
+  // but then it would not be easy to compare the keys used here with those in the
+  // spec when debugging the tests, and it would make it more difficult to send in
+  // feedback to the IETF HttpBis WG.
 
-	def privateKey: SignatureExample.PrivateKeyPEM
+  def privateKey: SignatureExample.PrivateKeyPEM
 
-	// PKCS8 version of the private key
-	def privatePk8Key: SignatureExample.PrivateKeyPEM = privateKey
+  // PKCS8 version of the private key
+  def privatePk8Key: SignatureExample.PrivateKeyPEM = privateKey
 
-	def publicKey: SignatureExample.PublicKeyPEM
+  def publicKey: SignatureExample.PublicKeyPEM
 
-	def publicKeyNew: String = publicKey
+  def publicKeyNew: String = publicKey
 
-	def keyAlg: AsymmetricKeyAlg
+  def keyAlg: AsymmetricKeyAlg
 }

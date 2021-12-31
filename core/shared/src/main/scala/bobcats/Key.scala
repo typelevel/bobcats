@@ -36,19 +36,20 @@ final case class SecretKeySpec[+A <: Algorithm](key: ByteVector, algorithm: A)
 // todo: how would we represent such an opaque key?
 
 /*
-* The ByteVector is PKCS8 encoded data
-* (todo: Q: what is role the algorithm as that could be extracted from the ByteVector?)
-* todo: should therefore be called Pkcs8PrivateKeySpec?
-* note: JSON Web Key is the future
-*/
+ * The ByteVector is PKCS8 encoded data
+ * (todo: Q: what is role the algorithm as that could be extracted from the ByteVector?)
+ * todo: should therefore be called Pkcs8PrivateKeySpec?
+ * note: JSON Web Key is the future
+ */
 final case class PrivateKeySpec[+A <: AsymmetricKeyAlg](key: ByteVector, algorithm: A)
-  extends PrivateKey[A] with PrivateKeySpecPlatform[A]
+    extends PrivateKey[A]
+    with PrivateKeySpecPlatform[A]
 
 /* The ByteVector is X509 encoded data
-* todo: renome to X509PublicKeySpec
-* q: what is the role of the algorithm?
-* note: JSON Web Key is the future
-*/
+ * todo: renome to X509PublicKeySpec
+ * q: what is the role of the algorithm?
+ * note: JSON Web Key is the future
+ */
 final case class PublicKeySpec[+A <: AsymmetricKeyAlg](key: ByteVector, algorithm: A)
-  extends PublicKey[A] with PublicKeySpecPlatform[A]
-
+    extends PublicKey[A]
+    with PublicKeySpecPlatform[A]

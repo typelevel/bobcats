@@ -97,7 +97,6 @@ sealed trait AsymmetricKeyAlg extends Algorithm
 
 object AsymmetricKeyAlg {
 
-
   sealed trait Signature extends Algorithm with SignaturePlatform {
     def hash: HashAlgorithm
   }
@@ -134,10 +133,11 @@ object AsymmetricKeyAlg {
     override private[bobcats] def toStringNodeJS = ???
     override private[bobcats] def toStringWebCrypto = ???
 
-    override def hash: HashAlgorithm = HashAlgorithm.SHA512 // is this right? OR should it be optional?
+    override def hash: HashAlgorithm =
+      HashAlgorithm.SHA512 // is this right? OR should it be optional?
   }
 
-  //NOTE: Java Crypto and JS Web Crypto API split attributes in different ways.
+  // NOTE: Java Crypto and JS Web Crypto API split attributes in different ways.
   // JavaCrypto:
   //   a. builds a key with minimal key information
   //   b. passes the hash as part of the singing process
@@ -151,7 +151,7 @@ object AsymmetricKeyAlg {
   trait RSA_PSS_Sig extends Signature with RSA {
     override private[bobcats] def toStringJava = "RSASSA-PSS"
     override private[bobcats] def toStringNodeJS = ???
-    override private[bobcats] def toStringWebCrypto =  "RSA-PSS"
+    override private[bobcats] def toStringWebCrypto = "RSA-PSS"
     def saltLength: Int
   }
 
@@ -160,7 +160,7 @@ object AsymmetricKeyAlg {
   }
 
   abstract class EC_Sig extends Signature with EC {
-    def ecKeyAlg: ECKey  //todo: don't think it is needed
+    def ecKeyAlg: ECKey // todo: don't think it is needed
   }
 
   // this makes one think if perhaps all the methods should not go the the SignaturePlatform?
@@ -169,13 +169,15 @@ object AsymmetricKeyAlg {
   // note PSS requires extra arguments to be passed.
   case object `rsa-pss-sha512` extends RSA_PSS_Sig {
     override def saltLength: Int = 64
-    override def hash: HashAlgorithm = HashAlgorithm.SHA512 // is this right? OR should it be optional?
+    override def hash: HashAlgorithm =
+      HashAlgorithm.SHA512 // is this right? OR should it be optional?
   }
 
   case object `rsa-v1_5-sha256` extends RSA_PKCS_Sig {
     override private[bobcats] def toStringJava = "SHA256withRSA"
     override private[bobcats] def toStringNodeJS = ???
-    override def hash: HashAlgorithm = HashAlgorithm.SHA256 // is this right? OR should it be optional?
+    override def hash: HashAlgorithm =
+      HashAlgorithm.SHA256 // is this right? OR should it be optional?
   }
 
   case object `ecdsa-p256-sha256` extends EC_Sig {
@@ -183,8 +185,9 @@ object AsymmetricKeyAlg {
     // for the names see https://docs.oracle.com/en/java/javase/17/docs/specs/security/standard-names.html#signature-algorithms
     override private[bobcats] def toStringJava = "SHA256withECDSAinP1363Format"
     override private[bobcats] def toStringNodeJS = ???
-    override private[bobcats] def toStringWebCrypto = "ECDSA" // one has to pass an object with the sha
-    override def hash: HashAlgorithm = HashAlgorithm.SHA256 // is this right? OR should it be optional?
+    override private[bobcats] def toStringWebCrypto =
+      "ECDSA" // one has to pass an object with the sha
+    override def hash: HashAlgorithm =
+      HashAlgorithm.SHA256 // is this right? OR should it be optional?
   }
 }
-

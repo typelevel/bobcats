@@ -29,68 +29,73 @@ import scala.util.Try
  * todo: does one need CatsEffectSuite?  (We don't use assertIO, ...)
  */
 trait SignerSuite extends CatsEffectSuite {
-	type MonadErr[T[_]] = MonadError[T, Throwable]
+  type MonadErr[T[_]] = MonadError[T, Throwable]
 
-	val tests: Seq[SignatureExample] = SigningHttpMessages.signatureExamples
+  val tests: Seq[SignatureExample] = SigningHttpMessages.signatureExamples
 
-	def pemutils: PEMUtils
+  def pemutils: PEMUtils
 
-	def testSigner[F[_] : Signer : Verifier : MonadErr](
-	  sigTest: SignatureExample, pubKey: PublicKeySpec[_], privKey: PrivateKeySpec[_]
-	)(implicit ct: ClassTag[F[_]]): Unit = {
+  def testSigner[F[_]: Signer: Verifier: MonadErr](
+      sigTest: SignatureExample,
+      pubKey: PublicKeySpec[_],
+      privKey: PrivateKeySpec[_]
+  )(implicit ct: ClassTag[F[_]]): Unit = {
 
-		val signatureTxtF: F[ByteVector] = implicitly[MonadErr[F]].fromEither(ByteVector.encodeAscii(sigTest.sigtext))
-		test(s"${sigTest.description}: can verify generated signature") {
-			for {
-				sigTextBytes <- signatureTxtF
-				signedTxt <- Signer[F].sign(privKey, sigTest.signatureAlg)(sigTextBytes)
-				b <- Verifier[F].verify(pubKey, sigTest.signatureAlg)(
-					sigTextBytes, signedTxt
-				)
-			} yield {
-				assertEquals(b, true, s"expected verify(>>${sigTest.sigtext}<<, >>$signedTxt<<)=true)")
-			}
-		}
+    val signatureTxtF: F[ByteVector] =
+      implicitly[MonadErr[F]].fromEither(ByteVector.encodeAscii(sigTest.sigtext))
+    test(s"${sigTest.description}: can verify generated signature") {
+      for {
+        sigTextBytes <- signatureTxtF
+        signedTxt <- Signer[F].sign(privKey, sigTest.signatureAlg)(sigTextBytes)
+        b <- Verifier[F].verify(pubKey, sigTest.signatureAlg)(
+          sigTextBytes,
+          signedTxt
+        )
+      } yield {
+        assertEquals(b, true, s"expected verify(>>${sigTest.sigtext}<<, >>$signedTxt<<)=true)")
+      }
+    }
 
-		test(s"${sigTest.description}: matches expected value") {
-			for {
-				sigTextBytes <- signatureTxtF
-				expectedSig <-  implicitly[MonadErr[F]].fromEither(
-					ByteVector.fromBase64Descriptive(sigTest.signature, scodec.bits.Bases.Alphabets.Base64)
-					  .leftMap(new Exception(_))
-				)
-				b <- Verifier[F].verify(pubKey, sigTest.signatureAlg)(
-					sigTextBytes, expectedSig
-				)
-			} yield {
-				assertEquals(b, true,
-					s"expected to verify >>${sigTest.sigtext}<<"
-				)
-			}
-		}
-	}
+    test(s"${sigTest.description}: matches expected value") {
+      for {
+        sigTextBytes <- signatureTxtF
+        expectedSig <- implicitly[MonadErr[F]].fromEither(
+          ByteVector
+            .fromBase64Descriptive(sigTest.signature, scodec.bits.Bases.Alphabets.Base64)
+            .leftMap(new Exception(_))
+        )
+        b <- Verifier[F].verify(pubKey, sigTest.signatureAlg)(
+          sigTextBytes,
+          expectedSig
+        )
+      } yield {
+        assertEquals(b, true, s"expected to verify >>${sigTest.sigtext}<<")
+      }
+    }
+  }
 
-	def extractKeys(ex: SignatureExample): (PublicKeySpec[AsymmetricKeyAlg], PrivateKeySpec[AsymmetricKeyAlg]) = {
-		val res: Try[(PublicKeySpec[AsymmetricKeyAlg], PrivateKeySpec[AsymmetricKeyAlg])] = for {
-			pub <- pemutils.getPublicKeyFromPEM(ex.keys.publicKeyNew, ex.keys.keyAlg)
-			priv <- pemutils.getPrivateKeyFromPEM(ex.keys.privatePk8Key, ex.keys.keyAlg)
-		} yield (pub, priv)
+  def extractKeys(ex: SignatureExample)
+      : (PublicKeySpec[AsymmetricKeyAlg], PrivateKeySpec[AsymmetricKeyAlg]) = {
+    val res: Try[(PublicKeySpec[AsymmetricKeyAlg], PrivateKeySpec[AsymmetricKeyAlg])] = for {
+      pub <- pemutils.getPublicKeyFromPEM(ex.keys.publicKeyNew, ex.keys.keyAlg)
+      priv <- pemutils.getPrivateKeyFromPEM(ex.keys.privatePk8Key, ex.keys.keyAlg)
+    } yield (pub, priv)
 
-		test(s"${ex.description}: parsing public and private keys") {
-			res.get
-		}
-		res.get
-	}
+    test(s"${ex.description}: parsing public and private keys") {
+      res.get
+    }
+    res.get
+  }
 
-	// subclasses should call run
-	def run[F[_]: Signer : Verifier : MonadErr](
-	  tests: Seq[SignatureExample]
-	): Unit = {
-		tests.foreach { sigTest =>
-		  //using flatmap here would not work as F is something like IO that would
-		  //delay the flapMap, meaning the tests would then not get registered.
-			val keys = extractKeys(sigTest)
-			testSigner[F](sigTest, keys._1, keys._2)
-		}
-	}
+  // subclasses should call run
+  def run[F[_]: Signer: Verifier: MonadErr](
+      tests: Seq[SignatureExample]
+  ): Unit = {
+    tests.foreach { sigTest =>
+      // using flatmap here would not work as F is something like IO that would
+      // delay the flapMap, meaning the tests would then not get registered.
+      val keys = extractKeys(sigTest)
+      testSigner[F](sigTest, keys._1, keys._2)
+    }
+  }
 }
