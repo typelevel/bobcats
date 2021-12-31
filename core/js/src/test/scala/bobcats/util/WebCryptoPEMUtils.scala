@@ -16,69 +16,69 @@
 
 package bobcats.util
 
-import bobcats.{PrivateKeySpec, PublicKeySpec, util}
-import cats.effect.Async
-import org.scalajs.dom
-import org.scalajs.dom.{Algorithm, EcKeyImportParams, HashAlgorithmIdentifier, RsaHashedImportParams, RsaPssParams, crypto}
+import bobcats.{AsymmetricKeyAlg, PrivateKeySpec, PublicKeySpec, util}
 import scodec.bits.ByteVector
-import cats.syntax.all._
-import org.scalajs.dom.HashAlgorithm.`SHA-512`
 
-import scala.scalajs.js
 import scala.util.matching.Regex
 import scala.util.{Failure, Success, Try}
 
-object WebCryptoPEMUtils {
+/** the JS Crypto API does not give us the tools to parse a PEM in a way that
+ * we end up with a pure key. So we will just assume the PEM given is correct and
+ * build the specs from that.
+ *
+ * note: this class uses no JS libs, so it could be the default
+ *
+ * the whole problem here is that we are forced to pass the encoding of the key, where
+ * that information is located IN the PKCS8 key. JS WebCrypto API cannot parse PKCS1 keys
+ * where the that information is located in the ----- headers ----- (which we could parse)
+ * because the JS Crypto API does not understand that format.
+ *
+ * So as a result this library is not very helpful for use on the Web, where one may
+ * come across keys in PKCS1 format or keys in PKCS8 format and not know the key type
+ *
+ * To make it useful on the web we would need to find a JS library that can parse a PKCS1 and
+ * PKCS8 file without needing to know the key type.
+ */
 
-	implicit def forASyncIO[F[_]](implicit F0: Async[F]): PEMUtils[F] =
-		new util.PEMUtils[F] {
-			override def getPrivateKeyFromPEM(pemStr: String, algorithm: String=""): F[PrivateKeySpec[_]] = {
-				val alg: org.scalajs.dom.KeyAlgorithm = algorithm match {
-					case "RSASSA-PKCS1-v1_5" => new RsaHashedImportParams {
-						override val name: String = "RSASSA-PKCS1-v1_5"
-						val hash: HashAlgorithmIdentifier = org.scalajs.dom.HashAlgorithm.`SHA-512`
-					}
-					case "RSA-PSS" => new RsaHashedImportParams {
-						override val name: String = "RSA-PSS"
-						override val hash: HashAlgorithmIdentifier = org.scalajs.dom.HashAlgorithm.`SHA-512`
-					}
-//						new RsaPssParams {
-//						override val saltLength: Double = 64
-//						override val name: String = "RSA-PSS"
-//					}
-					case "ECDSA-P256" => new EcKeyImportParams {
-						override val name: String = "ECDSA"
-						override val namedCurve: String = "P-256"
-					}
-				}
-				for {
-					base64data <- F0.fromTry(pemData(pemStr))
-					bytes: ByteVector <- F0.fromEither(ByteVector.fromBase64(base64data).toRight(
-						new Exception("not base64 data")
-					))
-					x <- F0.fromPromise(
-						F0.delay( crypto.subtle.importKey(
-							org.scalajs.dom.KeyFormat.pkcs8,
-							bytes.toUint8Array,
-							alg, //let's see if not specifying the key algorithm will help
-							true,
-							js.Array(dom.KeyUsage.sign)
-						))
-					)
-				} yield {
-					println("algorithm = "+x)
-					PrivateKeySpec(bytes, bobcats.PrivateKeyAlg.RSA)
-				}
-			}
+object WebCryptoPEMUtils extends util.PEMUtils {
 
-			val PEMContent: Regex = "(?s)-----BEGIN[A-Z ]+KEY-----(.*)-----END[A-Z ]+KEY-----".r
-
-			def pemData(pem: String): Try[String] =
-				pem match {
-					case PEMContent(s) => Success(s.filterNot(_.isWhitespace))
-					case e => Failure(new Exception("does not match PEM syntax. " + e))
-				}
-
-			override def getPublicKeyFromPEM(pemStr: String): F[PublicKeySpec[_]] = ???
+	override def getPrivateKeyFromPEM(
+	  pemStr: PKCS8_PEM,
+	  keyType: AsymmetricKeyAlg
+	): Try[PrivateKeySpec[AsymmetricKeyAlg]]= {
+		println("in getPrivateKeyFromPEM")
+		for {
+			base64data <- pemData(pemStr)
+			bytes: ByteVector <- ByteVector.fromBase64(base64data).toRight(
+				new Exception("not base64 data")
+			).toTry
+		} yield {
+			PrivateKeySpec(bytes, keyType)
 		}
+	}
+
+	val PEMContent: Regex = "(?s)-----BEGIN[A-Z ]+KEY-----(.*)-----END[A-Z ]+KEY-----".r
+
+	def pemData(pem: String): Try[String] =
+		pem match {
+			case PEMContent(s) => Success(s.filterNot(_.isWhitespace))
+			case e => Failure(new Exception("does not match PEM syntax. " + e))
+		}
+
+	override def getPublicKeyFromPEM(
+	  pemStr: SPKI_PEM,
+	  keyType: AsymmetricKeyAlg
+	): Try[PublicKeySpec[AsymmetricKeyAlg]] = {
+		println("in getPrivateKeyFromPEM")
+		for {
+			base64data <- pemData(pemStr)
+			bytes: ByteVector <- (ByteVector.fromBase64(base64data).toRight(
+				new Exception("not base64 data")
+			)).toTry
+		} yield {
+			PublicKeySpec(bytes, keyType)
+		}
+	}
+
+
 }

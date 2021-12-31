@@ -42,7 +42,7 @@ private[bobcats] trait SecretKeySpecPlatform[+A <: Algorithm] { self: SecretKeyS
 
 }
 
-private[bobcats] trait PrivateKeySpecPlatform[+A <: PrivateKeyAlg] { self: PrivateKeySpec[A] =>
+private[bobcats] trait PrivateKeySpecPlatform[+A <: AsymmetricKeyAlg] { self: PrivateKeySpec[A] =>
   def toJava: security.PrivateKey = {
     val kf: KeyFactory = KeyFactory.getInstance(algorithm.toStringJava)
     kf.generatePrivate(toJavaSpec)
@@ -53,7 +53,7 @@ private[bobcats] trait PrivateKeySpecPlatform[+A <: PrivateKeyAlg] { self: Priva
     new java.security.spec.PKCS8EncodedKeySpec(key.toArray,algorithm.toStringJava)
 }
 
-private[bobcats] trait PublicKeySpecPlatform[+A <: PKA] { self: PublicKeySpec[A] =>
+private[bobcats] trait PublicKeySpecPlatform[+A <: AsymmetricKeyAlg] { self: PublicKeySpec[A] =>
   def toJava: security.PublicKey = {
     val kf: KeyFactory = KeyFactory.getInstance(algorithm.toStringJava)
     kf.generatePublic(toJavaSpec)

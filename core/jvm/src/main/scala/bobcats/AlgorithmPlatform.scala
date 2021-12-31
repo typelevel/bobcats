@@ -16,28 +16,35 @@
 
 package bobcats
 
+import bobcats.AsymmetricKeyAlg.RSA_PSS_Sig
+
 import java.security.Signature
 
 trait SignaturePlatform { self: bobcats.Algorithm =>
 
 	def toJava: java.security.Signature = {
 		// how could one get this to be added directly to the object?
-		if (this == PKA.`rsa-pss-sha512`) {
-			// sig is not thread safe, so we can't reuse one
+		//todo: implement all the other pss schemes
+		this match {
+			case sig: RSA_PSS_Sig => {
+				// sig is not thread safe, so we can't reuse one
 
-			// the parameters set below are defined clearly here
-			// https://httpwg.org/http-extensions/draft-ietf-httpbis-message-signatures.html#section-3.3.1
-			// we will need to have a function on the PKA.Signature objects that returns a signature.
+				// the parameters set below are defined clearly here
+				// https://httpwg.org/http-extensions/draft-ietf-httpbis-message-signatures.html#section-3.3.1
+				// we will need to have a function on the PKA.Signature objects that returns a signature.
 
-			// from https://docs.oracle.com/en/java/javase/17/docs/specs/security/standard-names.html
-			// The signature algorithm that uses the RSASSA-PSS signature scheme as defined in
-			// [PKCS #1 v2.2] (https://tools.ietf.org/html/rfc8017).
-			// Note that this signature algorithm needs parameters such as a digesting algorithm, salt length and MGF1 algorithm, to be supplied before performing the RSA operation.
-			val rsapss = Signature.getInstance("RSASSA-PSS")
-			rsapss.setParameter(SignerCompanionPlatform.PSS_512_SPEC)
-			rsapss
-		} else {
-			Signature.getInstance(self.toStringJava)
+				// from https://docs.oracle.com/en/java/javase/17/docs/specs/security/standard-names.html
+				// The signature algorithm that uses the RSASSA-PSS signature scheme as defined in
+				// [PKCS #1 v2.2] (https://tools.ietf.org/html/rfc8017).
+				// Note that this signature algorithm needs parameters such as a digesting algorithm, salt length and MGF1 algorithm, to be supplied before performing the RSA operation.
+				val rsapss = Signature.getInstance(sig.toStringJava)
+				rsapss.setParameter(SignerCompanionPlatform.spec(sig.saltLength,sig.hash))
+				rsapss
+			}
+			case _ => {
+				Signature.getInstance(self.toStringJava)
+			}
+
 		}
 	}
 }

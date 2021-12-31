@@ -31,7 +31,7 @@ case class SignatureExample(
   sigtext: SigningString,
   signature: Signature,
   keys: TestKeys,
-  signatureAlg: PKA.Signature,
+  signatureAlg: AsymmetricKeyAlg.Signature,
 )
 {
 	//		def sigtest(keys: TestKeys, sig: PKA.Signature): SignatureTest =
@@ -80,7 +80,7 @@ trait TestKeys {
 
 	def publicKey: SignatureExample.PublicKeyPEM
 
-	def privateKeyAlg: PrivateKeyAlg
+	def publicKeyNew: String = publicKey
 
-	def publicKeyAlg: PKA
+	def keyAlg: AsymmetricKeyAlg
 }

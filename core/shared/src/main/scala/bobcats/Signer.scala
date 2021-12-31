@@ -25,7 +25,7 @@ sealed trait Signer[F[_]] extends SignerPlatform[F] {
 	 * return a function from Byte Vector to signatures
 	 **/
 	def sign( //[A<:PrivateKeyAlg, S<: PKA.Signature] <- these make coding difficult for no benefit
-	  spec: PrivateKeySpec[_], sig: PKA.Signature
+	  spec: PrivateKeySpec[_], sig: AsymmetricKeyAlg.Signature
 	)(
 	  data: ByteVector
 	): F[ByteVector]

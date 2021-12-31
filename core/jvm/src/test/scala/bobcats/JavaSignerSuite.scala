@@ -19,19 +19,9 @@ package bobcats
 import bobcats.util.{BouncyJavaPEMUtils, PEMUtils}
 import cats.effect.{MonadCancel, Sync, SyncIO}
 
-import scala.util.Try
-
 class JavaSignerSuite extends SignerSuite {
 
-	override type IOX[+X] = SyncIO[X]
-
-	override def extractPub(a: SyncIO[PublicKeySpec[PKA]]): Try[PublicKeySpec[PKA]] =
-		Try(a.unsafeRunSync())
-	override def extractPriv(a: SyncIO[PrivateKeySpec[PrivateKeyAlg]]): Try[PrivateKeySpec[PrivateKeyAlg]] =
-		Try(a.unsafeRunSync())
-
-	override def pemutils: PEMUtils[SyncIO] =
-		BouncyJavaPEMUtils.forMonadError[SyncIO](cats.effect.SyncIO.syncForSyncIO)
+	override def pemutils: PEMUtils = BouncyJavaPEMUtils
 
 	implicit val synio: Sync[SyncIO] with MonadCancel[SyncIO, Throwable] = SyncIO.syncForSyncIO
 	implicit val signer: Signer[SyncIO] = Signer.forSync[SyncIO]
