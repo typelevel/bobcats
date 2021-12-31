@@ -35,7 +35,8 @@ private[bobcats] trait PrivateKeySpecPlatform[+A <: AsymmetricKeyAlg] { self: Pr
 	): F[org.scalajs.dom.CryptoKey] =
 		F0.fromPromise(F0.delay {
 			dom.crypto.subtle.importKey(
-				dom.KeyFormat.pkcs8, key.toJSArrayBuffer,
+				dom.KeyFormat.pkcs8,
+				key.toJSArrayBuffer,
 				JSKeySpec.importAlgorithm(algorithm,signature),
 				true,
 				js.Array(dom.KeyUsage.sign)
@@ -49,7 +50,8 @@ private[bobcats] trait PublicKeySpecPlatform[+A <: AsymmetricKeyAlg] {
 	): F[org.scalajs.dom.CryptoKey] =
 		F0.fromPromise(F0.delay {
 			dom.crypto.subtle.importKey(
-				dom.KeyFormat.spki, key.toJSArrayBuffer,
+				dom.KeyFormat.spki,
+				key.toJSArrayBuffer,
 				JSKeySpec.importAlgorithm(algorithm,signature),
 				true, //todo: do we always want extractable?
 				js.Array(dom.KeyUsage.verify) //todo: we may want other key usages?

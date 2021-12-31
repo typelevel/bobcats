@@ -16,12 +16,11 @@
 
 package bobcats
 
-import bobcats.AsymmetricKeyAlg.{RSA_PSS_Sig, RSA_PKCS_Sig}
 import cats.effect.kernel.Async
 import cats.syntax.all._
-import scodec.bits.ByteVector
 import org.scalajs.dom
-import dom.{EcdsaParams, HashAlgorithmIdentifier, crypto}
+import org.scalajs.dom.crypto
+import scodec.bits.ByteVector
 
 import scala.scalajs.js
 
@@ -33,21 +32,18 @@ private[bobcats] trait SignerCompanionPlatform {
 			/** Given a Private Key specification and a Signature type,
 			 * return a function from Byte Vector to signatures
 			 *   */
-			override def sign(spec: PrivateKeySpec[_], sig: AsymmetricKeyAlg.Signature)(
+			override def sign(privSpec: PrivateKeySpec[_], sig: AsymmetricKeyAlg.Signature)(
 			  data: ByteVector
-			): F[ByteVector] = {
-				spec.toWebCryptoKey(sig).flatMap{ (key: dom.CryptoKey) =>
-					//todo: optimise so that key is only calculated once
-					FA.fromPromise(FA.delay(
+			): F[ByteVector] = for {
+				key <- privSpec.toWebCryptoKey(sig)
+				any <- FA.fromPromise(FA.delay(
 						crypto.subtle.sign(
-							bobcats.JSKeySpec.signatureAlgorithm(sig),
+							JSKeySpec.signatureAlgorithm(sig),
 							key,
-							data.toJSArrayBuffer
-						))).map(any =>
-						//see https://github.com/scala-js/scala-js-dom/issues/660
-					  	ByteVector.fromJSArrayBuffer(any.asInstanceOf[js.typedarray.ArrayBuffer])
-					)
-				}
+							data.toJSArrayBuffer)
+						))
+			} yield { //see https://github.com/scala-js/scala-js-dom/issues/660
+				ByteVector.fromJSArrayBuffer(any.asInstanceOf[js.typedarray.ArrayBuffer])
 			}
 		}
 }

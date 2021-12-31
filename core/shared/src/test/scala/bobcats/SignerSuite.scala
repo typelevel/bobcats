@@ -20,7 +20,6 @@ import bobcats.util.PEMUtils
 import cats.MonadError
 import cats.syntax.all._
 import munit.CatsEffectSuite
-import scodec.bits.Bases.Alphabets
 import scodec.bits.ByteVector
 
 import scala.reflect.ClassTag

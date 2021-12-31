@@ -16,7 +16,10 @@
 
 package bobcats
 
-import scala.util.Success
+import bobcats.{AsymmetricKeyAlg => Alg}
+
+import java.security
+import scala.util.{Success, Try}
 
 class PEMTestSuite extends munit.FunSuite {
 	import util.{BouncyJavaPEMUtils => pemutils}
@@ -25,20 +28,41 @@ class PEMTestSuite extends munit.FunSuite {
 
 	def testPEM(pem: TestKeys): Unit = {
 		test(s"${pem.description}: test spec public key matches calculated spki key") {
+			val pubkeyTry: Try[security.PublicKey] = pemutils.PEMToPublicKey(pem.publicKey)
+			assert(pubkeyTry.isSuccess)
+			val pubkey = pubkeyTry.get
+			assertEquals(pubkey.getAlgorithm,
+				PEMNamesForKey(pem,false)
+			)
+			assertEquals(pubkey.getFormat, "X.509")
 			assertEquals(
-				pemutils.PEMToPublicKey(pem.publicKey).map(pemutils.toSPKI).map(_.trim),
-				Success(pem.publicKeyNew),
+				pemutils.toSPKI(pubkey).trim,
+				pem.publicKeyNew,
 				s"original key value was: "+pem.publicKey
 			)
+
 		}
-		test(s"${pem.description}: test spec priave key matches calculated pkcs8 key") {
+		test(s"${pem.description}: test spec private key matches calculated pkcs8 key") {
+			val privkeyTry: Try[security.PrivateKey] = pemutils.PEMtoPrivateKey(pem.privateKey)
+			assert(privkeyTry.isSuccess)
+			val privkey = privkeyTry.get
+			assertEquals(privkey.getAlgorithm,
+				PEMNamesForKey(pem,true))
+			assertEquals(privkey.getFormat, "PKCS#8")
 			assertEquals(
-				pemutils.PEMtoPrivateKey(pem.privateKey).map(pemutils.toPKCS8).map(_.trim),
-				Success(pem.privatePk8Key),
+			  	pemutils.toPKCS8(privkey).trim,
+				pem.privatePk8Key,
 				s"original key value was: "+pem.privateKey
 			)
 		}
 
 	}
 
+	private def PEMNamesForKey(pem: TestKeys, isPriv: Boolean): String = {
+		pem.keyAlg match {
+			case _: Alg.EC => "ECDSA"
+			case Alg.RSA_PSS_Key => if (isPriv) "RSASSA-PSS" else "RSA"
+			case _: Alg.RSA => "RSA"
+		}
+	}
 }

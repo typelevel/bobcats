@@ -16,39 +16,32 @@
 
 package bobcats
 
-import bobcats.AsymmetricKeyAlg.{RSA_PKCS_Sig, RSA_PSS_Sig}
 import cats.effect.kernel.Async
 import cats.implicits.toFunctorOps
 import cats.syntax.all._
-import org.scalajs.dom
-import org.scalajs.dom.{EcdsaParams, HashAlgorithmIdentifier, RsaPssParams, crypto}
+import org.scalajs.dom.crypto
 import scodec.bits.ByteVector
-
-import scala.scalajs.js
 
 private[bobcats] trait VerifierPlatform[F[_]]
 
 private[bobcats] trait VerifierCompanionPlatform {
-		implicit def forAsync[F[_]](implicit FA: Async[F]): Verifier[F] =
-			new UnsealedVerifier[F] {
-				override def verify(spec: PublicKeySpec[_], sig: AsymmetricKeyAlg.Signature)(
-				  signingStr: ByteVector, signature: ByteVector
-				): F[Boolean] = {
-					//todo: optimise so that key is only calculated once
-					spec.toWebCryptoKey(sig).flatMap { (key: dom.CryptoKey) =>
-						FA.fromPromise(FA.delay {
-							crypto.subtle.verify( //todo: report to dom that this should really return a Boolean promise
-								JSKeySpec.signatureAlgorithm(sig),
-								key, signature.toJSArrayBuffer, signingStr.toJSArrayBuffer
-							)
-						}).fmap[Boolean] { (any: js.Any) =>
-						  // see https://github.com/scala-js/scala-js-dom/issues/660
-							any.toString match { //attempting transformation to bool
-								case "true" => true
-								case 	_ => false
-							}
-						}
-					}
+	implicit def forAsync[F[_]](implicit FA: Async[F]): Verifier[F] =
+		new UnsealedVerifier[F] {
+			override def verify(spec: PublicKeySpec[_], sig: AsymmetricKeyAlg.Signature)(
+			  signingStr: ByteVector, signature: ByteVector
+			): F[Boolean] =
+				//todo: optimise so that key is only calculated once
+				for {
+					key <- spec.toWebCryptoKey(sig)
+					ok <- FA.fromPromise(FA.delay {
+						crypto.subtle.verify( //todo: report to dom that this should really return a Boolean promise
+							JSKeySpec.signatureAlgorithm(sig),
+							key, signature.toJSArrayBuffer, signingStr.toJSArrayBuffer
+						)
+					})
+				} yield {
+					// see https://github.com/scala-js/scala-js-dom/issues/660
+					ok.asInstanceOf[Boolean]
 				}
-			}
+		}
 }

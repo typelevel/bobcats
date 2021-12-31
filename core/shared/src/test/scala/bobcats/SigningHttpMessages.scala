@@ -297,7 +297,6 @@ object SigningHttpMessages extends SignatureExamples {
 			  |-----END PUBLIC KEY-----""".stripMargin
 
 		override def keyAlg: AsymmetricKeyAlg = AsymmetricKeyAlg.RSA_PSS_Key
-
 	}
 
 	object `test-key-ecc-p256` extends TestKeys {
