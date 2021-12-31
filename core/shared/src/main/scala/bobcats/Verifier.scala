@@ -23,7 +23,7 @@ sealed trait Verifier[F[_]] extends VerifierPlatform[F] {
 	//the first two arguments set up a verifier for a public key and signature type
 	//returning a function that takes a signing string and a signature
 	def verify(
-	  spec: PublicKeySpec[_], sig: PKA.Signature
+	  spec: PublicKeySpec[_], sig: AsymmetricKeyAlg.Signature
 	)(
 	  signingStr: ByteVector, signature: ByteVector
 	): F[Boolean]

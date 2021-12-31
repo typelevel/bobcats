@@ -41,7 +41,7 @@ final case class SecretKeySpec[+A <: Algorithm](key: ByteVector, algorithm: A)
 * todo: should therefore be called Pkcs8PrivateKeySpec?
 * note: JSON Web Key is the future
 */
-final case class PrivateKeySpec[+A <: PrivateKeyAlg](key: ByteVector, algorithm: A)
+final case class PrivateKeySpec[+A <: AsymmetricKeyAlg](key: ByteVector, algorithm: A)
   extends PrivateKey[A] with PrivateKeySpecPlatform[A]
 
 /* The ByteVector is X509 encoded data
@@ -49,6 +49,6 @@ final case class PrivateKeySpec[+A <: PrivateKeyAlg](key: ByteVector, algorithm:
 * q: what is the role of the algorithm?
 * note: JSON Web Key is the future
 */
-final case class PublicKeySpec[+A <: PKA](key: ByteVector, algorithm: A)
+final case class PublicKeySpec[+A <: AsymmetricKeyAlg](key: ByteVector, algorithm: A)
   extends PublicKey[A] with PublicKeySpecPlatform[A]
 

@@ -31,7 +31,7 @@ private[bobcats] trait SignerCompanionPlatform {
 			//one would really want a type that pairs the PKA and Sig, so as not to leave impossible combinations open
 			override def sign( // it is not clear that adding [A <: PrivateKeyAlg, S <: PKA.Signature] helps
 			  spec: PrivateKeySpec[_],
-			  sigType: PKA.Signature)(
+			  sigType: AsymmetricKeyAlg.Signature)(
 			  data: ByteVector
 			): F[ByteVector] =
 				F.catchNonFatal{
@@ -46,11 +46,11 @@ private[bobcats] trait SignerCompanionPlatform {
 
 object SignerCompanionPlatform {
 	// these are the values set in sun.security.util.SignatureUtil.PSSParamsHolder.PSS_512_SPEC
-	val PSS_512_SPEC = new PSSParameterSpec(
-		"SHA-512",
+	def spec(salt: Int, sha: HashAlgorithm): PSSParameterSpec = new PSSParameterSpec(
+		sha.toStringJava,
 		"MGF1",
-		MGF1ParameterSpec.SHA512,
-		64,
+		new MGF1ParameterSpec(sha.toStringJava),
+		salt,
 		1)
 }
 

@@ -32,23 +32,14 @@ package bobcats
  * limitations under the License.
  */
 
-import bobcats.util.PEMUtils
+import bobcats.util.{PEMUtils, WebCryptoPEMUtils}
 import cats.effect.kernel.Async
 import cats.effect.{IO, MonadCancel, Sync, SyncIO}
 
 import scala.util.Try
 
 class JSSignerSuite extends SignerSuite {
-	override implicit def pemutils: PEMUtils[IO] =
-		bobcats.util.WebCryptoPEMUtils.forASyncIO[IO](cats.effect.Async[IO])
-
-	override type IOX[+X] = IO[X]
-
-	override def extractPub(a: IO[PublicKeySpec[PKA]]): Try[PublicKeySpec[PKA]] =
-		a.unsafeToFuture().value.get
-
-	override def extractPriv(a: IO[PrivateKeySpec[PrivateKeyAlg]]): Try[PrivateKeySpec[PrivateKeyAlg]] =
-		a.unsafeToFuture().value.get
+	override implicit val pemutils: PEMUtils = WebCryptoPEMUtils
 
 	implicit val synio: Async[IO] = IO.asyncForIO
 

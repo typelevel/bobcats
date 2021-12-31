@@ -35,7 +35,7 @@ object SigningHttpMessages extends SignatureExamples {
 
 	object `§3.1_Signature` extends SignatureExample(
 		description = "§3.1_Signature example",
-		sigtext =
+		sigtext = // defined https://www.ietf.org/archive/id/draft-ietf-httpbis-message-signatures-07.html#section-2.3
 			""""@method": GET
 			  |"@path": /foo
 			  |"@authority": example.org
@@ -53,7 +53,7 @@ object SigningHttpMessages extends SignatureExamples {
 			  |5BUAVGqlyp8JYm+S/CWJi31PNUjRRCusCVRj05NrxABNFv3r5S9IXf2fYJK+eyW4AiG\
 			  |VMvMcOg==""".rfc8792single,
 		keys =	`test-key-rsa-pss`,
-		signatureAlg = PKA.`rsa-pss-sha512`
+		signatureAlg = AsymmetricKeyAlg.`rsa-pss-sha512`
 	)
 
 	object `Appendix_B.2.1` extends SignatureExample(
@@ -69,7 +69,7 @@ object SigningHttpMessages extends SignatureExamples {
 			  |IyVFnEZ7B/VIQofdShO+C/7MuupCSLVjQz5xA+Zs6Hw+W9ESD/6BuGs6LF1TcKLxW\
 			  |+5K+2zvDY/Cia34HNpRW5io7Iv9/b7iQ==""".rfc8792single,
 		keys = `test-key-rsa-pss`,
-		signatureAlg = PKA.`rsa-pss-sha512`
+		signatureAlg = AsymmetricKeyAlg.`rsa-pss-sha512`
 	)
 
 	object `Appendix_B.2.2` extends SignatureExample(
@@ -87,7 +87,7 @@ object SigningHttpMessages extends SignatureExamples {
 			  |  v0l8mN404PPzRBTpB7+HpClyK4CNp+SVv46+6sHMfJU4taz10s/NoYRmYCGXyadzY\
 			  |  YDj0BYnFdERB6NblI/AOWFGl5Axhhmjg==""".rfc8792single,
 		keys = `test-key-rsa-pss`,
-		signatureAlg = PKA.`rsa-pss-sha512`
+		signatureAlg = AsymmetricKeyAlg.`rsa-pss-sha512`
 	)
 
 	object `Appendix_B.2.3` extends SignatureExample(
@@ -112,7 +112,7 @@ object SigningHttpMessages extends SignatureExamples {
 			  |  Iy1RZ5XpgbNeDLCqSLuZFVID80EohC2CQ1cL5svjslrlCNstd2JCLmhjL7xV3NYXe\
 			  |  rLim4bqUQGRgDwNJRnqobpS6C1NBns/Q==""".rfc8792single,
 		keys = `test-key-rsa-pss`,
-		signatureAlg = PKA.`rsa-pss-sha512`
+		signatureAlg = AsymmetricKeyAlg.`rsa-pss-sha512`
 	)
 
 	object `Appendix_B.2.4` extends SignatureExample(
@@ -127,10 +127,8 @@ object SigningHttpMessages extends SignatureExamples {
 			"""n8RKXkj0iseWDmC6PNSQ1GX2R9650v+lhbb6rTGoSrSSx18zmn\
 			  |  6fPOtBx48/WffYLO0n1RHHf9scvNGAgGq52Q==""".rfc8792single,
 		keys = `test-key-ecc-p256`,
-		signatureAlg = PKA.`ecdsa-p256-sha256`
+		signatureAlg = AsymmetricKeyAlg.`ecdsa-p256-sha256`
 	)
-
-
 
 	object `§4.3_Example` extends SignatureExample(
 		description = "§4.3 Example",
@@ -152,12 +150,12 @@ object SigningHttpMessages extends SignatureExamples {
 			  |qfDmV0vLCXtDda6CNO2Zyum/pMGboCnQn/VkQ+j8kSydKoFg6EbVuGbrQijth6I0dDX\
 			  |2/HYcJg==""".rfc8792single,
 		keys= `test-key-rsa`,
-		signatureAlg = PKA.`rsa-v1_5-sha256`
+		signatureAlg = AsymmetricKeyAlg.`rsa-v1_5-sha256`
 	)
 
 
 	// 2048-bit RSA public and private key pair,
-	// given in https://httpwg.org/http-extensions/draft-ietf-httpbis-message-signatures.html#appendix-B.1.1
+	// given in https://www.ietf.org/archive/id/draft-ietf-httpbis-message-signatures-07.html#appendix-B.1.1
 	object `test-key-rsa` extends TestKeys {
 		override def privateKey: PrivateKeyPEM =
 			"""-----BEGIN RSA PRIVATE KEY-----
@@ -228,10 +226,20 @@ object SigningHttpMessages extends SignatureExamples {
 			  |PSXSfBDiUGhwOw76WuSSsf1D4b/vLoJ10wIDAQAB
 			  |-----END RSA PUBLIC KEY-----""".stripMargin
 
+		override def publicKeyNew =
+			"""-----BEGIN PUBLIC KEY-----
+			  |MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAhAKYdtoeoy8zcAcR874L
+			  |8cnZxKzAGwd7v36APp7Pv6Q2jdsPBRrwWEBnez6d0UDKDwGbc6nxfEXAy5mbhgaj
+			  |zrw3MOEt8uA5txSKobBpKDeBLOsdJKFqMGmXCQvEG7YemcxDTRPxAleIAgYYRjTS
+			  |d/QBwVW9OwNFhekro3RtlinV0a75jfZgkne/YiktSvLG34lw2zqXBDTC5NHROUqG
+			  |TlML4PlNZS5Ri2U4aCNx2rUPRcKIlE0PuKxI4T+HIaFpv8+rdV6eUgOrB2xeI1dS
+			  |FFn/nnv5OoZJEIB+VmuKn3DCUcCZSFlQPSXSfBDiUGhwOw76WuSSsf1D4b/vLoJ1
+			  |0wIDAQAB
+			  |-----END PUBLIC KEY-----""".stripMargin
 
-		override def privateKeyAlg: PrivateKeyAlg = PrivateKeyAlg.RSA
 
-		override def publicKeyAlg: PKA = PKA.RSA
+		override def keyAlg: AsymmetricKeyAlg = AsymmetricKeyAlg.RSA_PKCS_Key
+
 	}
 
 	// 2048-bit RSA public and private key pair
@@ -278,9 +286,7 @@ object SigningHttpMessages extends SignatureExamples {
 			  |2wIDAQAB
 			  |-----END PUBLIC KEY-----""".stripMargin
 
-		override def publicKeyAlg: PKA = PKA.RSA
-
-		override def privateKeyAlg: PrivateKeyAlg = PrivateKeyAlg.RSA
+		override def keyAlg: AsymmetricKeyAlg = AsymmetricKeyAlg.RSA_PSS_Key
 
 	}
 
@@ -306,9 +312,8 @@ object SigningHttpMessages extends SignatureExamples {
 			  |w0EkjqF7xB4FivAxzic30tMM4GF+hR6Dxh71Z50VGGdldkkDXZCnTNnoXQ==
 			  |-----END PUBLIC KEY-----""".stripMargin
 
-		override def privateKeyAlg: PrivateKeyAlg = PrivateKeyAlg.EC
+		override def keyAlg: AsymmetricKeyAlg = AsymmetricKeyAlg.ECKey(AsymmetricKeyAlg.`P-256`)
 
-		override def publicKeyAlg: PKA = PKA.EC
 	}
 
 }

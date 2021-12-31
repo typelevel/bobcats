@@ -16,7 +16,7 @@
 
 package bobcats
 
-import bobcats.PKA.{RSA_PSS, RSA_Signature}
+import bobcats.AsymmetricKeyAlg.{RSA_PSS_Sig, RSA_PKCS_Sig}
 import cats.effect.kernel.Async
 import cats.syntax.all._
 import scodec.bits.ByteVector
@@ -33,23 +33,23 @@ private[bobcats] trait SignerCompanionPlatform {
 			/** Given a Private Key specification and a Signature type,
 			 * return a function from Byte Vector to signatures
 			 *   */
-			override def sign(spec: PrivateKeySpec[_], sig: PKA.Signature)(
+			override def sign(spec: PrivateKeySpec[_], sig: AsymmetricKeyAlg.Signature)(
 			  data: ByteVector
 			): F[ByteVector] = {
 				spec.toWebCryptoKey(sig).flatMap{ (key: dom.CryptoKey) =>
 					//todo: optimise so that key is only calculated once
 					val algId: org.scalajs.dom.Algorithm = sig match {
-						case rsapss: RSA_PSS => new org.scalajs.dom.RsaPssParams {
+						case rsapss: RSA_PSS_Sig => new org.scalajs.dom.RsaPssParams {
 							override val saltLength: Double = rsapss.saltLength
 							override val name: String = "RSA-PSS"
 						}
-						case _: RSA_Signature => new org.scalajs.dom.Algorithm {
+						case _: RSA_PKCS_Sig => new org.scalajs.dom.Algorithm {
 							override val name: String = "RSASSA-PKCS1-v1_5"
 						}
-						case ec: bobcats.PKA.EC_Sig => new EcdsaParams {
-							override val hash: HashAlgorithmIdentifier = ec.hash.toStringWebCrypto
-							override val name: String = ec.toStringWebCrypto
-						}
+						case ec: bobcats.AsymmetricKeyAlg.EC_Sig => new EcdsaParams {
+								override val hash: HashAlgorithmIdentifier = ec.hash.toStringWebCrypto
+								override val name: String = ec.toStringWebCrypto
+							}
 					}
 					FA.fromPromise(FA.delay(crypto.subtle.sign(algId,key,data.toUint8Array)))
 					  .map(any => ByteVector.fromJSArrayBuffer(any.asInstanceOf[js.typedarray.ArrayBuffer]))

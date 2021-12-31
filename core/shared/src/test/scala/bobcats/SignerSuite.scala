@@ -31,60 +31,55 @@ import scala.util.Try
  */
 trait SignerSuite extends CatsEffectSuite {
 	type MonadErr[T[_]] = MonadError[T, Throwable]
-	type IOX[+X]
 
 	val tests: Seq[SignatureExample] = SigningHttpMessages.signatureExamples
 
-	//the only time we have to really decide between IOX being sync or async is in
-	// the PEMUtils as `extract` calls the unsafe methods
-	def pemutils: PEMUtils[IOX]
-
-	// either unsafeRunSync() or unsafeRunASync()
-	def extractPub(a: IOX[PublicKeySpec[PKA]]): Try[PublicKeySpec[PKA]]
-	def extractPriv(a: IOX[PrivateKeySpec[PrivateKeyAlg]]): Try[PrivateKeySpec[PrivateKeyAlg]]
-
+	def pemutils: PEMUtils
 
 	def testSigner[F[_] : Signer : Verifier : MonadErr](
 	  sigTest: SignatureExample, pubKey: PublicKeySpec[_], privKey: PrivateKeySpec[_]
 	)(implicit ct: ClassTag[F[_]]): Unit = {
 
-		val signature: F[ByteVector] = {
-			val bytes: ByteVector = ByteVector.encodeAscii(sigTest.sigtext).toOption.get
-			Signer[F].sign(privKey, sigTest.signatureAlg)(bytes)
-		}
-
 		test(s"signature verification with public key for ${sigTest.description}") {
-			val headersVec = ByteVector.encodeAscii(sigTest.sigtext).toOption.get //because these are headers!
 			for {
-				signedTxt <- signature
-				b <- Verifier[F].verify(pubKey, sigTest.signatureAlg)(headersVec, signedTxt)
-			} yield {
-				assertEquals(b, true,
-					s"expected verify(>>${sigTest.sigtext}<<, >>$signedTxt<<)=true)"
+				sigTextBytes <- implicitly[MonadErr[F]].fromEither(ByteVector.encodeAscii(sigTest.sigtext))
+				signedTxt <- Signer[F].sign(privKey, sigTest.signatureAlg)(sigTextBytes)
+				b <- Verifier[F].verify(pubKey, sigTest.signatureAlg)(
+					sigTextBytes, signedTxt
 				)
+			} yield {
+				assertEquals(b, true, s"expected verify(>>${sigTest.sigtext}<<, >>$signedTxt<<)=true)")
 			}
 		}
 
 		test(s"test ${sigTest.description} against expected value") {
-			signature.map { signed =>
-				assertEquals(
-					signed.toBase64(Alphabets.Base64), sigTest.signature,
-					s"inputStr was >>${sigTest.sigtext}<<"
+			for {
+				sigTextBytes <- implicitly[MonadErr[F]].fromEither(ByteVector.encodeAscii(sigTest.sigtext))
+				expectedSig <-  implicitly[MonadErr[F]].fromEither(
+					ByteVector.fromBase64Descriptive(sigTest.signature, scodec.bits.Bases.Alphabets.Base64)
+					  .leftMap(new Exception(_))
+				)
+				b <- Verifier[F].verify(pubKey, sigTest.signatureAlg)(
+					sigTextBytes, expectedSig
+				)
+			} yield {
+				assertEquals(b, true,
+					s"expected to verify >>${sigTest.sigtext}<<"
 				)
 			}
 		}
 	}
 
-	def extractKeys(ex: SignatureExample): (PublicKeySpec[PKA], PrivateKeySpec[PrivateKeyAlg]) = {
-		val res: Try[(PublicKeySpec[PKA], PrivateKeySpec[PrivateKeyAlg])] = for {
-			pub <- extractPub(pemutils.getPublicKeyFromPEM(ex.keys.publicKey))
-			priv <- extractPriv(pemutils.getPrivateKeyFromPEM(ex.keys.privateKey))
+	def extractKeys(ex: SignatureExample): (PublicKeySpec[AsymmetricKeyAlg], PrivateKeySpec[AsymmetricKeyAlg]) = {
+		val res: Try[(PublicKeySpec[AsymmetricKeyAlg], PrivateKeySpec[AsymmetricKeyAlg])] = for {
+			pub <- pemutils.getPublicKeyFromPEM(ex.keys.publicKeyNew, ex.keys.keyAlg)
+			priv <- pemutils.getPrivateKeyFromPEM(ex.keys.privatePk8Key, ex.keys.keyAlg)
 		} yield (pub, priv)
 
 		test(s"parsing public and private keys for ${ex.description}") {
 			res.get
 		}
-		res.get.asInstanceOf[(PublicKeySpec[PKA], PrivateKeySpec[PrivateKeyAlg])]
+		res.get
 	}
 
 	// subclasses should call run
