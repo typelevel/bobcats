@@ -27,23 +27,23 @@ import scala.scalajs.js
 private[bobcats] trait SignerPlatform[F[_]]
 
 private[bobcats] trait SignerCompanionPlatform {
-	implicit def forAsync[F[_]](implicit FA: Async[F]): Signer[F] =
-		new UnsealedSigner[F] {
-			/** Given a Private Key specification and a Signature type,
-			 * return a function from Byte Vector to signatures
-			 *   */
-			override def sign(privSpec: PrivateKeySpec[_], sig: AsymmetricKeyAlg.Signature)(
-			  data: ByteVector
-			): F[ByteVector] = for {
-				key <- privSpec.toWebCryptoKey(sig)
-				any <- FA.fromPromise(FA.delay(
-						crypto.subtle.sign(
-							JSKeySpec.signatureAlgorithm(sig),
-							key,
-							data.toJSArrayBuffer)
-						))
-			} yield { //see https://github.com/scala-js/scala-js-dom/issues/660
-				ByteVector.fromJSArrayBuffer(any.asInstanceOf[js.typedarray.ArrayBuffer])
-			}
-		}
+  implicit def forAsync[F[_]](implicit FA: Async[F]): Signer[F] =
+    new UnsealedSigner[F] {
+
+      /**
+       * Given a Private Key specification and a Signature type, return a function from Byte
+       * Vector to signatures
+       */
+      override def sign(privSpec: PrivateKeySpec[_], sig: AsymmetricKeyAlg.Signature)(
+          data: ByteVector
+      ): F[ByteVector] = for {
+        key <- privSpec.toWebCryptoKey(sig)
+        any <- FA.fromPromise(
+          FA.delay(
+            crypto.subtle.sign(JSKeySpec.signatureAlgorithm(sig), key, data.toJSArrayBuffer)
+          ))
+      } yield { // see https://github.com/scala-js/scala-js-dom/issues/660
+        ByteVector.fromJSArrayBuffer(any.asInstanceOf[js.typedarray.ArrayBuffer])
+      }
+    }
 }

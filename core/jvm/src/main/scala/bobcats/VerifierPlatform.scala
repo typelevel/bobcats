@@ -21,26 +21,27 @@ import scodec.bits.ByteVector
 
 import java.security
 
-
 private[bobcats] trait VerifierPlatform[F[_]]
 
 private[bobcats] trait VerifierCompanionPlatform {
 
-	implicit def forSync[F[_]](implicit F: Sync[F]): Verifier[F] =
-		new UnsealedVerifier[F] {
-			override def verify(
-			  spec: PublicKeySpec[_], sigType: AsymmetricKeyAlg.Signature
-			)(
-			  signingStr: ByteVector, signature: ByteVector
-			): F[Boolean] =
-			   //todo: if one is to catchNonFatal one should have exceptions that
-				//   are consistent across JS and Java implementations (should one?)
-			F.catchNonFatal {
-				val pubKey: security.PublicKey  = spec.toJava
-				val sig: java.security.Signature = sigType.toJava
-				sig.initVerify(pubKey)
-				sig.update(signingStr.toByteBuffer)
-				sig.verify(signature.toArray)
-			}
-		}
+  implicit def forSync[F[_]](implicit F: Sync[F]): Verifier[F] =
+    new UnsealedVerifier[F] {
+      override def verify(
+          spec: PublicKeySpec[_],
+          sigType: AsymmetricKeyAlg.Signature
+      )(
+          signingStr: ByteVector,
+          signature: ByteVector
+      ): F[Boolean] =
+        // todo: if one is to catchNonFatal one should have exceptions that
+        //   are consistent across JS and Java implementations (should one?)
+        F.catchNonFatal {
+          val pubKey: security.PublicKey = spec.toJava
+          val sig: java.security.Signature = sigType.toJava
+          sig.initVerify(pubKey)
+          sig.update(signingStr.toByteBuffer)
+          sig.verify(signature.toArray)
+        }
+    }
 }
