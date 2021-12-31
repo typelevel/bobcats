@@ -20,7 +20,6 @@ import bobcats.util.PEMUtils
 import cats.MonadError
 import cats.syntax.all._
 import munit.CatsEffectSuite
-import scodec.bits.Bases.Alphabets
 import scodec.bits.ByteVector
 
 import scala.reflect.ClassTag
@@ -40,9 +39,10 @@ trait SignerSuite extends CatsEffectSuite {
 	  sigTest: SignatureExample, pubKey: PublicKeySpec[_], privKey: PrivateKeySpec[_]
 	)(implicit ct: ClassTag[F[_]]): Unit = {
 
-		test(s"signature verification with public key for ${sigTest.description}") {
+		val signatureTxtF: F[ByteVector] = implicitly[MonadErr[F]].fromEither(ByteVector.encodeAscii(sigTest.sigtext))
+		test(s"${sigTest.description}: can verify generated signature") {
 			for {
-				sigTextBytes <- implicitly[MonadErr[F]].fromEither(ByteVector.encodeAscii(sigTest.sigtext))
+				sigTextBytes <- signatureTxtF
 				signedTxt <- Signer[F].sign(privKey, sigTest.signatureAlg)(sigTextBytes)
 				b <- Verifier[F].verify(pubKey, sigTest.signatureAlg)(
 					sigTextBytes, signedTxt
@@ -52,9 +52,9 @@ trait SignerSuite extends CatsEffectSuite {
 			}
 		}
 
-		test(s"test ${sigTest.description} against expected value") {
+		test(s"${sigTest.description}: matches expected value") {
 			for {
-				sigTextBytes <- implicitly[MonadErr[F]].fromEither(ByteVector.encodeAscii(sigTest.sigtext))
+				sigTextBytes <- signatureTxtF
 				expectedSig <-  implicitly[MonadErr[F]].fromEither(
 					ByteVector.fromBase64Descriptive(sigTest.signature, scodec.bits.Bases.Alphabets.Base64)
 					  .leftMap(new Exception(_))
@@ -76,7 +76,7 @@ trait SignerSuite extends CatsEffectSuite {
 			priv <- pemutils.getPrivateKeyFromPEM(ex.keys.privatePk8Key, ex.keys.keyAlg)
 		} yield (pub, priv)
 
-		test(s"parsing public and private keys for ${ex.description}") {
+		test(s"${ex.description}: parsing public and private keys") {
 			res.get
 		}
 		res.get

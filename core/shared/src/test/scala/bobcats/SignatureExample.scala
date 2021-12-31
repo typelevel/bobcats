@@ -40,6 +40,7 @@ case class SignatureExample(
 
 trait SignatureExamples {
 	def signatureExamples: Seq[SignatureExample]
+	def keyExamples: Seq[TestKeys]
 }
 
 
@@ -65,6 +66,7 @@ object X {
  * So place them here to make them available in other tests.
  **/
 trait TestKeys {
+	def description: String
 	// the keys in the Signing HTTP messages Spec are PEM encoded.
 	// One could transform the keys from PKCS#1 to PKCS#8 using
 	// openssl pkcs8 -topk8 -inform PEM -in spec.private.pem -out private.pem -nocrypt

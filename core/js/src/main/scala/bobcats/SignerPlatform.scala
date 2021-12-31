@@ -16,44 +16,34 @@
 
 package bobcats
 
-import bobcats.AsymmetricKeyAlg.{RSA_PSS_Sig, RSA_PKCS_Sig}
 import cats.effect.kernel.Async
 import cats.syntax.all._
-import scodec.bits.ByteVector
 import org.scalajs.dom
-import dom.{EcdsaParams, HashAlgorithmIdentifier, crypto}
+import org.scalajs.dom.crypto
+import scodec.bits.ByteVector
 
 import scala.scalajs.js
 
 private[bobcats] trait SignerPlatform[F[_]]
 
 private[bobcats] trait SignerCompanionPlatform {
-	implicit def forAsync[F[_]](implicit FA: Async[F]): Signer[F] =
-		new UnsealedSigner[F] {
-			/** Given a Private Key specification and a Signature type,
-			 * return a function from Byte Vector to signatures
-			 *   */
-			override def sign(spec: PrivateKeySpec[_], sig: AsymmetricKeyAlg.Signature)(
-			  data: ByteVector
-			): F[ByteVector] = {
-				spec.toWebCryptoKey(sig).flatMap{ (key: dom.CryptoKey) =>
-					//todo: optimise so that key is only calculated once
-					val algId: org.scalajs.dom.Algorithm = sig match {
-						case rsapss: RSA_PSS_Sig => new org.scalajs.dom.RsaPssParams {
-							override val saltLength: Double = rsapss.saltLength
-							override val name: String = "RSA-PSS"
-						}
-						case _: RSA_PKCS_Sig => new org.scalajs.dom.Algorithm {
-							override val name: String = "RSASSA-PKCS1-v1_5"
-						}
-						case ec: bobcats.AsymmetricKeyAlg.EC_Sig => new EcdsaParams {
-								override val hash: HashAlgorithmIdentifier = ec.hash.toStringWebCrypto
-								override val name: String = ec.toStringWebCrypto
-							}
-					}
-					FA.fromPromise(FA.delay(crypto.subtle.sign(algId,key,data.toUint8Array)))
-					  .map(any => ByteVector.fromJSArrayBuffer(any.asInstanceOf[js.typedarray.ArrayBuffer]))
-				}
-			}
-		}
+  implicit def forAsync[F[_]](implicit FA: Async[F]): Signer[F] =
+    new UnsealedSigner[F] {
+
+      /**
+       * Given a Private Key specification and a Signature type, return a function from Byte
+       * Vector to signatures
+       */
+      override def sign(privSpec: PrivateKeySpec[_], sig: AsymmetricKeyAlg.Signature)(
+          data: ByteVector
+      ): F[ByteVector] = for {
+        key <- privSpec.toWebCryptoKey(sig)
+        any <- FA.fromPromise(
+          FA.delay(
+            crypto.subtle.sign(JSKeySpec.signatureAlgorithm(sig), key, data.toJSArrayBuffer)
+          ))
+      } yield { // see https://github.com/scala-js/scala-js-dom/issues/660
+        ByteVector.fromJSArrayBuffer(any.asInstanceOf[js.typedarray.ArrayBuffer])
+      }
+    }
 }

@@ -39,13 +39,13 @@ import cats.effect.{IO, MonadCancel, Sync, SyncIO}
 import scala.util.Try
 
 class JSSignerSuite extends SignerSuite {
-	override implicit val pemutils: PEMUtils = WebCryptoPEMUtils
+  override implicit val pemutils: PEMUtils = WebCryptoPEMUtils
 
-	implicit val synio: Async[IO] = IO.asyncForIO
+  implicit val synio: Async[IO] = IO.asyncForIO
 
-	implicit val signer: Signer[IO] = Signer.forAsync[IO]
-	implicit val verifier: Verifier[IO] = Verifier.forAsync[IO]
+  implicit val signer: Signer[IO] = Signer.forAsync[IO]
+  implicit val verifier: Verifier[IO] = Verifier.forAsync[IO]
 
-	run[IO](SigningHttpMessages.signatureExamples)
+  run[IO](SigningHttpMessages.signatureExamples)
 
 }

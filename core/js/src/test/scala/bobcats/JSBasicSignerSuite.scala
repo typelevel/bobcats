@@ -42,36 +42,41 @@ import scala.util.Success
 // parses the content. Move to Java.
 class JSBasicSignerSuite extends CatsEffectSuite {
 
-
-	test("can I parse `test-key-rsa`") {
+  test("can I parse `test-key-rsa`") {
 //		assertIO(IO(4),4)
-		assertEquals(
-			WebCryptoPEMUtils.getPrivateKeyFromPEM(
-				bobcats.SigningHttpMessages.`test-key-rsa`.privatePk8Key,
-				bobcats.AsymmetricKeyAlg.RSA_PKCS_Key,
-			).map(pk=> pk.algorithm),
-			Success(AsymmetricKeyAlg.RSA_PKCS_Key)
-		)
-	}
+    assertEquals(
+      WebCryptoPEMUtils
+        .getPrivateKeyFromPEM(
+          bobcats.SigningHttpMessages.`test-key-rsa`.privatePk8Key,
+          bobcats.AsymmetricKeyAlg.RSA_PKCS_Key
+        )
+        .map(pk => pk.algorithm),
+      Success(AsymmetricKeyAlg.RSA_PKCS_Key)
+    )
+  }
 
-	test("can I parse `test-key-rsa-pss`") {
-		assertEquals(
-			WebCryptoPEMUtils.getPrivateKeyFromPEM(
-				bobcats.SigningHttpMessages.`test-key-rsa-pss`.privatePk8Key,
-				AsymmetricKeyAlg.RSA_PSS_Key
-			).map(pk=> pk.algorithm),
-			Success(AsymmetricKeyAlg.RSA_PSS_Key)
-		)
-	}
+  test("can I parse `test-key-rsa-pss`") {
+    assertEquals(
+      WebCryptoPEMUtils
+        .getPrivateKeyFromPEM(
+          bobcats.SigningHttpMessages.`test-key-rsa-pss`.privatePk8Key,
+          AsymmetricKeyAlg.RSA_PSS_Key
+        )
+        .map(pk => pk.algorithm),
+      Success(AsymmetricKeyAlg.RSA_PSS_Key)
+    )
+  }
 
-	test("can I parse `test-key-ecc-p256`") {
-		assertEquals(
-			WebCryptoPEMUtils.getPrivateKeyFromPEM(
-				bobcats.SigningHttpMessages.`test-key-ecc-p256`.privatePk8Key,
-				AsymmetricKeyAlg.ECKey(bobcats.AsymmetricKeyAlg.`P-256`)
-			).map(pk=> pk.algorithm),
-			Success(AsymmetricKeyAlg.ECKey(bobcats.AsymmetricKeyAlg.`P-256`))
-		)
-	}
+  test("can I parse `test-key-ecc-p256`") {
+    assertEquals(
+      WebCryptoPEMUtils
+        .getPrivateKeyFromPEM(
+          bobcats.SigningHttpMessages.`test-key-ecc-p256`.privatePk8Key,
+          AsymmetricKeyAlg.ECKey(bobcats.AsymmetricKeyAlg.`P-256`)
+        )
+        .map(pk => pk.algorithm),
+      Success(AsymmetricKeyAlg.ECKey(bobcats.AsymmetricKeyAlg.`P-256`))
+    )
+  }
 
 }

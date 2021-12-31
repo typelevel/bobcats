@@ -26,31 +26,30 @@ private[bobcats] trait SignerPlatform[F[_]]
 
 private[bobcats] trait SignerCompanionPlatform {
 
-	implicit def forSync[F[_]](implicit F: Sync[F]): Signer[F] =
-		new UnsealedSigner[F] {
-			//one would really want a type that pairs the PKA and Sig, so as not to leave impossible combinations open
-			override def sign( // it is not clear that adding [A <: PrivateKeyAlg, S <: PKA.Signature] helps
-			  spec: PrivateKeySpec[_],
-			  sigType: AsymmetricKeyAlg.Signature)(
-			  data: ByteVector
-			): F[ByteVector] =
-				F.catchNonFatal{
-					val priv: security.PrivateKey = spec.toJava
-					val sig : java.security.Signature = sigType.toJava
-					sig.initSign(priv)
-					sig.update(data.toByteBuffer)
-					ByteVector.view(sig.sign())
-				}
-		}
+  implicit def forSync[F[_]](implicit F: Sync[F]): Signer[F] =
+    new UnsealedSigner[F] {
+      // one would really want a type that pairs the PKA and Sig, so as not to leave impossible combinations open
+      override def sign( // it is not clear that adding [A <: PrivateKeyAlg, S <: PKA.Signature] helps
+          spec: PrivateKeySpec[_],
+          sigType: AsymmetricKeyAlg.Signature)(
+          data: ByteVector
+      ): F[ByteVector] =
+        F.catchNonFatal {
+          val priv: security.PrivateKey = spec.toJava
+          val sig: java.security.Signature = sigType.toJava
+          sig.initSign(priv)
+          sig.update(data.toByteBuffer)
+          ByteVector.view(sig.sign())
+        }
+    }
 }
 
 object SignerCompanionPlatform {
-	// these are the values set in sun.security.util.SignatureUtil.PSSParamsHolder.PSS_512_SPEC
-	def spec(salt: Int, sha: HashAlgorithm): PSSParameterSpec = new PSSParameterSpec(
-		sha.toStringJava,
-		"MGF1",
-		new MGF1ParameterSpec(sha.toStringJava),
-		salt,
-		1)
+  // these are the values set in sun.security.util.SignatureUtil.PSSParamsHolder.PSS_512_SPEC
+  def spec(salt: Int, sha: HashAlgorithm): PSSParameterSpec = new PSSParameterSpec(
+    sha.toStringJava,
+    "MGF1",
+    new MGF1ParameterSpec(sha.toStringJava),
+    salt,
+    1)
 }
-

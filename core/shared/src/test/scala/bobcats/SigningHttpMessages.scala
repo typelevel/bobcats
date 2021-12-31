@@ -33,6 +33,12 @@ object SigningHttpMessages extends SignatureExamples {
 		`Appendix_B.2.4`
 	)
 
+	override def keyExamples: Seq[TestKeys] = Seq(
+		`test-key-rsa`,
+		`test-key-rsa-pss`,
+		`test-key-ecc-p256`
+	)
+
 	object `§3.1_Signature` extends SignatureExample(
 		description = "§3.1_Signature example",
 		sigtext = // defined https://www.ietf.org/archive/id/draft-ietf-httpbis-message-signatures-07.html#section-2.3
@@ -157,6 +163,8 @@ object SigningHttpMessages extends SignatureExamples {
 	// 2048-bit RSA public and private key pair,
 	// given in https://www.ietf.org/archive/id/draft-ietf-httpbis-message-signatures-07.html#appendix-B.1.1
 	object `test-key-rsa` extends TestKeys {
+		override def description: String = "test-key-rsa"
+
 		override def privateKey: PrivateKeyPEM =
 			"""-----BEGIN RSA PRIVATE KEY-----
 			  |MIIEqAIBAAKCAQEAhAKYdtoeoy8zcAcR874L8cnZxKzAGwd7v36APp7Pv6Q2jdsP
@@ -245,6 +253,8 @@ object SigningHttpMessages extends SignatureExamples {
 	// 2048-bit RSA public and private key pair
 	// taken from https://www.ietf.org/archive/id/draft-ietf-httpbis-message-signatures-07.html#name-example-rsa-pss-key
 	object `test-key-rsa-pss` extends TestKeys {
+		override def description: String = "test-key-rsa-pss"
+
 		override def privateKey: PrivateKeyPEM =
 			"""-----BEGIN PRIVATE KEY-----
 			  |MIIEvgIBADALBgkqhkiG9w0BAQoEggSqMIIEpgIBAAKCAQEAr4tmm3r20Wd/Pbqv
@@ -287,11 +297,10 @@ object SigningHttpMessages extends SignatureExamples {
 			  |-----END PUBLIC KEY-----""".stripMargin
 
 		override def keyAlg: AsymmetricKeyAlg = AsymmetricKeyAlg.RSA_PSS_Key
-
 	}
 
 	object `test-key-ecc-p256` extends TestKeys {
-
+		override def description: String = "test-key-ecc-p256"
 		override def privateKey: PrivateKeyPEM =
 			"""-----BEGIN EC PRIVATE KEY-----
 			  |MHcCAQEEIFKbhfNZfpDsW43+0+JjUr9K+bTeuxopu653+hBaXGA7oAoGCCqGSM49
@@ -301,9 +310,10 @@ object SigningHttpMessages extends SignatureExamples {
 
 		override def privatePk8Key: PrivateKeyPEM =
 			"""-----BEGIN PRIVATE KEY-----
-			  |MIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQgUpuF81l+kOxbjf7T
-			  |4mNSv0r5tN67Gim7rnf6EFpcYDuhRANCAASohVhlUsKs9kcYeM/XsJNbT/4P0t/D
-			  |QSSOoXvEHgWK8DHOJzfS0wzgYX6FHoPGHvVnnRUYZ2V2SQNdkKdM2ehd
+			  |MIGTAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBHkwdwIBAQQgUpuF81l+kOxbjf7T
+			  |4mNSv0r5tN67Gim7rnf6EFpcYDugCgYIKoZIzj0DAQehRANCAASohVhlUsKs9kcY
+			  |eM/XsJNbT/4P0t/DQSSOoXvEHgWK8DHOJzfS0wzgYX6FHoPGHvVnnRUYZ2V2SQNd
+			  |kKdM2ehd
 			  |-----END PRIVATE KEY-----""".stripMargin
 
 		override def publicKey: PublicKeyPEM =

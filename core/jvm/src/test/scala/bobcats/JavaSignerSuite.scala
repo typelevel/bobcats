@@ -21,11 +21,11 @@ import cats.effect.{MonadCancel, Sync, SyncIO}
 
 class JavaSignerSuite extends SignerSuite {
 
-	override def pemutils: PEMUtils = BouncyJavaPEMUtils
+  override def pemutils: PEMUtils = BouncyJavaPEMUtils
 
-	implicit val synio: Sync[SyncIO] with MonadCancel[SyncIO, Throwable] = SyncIO.syncForSyncIO
-	implicit val signer: Signer[SyncIO] = Signer.forSync[SyncIO]
-	implicit val verifier: Verifier[SyncIO] = Verifier.forSync[SyncIO]
+  implicit val synio: Sync[SyncIO] with MonadCancel[SyncIO, Throwable] = SyncIO.syncForSyncIO
+  implicit val signer: Signer[SyncIO] = Signer.forSync[SyncIO]
+  implicit val verifier: Verifier[SyncIO] = Verifier.forSync[SyncIO]
 
-	run(SigningHttpMessages.signatureExamples)
+  run(SigningHttpMessages.signatureExamples)
 }

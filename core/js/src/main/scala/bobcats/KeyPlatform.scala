@@ -16,10 +16,17 @@
 
 package bobcats
 
-import bobcats.AsymmetricKeyAlg.RSA
+import bobcats.AsymmetricKeyAlg.{RSA, RSA_PKCS_Sig, RSA_PSS_Sig}
 import cats.effect.kernel.Async
 import org.scalajs.dom
-import org.scalajs.dom.{EcKeyImportParams, HashAlgorithmIdentifier, RsaHashedImportParams}
+import org.scalajs.dom.{
+  EcKeyImportParams,
+  EcdsaParams,
+  HashAlgorithmIdentifier,
+  KeyAlgorithm,
+  RsaHashedImportParams,
+  RsaPssParams
+}
 
 import scala.scalajs.js
 
@@ -29,53 +36,78 @@ private[bobcats] trait PrivateKeyPlatform
 private[bobcats] trait SecretKeyPlatform
 
 private[bobcats] trait SecretKeySpecPlatform[+A <: Algorithm]
-private[bobcats] trait PrivateKeySpecPlatform[+A <: AsymmetricKeyAlg] { self: PrivateKeySpec[A] =>
-	def toWebCryptoKey[F[_]](signature: AsymmetricKeyAlg.Signature)(
-	  implicit F0: Async[F]
-	): F[org.scalajs.dom.CryptoKey] = {
-		val alg: org.scalajs.dom.KeyAlgorithm = algorithm  match {
-			case rsaAlg: RSA => new RsaHashedImportParams {
-					override val hash: HashAlgorithmIdentifier = signature.hash.toStringWebCrypto
-					override val name: String = rsaAlg.toStringWebCrypto
-			}
-			case ecAlg @ bobcats.AsymmetricKeyAlg.ECKey(p) => new EcKeyImportParams {
-				override val namedCurve: String = p.toString
-				override val name: String = ecAlg.toStringWebCrypto
-			}
-
-
-		}
-		F0.fromPromise(F0.delay {
-			dom.crypto.subtle.importKey(
-				dom.KeyFormat.pkcs8, key.toUint8Array,
-				alg,
-				true,
-				js.Array(dom.KeyUsage.sign)
-			)
-		})
-	}
-
+private[bobcats] trait PrivateKeySpecPlatform[+A <: AsymmetricKeyAlg] {
+  self: PrivateKeySpec[A] =>
+  def toWebCryptoKey[F[_]](signature: AsymmetricKeyAlg.Signature)(
+      implicit F0: Async[F]
+  ): F[org.scalajs.dom.CryptoKey] =
+    F0.fromPromise(F0.delay {
+      dom
+        .crypto
+        .subtle
+        .importKey(
+          dom.KeyFormat.pkcs8,
+          key.toJSArrayBuffer,
+          JSKeySpec.importAlgorithm(algorithm, signature),
+          true,
+          js.Array(dom.KeyUsage.sign)
+        )
+    })
 }
-private[bobcats] trait PublicKeySpecPlatform[+A <: AsymmetricKeyAlg] { self: PublicKeySpec[A] =>
-	def toWebCryptoKey[F[_]](signature: AsymmetricKeyAlg.Signature)(
-	  implicit F0: Async[F]
-	): F[org.scalajs.dom.CryptoKey] = {
-		val alg: org.scalajs.dom.KeyAlgorithm = algorithm  match {
-			case rsaAlg: RSA => new RsaHashedImportParams {
-					override val hash: HashAlgorithmIdentifier = signature.hash.toStringWebCrypto //toDomHash(signature.hash)
-					override val name: String = rsaAlg.toStringWebCrypto
-				}
-			case ecAlg @ bobcats.AsymmetricKeyAlg.ECKey(p) => new EcKeyImportParams {
-				override val namedCurve: String = p.toString
-				override val name: String = ecAlg.toStringWebCrypto
-			}
-		}
-		F0.fromPromise(F0.delay {
-			dom.crypto.subtle.importKey(
-				dom.KeyFormat.spki, key.toUint8Array, alg,
-				true, //todo: do we always want extractable?
-				js.Array(dom.KeyUsage.verify) //todo: we may want other key usages?
-			)
-		})
+private[bobcats] trait PublicKeySpecPlatform[+A <: AsymmetricKeyAlg] {
+  self: PublicKeySpec[A] =>
+  def toWebCryptoKey[F[_]](signature: AsymmetricKeyAlg.Signature)(
+      implicit F0: Async[F]
+  ): F[org.scalajs.dom.CryptoKey] =
+    F0.fromPromise(F0.delay {
+      dom
+        .crypto
+        .subtle
+        .importKey(
+          dom.KeyFormat.spki,
+          key.toJSArrayBuffer,
+          JSKeySpec.importAlgorithm(algorithm, signature),
+          true, // todo: do we always want extractable?
+          js.Array(dom.KeyUsage.verify) // todo: we may want other key usages?
+        )
+    })
 }
+
+object JSKeySpec {
+  def importAlgorithm(
+      algorithm: AsymmetricKeyAlg,
+      signature: AsymmetricKeyAlg.Signature
+  ): KeyAlgorithm =
+    algorithm match {
+      case rsaAlg: RSA =>
+        new RsaHashedImportParams {
+          override val name: String = rsaAlg.toStringWebCrypto
+          override val hash: HashAlgorithmIdentifier = signature.hash.toStringWebCrypto
+        }
+      case ecAlg @ bobcats.AsymmetricKeyAlg.ECKey(p) =>
+        new EcKeyImportParams {
+          override val name: String = ecAlg.toStringWebCrypto
+          override val namedCurve: String = p.toString
+        }
+    }
+
+  def signatureAlgorithm(sig: AsymmetricKeyAlg.Signature): dom.Algorithm = {
+    sig match {
+      case rsapss: RSA_PSS_Sig =>
+        new RsaPssParams {
+          override val name: String = rsapss.toStringWebCrypto
+          override val saltLength: Double = rsapss.saltLength
+        }
+      case sig: RSA_PKCS_Sig =>
+        new dom.Algorithm {
+          override val name: String = sig.toStringWebCrypto
+        }
+      case ec: AsymmetricKeyAlg.EC_Sig =>
+        new EcdsaParams {
+          override val hash: HashAlgorithmIdentifier = ec.hash.toStringWebCrypto
+          override val name: String = ec.toStringWebCrypto
+        }
+    }
+  }
+
 }
