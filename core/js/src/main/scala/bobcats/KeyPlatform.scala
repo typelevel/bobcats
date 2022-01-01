@@ -21,7 +21,14 @@ import cats.effect.kernel.Async
 import org.scalajs.dom
 import cats.syntax.all._
 import org.scalajs.dom.crypto.subtle
-import org.scalajs.dom.{EcKeyImportParams, EcdsaParams, HashAlgorithmIdentifier, KeyAlgorithm, RsaHashedImportParams, RsaPssParams}
+import org.scalajs.dom.{
+  EcKeyImportParams,
+  EcdsaParams,
+  HashAlgorithmIdentifier,
+  KeyAlgorithm,
+  RsaHashedImportParams,
+  RsaPssParams
+}
 
 import scala.scalajs.js
 import scala.scalajs.js.Promise
@@ -37,14 +44,14 @@ private[bobcats] trait PrivateKeySpecPlatform[+A <: AsymmetricKeyAlg] {
   def toWebCryptoKey[F[_]](signature: AsymmetricKeyAlg.Signature)(
       implicit F0: Async[F]
   ): F[org.scalajs.dom.CryptoKey] =
-    F0.fromPromise(F0.delay[Promise[org.scalajs.dom.CryptoKey]]{
+    F0.fromPromise(F0.delay[Promise[org.scalajs.dom.CryptoKey]] {
       subtle.importKey(
-          dom.KeyFormat.pkcs8,
-          key.toJSArrayBuffer,
-          JSKeySpec.importAlgorithm(algorithm, signature),
-          true,
-          js.Array(dom.KeyUsage.sign)
-        )
+        dom.KeyFormat.pkcs8,
+        key.toJSArrayBuffer,
+        JSKeySpec.importAlgorithm(algorithm, signature),
+        true,
+        js.Array(dom.KeyUsage.sign)
+      )
     })
 }
 private[bobcats] trait PublicKeySpecPlatform[+A <: AsymmetricKeyAlg] {
@@ -54,12 +61,12 @@ private[bobcats] trait PublicKeySpecPlatform[+A <: AsymmetricKeyAlg] {
   ): F[org.scalajs.dom.CryptoKey] =
     F0.fromPromise(F0.delay {
       subtle.importKey(
-          dom.KeyFormat.spki,
-          key.toJSArrayBuffer,
-          JSKeySpec.importAlgorithm(algorithm, signature),
-          true, // todo: do we always want extractable?
-          js.Array(dom.KeyUsage.verify) // todo: we may want other key usages?
-        )
+        dom.KeyFormat.spki,
+        key.toJSArrayBuffer,
+        JSKeySpec.importAlgorithm(algorithm, signature),
+        true, // todo: do we always want extractable?
+        js.Array(dom.KeyUsage.verify) // todo: we may want other key usages?
+      )
     })
 }
 

@@ -18,22 +18,21 @@ package bobcats
 
 import _root_.com.nimbusds.jose.jwk.JWK
 
-
 class JWKCryptoSuite extends munit.FunSuite {
 
-	test("transform PEM private to JWK") {
-		val jwk = JWK.parseFromPEMEncodedObjects(
-			SigningHttpMessages.`test-key-rsa-pss`.privateKey
-		)
-		println("Private key\n"+jwk.toJSONString)
+  test("transform PEM private to JWK") {
+    val jwk = JWK.parseFromPEMEncodedObjects(
+      SigningHttpMessages.`test-key-rsa-pss`.privateKey
+    )
+    println("Private key\n" + jwk.toJSONString)
 
-	}
+  }
 
-	test("transform PEM public to JWK") {
-		val jwk = JWK.parseFromPEMEncodedObjects(
-			SigningHttpMessages.`test-key-rsa-pss`.publicKey
-		)
-		println("Public key\n"+jwk.toJSONString)
+  test("transform PEM public to JWK") {
+    val jwk = JWK.parseFromPEMEncodedObjects(
+      SigningHttpMessages.`test-key-rsa-pss`.publicKey
+    )
+    println("Public key\n" + jwk.toJSONString)
 
-	}
+  }
 }
