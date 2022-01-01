@@ -48,7 +48,8 @@ object SigningHttpMessages extends SignatureExamples {
 			  |"@path": /foo
 			  |"@authority": example.org
 			  |"cache-control": max-age=60, must-revalidate
-			  |"x-empty-header":
+			  |"x-empty-header": \
+			  |
 			  |"x-example": Example header with some whitespace.
 			  |"@signature-params": ("@method" "@path" "@authority" \
 			  |  "cache-control" "x-empty-header" "x-example");created=1618884475\

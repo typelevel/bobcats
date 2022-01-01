@@ -19,7 +19,7 @@ package bobcats
 import bobcats.{AsymmetricKeyAlg => Alg}
 
 import java.security
-import scala.util.{Success, Try}
+import scala.util.Try
 
 class PEMTestSuite extends munit.FunSuite {
   import util.{BouncyJavaPEMUtils => pemutils}
