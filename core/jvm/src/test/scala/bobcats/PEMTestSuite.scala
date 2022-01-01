@@ -58,7 +58,7 @@ class PEMTestSuite extends munit.FunSuite {
   private def PEMNamesForKey(pem: TestKeys, isPriv: Boolean): String = {
     pem.keyAlg match {
       case _: Alg.EC => "ECDSA"
-      case Alg.RSA_PSS_Key => if (isPriv) "RSASSA-PSS" else "RSA"
+      case Alg.RSA_PSS_Key => "RSA"
       case _: Alg.RSA => "RSA"
     }
   }

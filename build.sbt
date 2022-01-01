@@ -87,6 +87,7 @@ val munitCEVersion = "1.0.7"
 val disciplineMUnitVersion = "1.0.9"
 val bouncyVersion = "1.69"
 val domVersion = "2.0.0"
+val nimbusJWTVersion = "9.15.2"
 
 lazy val root =
   project.in(file(".")).aggregate(rootJS, rootJVM).enablePlugins(NoPublishPlugin)
@@ -115,7 +116,8 @@ lazy val core = crossProject(JSPlatform, JVMPlatform)
     libraryDependencies ++=Seq(
       "org.bouncycastle" % "bcpkix-jdk15to18" % bouncyVersion % Test,
       "org.bouncycastle" % "bcprov-jdk15to18" % bouncyVersion % Test,
-      "org.bouncycastle" % "bctls-jdk15to18" % bouncyVersion % Test
+      "org.bouncycastle" % "bctls-jdk15to18" % bouncyVersion % Test,
+      "com.nimbusds" % "nimbus-jose-jwt" % nimbusJWTVersion % Test
     )
   )
   .jsSettings(

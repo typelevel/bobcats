@@ -19,16 +19,12 @@ package bobcats
 import bobcats.AsymmetricKeyAlg.{RSA, RSA_PKCS_Sig, RSA_PSS_Sig}
 import cats.effect.kernel.Async
 import org.scalajs.dom
-import org.scalajs.dom.{
-  EcKeyImportParams,
-  EcdsaParams,
-  HashAlgorithmIdentifier,
-  KeyAlgorithm,
-  RsaHashedImportParams,
-  RsaPssParams
-}
+import cats.syntax.all._
+import org.scalajs.dom.crypto.subtle
+import org.scalajs.dom.{EcKeyImportParams, EcdsaParams, HashAlgorithmIdentifier, KeyAlgorithm, RsaHashedImportParams, RsaPssParams}
 
 import scala.scalajs.js
+import scala.scalajs.js.Promise
 
 private[bobcats] trait KeyPlatform
 private[bobcats] trait PublicKeyPlatform
@@ -41,11 +37,8 @@ private[bobcats] trait PrivateKeySpecPlatform[+A <: AsymmetricKeyAlg] {
   def toWebCryptoKey[F[_]](signature: AsymmetricKeyAlg.Signature)(
       implicit F0: Async[F]
   ): F[org.scalajs.dom.CryptoKey] =
-    F0.fromPromise(F0.delay {
-      dom
-        .crypto
-        .subtle
-        .importKey(
+    F0.fromPromise(F0.delay[Promise[org.scalajs.dom.CryptoKey]]{
+      subtle.importKey(
           dom.KeyFormat.pkcs8,
           key.toJSArrayBuffer,
           JSKeySpec.importAlgorithm(algorithm, signature),
@@ -60,10 +53,7 @@ private[bobcats] trait PublicKeySpecPlatform[+A <: AsymmetricKeyAlg] {
       implicit F0: Async[F]
   ): F[org.scalajs.dom.CryptoKey] =
     F0.fromPromise(F0.delay {
-      dom
-        .crypto
-        .subtle
-        .importKey(
+      subtle.importKey(
           dom.KeyFormat.spki,
           key.toJSArrayBuffer,
           JSKeySpec.importAlgorithm(algorithm, signature),
