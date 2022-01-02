@@ -19,7 +19,6 @@ package bobcats
 import bobcats.AsymmetricKeyAlg.{RSA, RSA_PKCS_Sig, RSA_PSS_Sig}
 import cats.effect.kernel.Async
 import org.scalajs.dom
-import cats.syntax.all._
 import org.scalajs.dom.crypto.subtle
 import org.scalajs.dom.{
   EcKeyImportParams,
@@ -93,7 +92,7 @@ object JSKeySpec {
       case rsapss: RSA_PSS_Sig =>
         new RsaPssParams {
           override val name: String = rsapss.toStringWebCrypto
-          override val saltLength: Double = rsapss.saltLength
+          override val saltLength: Double = rsapss.saltLength.toDouble
         }
       case sig: RSA_PKCS_Sig =>
         new dom.Algorithm {

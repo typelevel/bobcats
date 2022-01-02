@@ -31,7 +31,7 @@ class PEMTestSuite extends munit.FunSuite {
       val pubkeyTry: Try[security.PublicKey] = pemutils.PEMToPublicKey(pem.publicKey)
       assert(pubkeyTry.isSuccess)
       val pubkey = pubkeyTry.get
-      assertEquals(pubkey.getAlgorithm, PEMNamesForKey(pem, false))
+      assertEquals(pubkey.getAlgorithm, PEMNamesForKey(pem))
       assertEquals(pubkey.getFormat, "X.509")
       assertEquals(
         pemutils.toSPKI(pubkey).trim,
@@ -44,7 +44,7 @@ class PEMTestSuite extends munit.FunSuite {
       val privkeyTry: Try[security.PrivateKey] = pemutils.PEMtoPrivateKey(pem.privateKey)
       assert(privkeyTry.isSuccess)
       val privkey = privkeyTry.get
-      assertEquals(privkey.getAlgorithm, PEMNamesForKey(pem, true))
+      assertEquals(privkey.getAlgorithm, PEMNamesForKey(pem))
       assertEquals(privkey.getFormat, "PKCS#8")
       assertEquals(
         pemutils.toPKCS8(privkey).trim,
@@ -55,7 +55,7 @@ class PEMTestSuite extends munit.FunSuite {
 
   }
 
-  private def PEMNamesForKey(pem: TestKey, isPriv: Boolean): String = {
+  private def PEMNamesForKey(pem: TestKey): String = {
     pem.keyAlg match {
       case _: Alg.EC => "ECDSA"
       case Alg.RSA_PSS_Key => "RSA"

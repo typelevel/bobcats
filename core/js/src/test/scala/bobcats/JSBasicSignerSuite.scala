@@ -32,8 +32,7 @@
 //
 package bobcats
 
-import bobcats.util.{PEMUtils, WebCryptoPEMUtils}
-import cats.effect.IO
+import bobcats.util.WebCryptoPEMUtils
 import munit.CatsEffectSuite
 
 import scala.util.Success
