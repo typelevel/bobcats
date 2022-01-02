@@ -18,21 +18,22 @@ package bobcats
 
 import _root_.com.nimbusds.jose.jwk.JWK
 
+//JWK is supported out of the box by JS Crypto API.
+//todo: add it as part of default.
 class JWKCryptoSuite extends munit.FunSuite {
 
   test("transform PEM private to JWK") {
     val jwk = JWK.parseFromPEMEncodedObjects(
       SigningHttpMessages.`test-key-rsa-pss`.privateKey
     )
-    println("Private key\n" + jwk.toJSONString)
-
+    assertEquals(jwk.getKeyType.toString, "RSA")
   }
 
   test("transform PEM public to JWK") {
     val jwk = JWK.parseFromPEMEncodedObjects(
       SigningHttpMessages.`test-key-rsa-pss`.publicKey
     )
-    println("Public key\n" + jwk.toJSONString)
+    assertEquals(jwk.getKeyType.toString, "RSA")
 
   }
 }

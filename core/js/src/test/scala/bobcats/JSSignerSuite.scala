@@ -33,10 +33,8 @@ package bobcats
  */
 
 import bobcats.util.{PEMUtils, WebCryptoPEMUtils}
+import cats.effect.IO
 import cats.effect.kernel.Async
-import cats.effect.{IO, MonadCancel, Sync, SyncIO}
-
-import scala.util.Try
 
 class JSSignerSuite extends SignerSuite {
   override implicit val pemutils: PEMUtils = WebCryptoPEMUtils

@@ -27,5 +27,5 @@ class JavaSignerSuite extends SignerSuite {
   implicit val signer: Signer[SyncIO] = Signer.forSync[SyncIO]
   implicit val verifier: Verifier[SyncIO] = Verifier.forSync[SyncIO]
 
-  run(SigningHttpMessages.signatureExamples)
+  run[SyncIO](SigningHttpMessages.signatureExamples)
 }

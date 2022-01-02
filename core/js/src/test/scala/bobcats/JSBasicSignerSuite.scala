@@ -42,7 +42,7 @@ import scala.util.Success
 // parses the content. Move to Java.
 class JSBasicSignerSuite extends CatsEffectSuite {
 
-  test("can I parse `test-key-rsa`") {
+  test("parse `test-key-rsa`") {
 //		assertIO(IO(4),4)
     assertEquals(
       WebCryptoPEMUtils
@@ -55,7 +55,7 @@ class JSBasicSignerSuite extends CatsEffectSuite {
     )
   }
 
-  test("can I parse `test-key-rsa-pss`") {
+  test("parse `test-key-rsa-pss`") {
     assertEquals(
       WebCryptoPEMUtils
         .getPrivateKeyFromPEM(
@@ -67,7 +67,7 @@ class JSBasicSignerSuite extends CatsEffectSuite {
     )
   }
 
-  test("can I parse `test-key-ecc-p256`") {
+  test("parse `test-key-ecc-p256`") {
     assertEquals(
       WebCryptoPEMUtils
         .getPrivateKeyFromPEM(

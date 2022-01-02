@@ -43,7 +43,9 @@ trait SignerSuite extends CatsEffectSuite {
 
     val signatureTxtF: F[ByteVector] =
       implicitly[MonadErr[F]].fromEither(ByteVector.encodeAscii(sigTest.sigtext))
-    test(s"${sigTest.description}: can verify generated signature") {
+
+    test(
+      s"${sigTest.description} with ${ct.runtimeClass.getSimpleName()}: can verify generated signature") {
       for {
         sigTextBytes <- signatureTxtF
         signedTxt <- Signer[F].sign(privKey, sigTest.signatureAlg)(sigTextBytes)
@@ -56,7 +58,8 @@ trait SignerSuite extends CatsEffectSuite {
       }
     }
 
-    test(s"${sigTest.description}: matches expected value") {
+    test(
+      s"${sigTest.description} with ${ct.runtimeClass.getSimpleName()}: matches expected value") {
       for {
         sigTextBytes <- signatureTxtF
         expectedSig <- implicitly[MonadErr[F]].fromEither(
@@ -90,7 +93,7 @@ trait SignerSuite extends CatsEffectSuite {
   // subclasses should call run
   def run[F[_]: Signer: Verifier: MonadErr](
       tests: Seq[SignatureExample]
-  ): Unit = {
+  )(implicit ct: ClassTag[F[_]]): Unit = {
     tests.foreach { sigTest =>
       // using flatmap here would not work as F is something like IO that would
       // delay the flapMap, meaning the tests would then not get registered.
