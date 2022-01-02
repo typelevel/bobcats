@@ -36,20 +36,32 @@ final case class SecretKeySpec[+A <: Algorithm](key: ByteVector, algorithm: A)
 // todo: how would we represent such an opaque key?
 
 /*
- * The ByteVector is PKCS8 encoded data
- * (todo: Q: what is role the algorithm as that could be extracted from the ByteVector?)
- * todo: should therefore be called Pkcs8PrivateKeySpec?
- * note: JSON Web Key is the future
+ * Private Key specification given by byte vector in PKCS8 encoded data
+ * as defined in RFC5208. These are usually serialised as PEM Documents,
+ * starting with "----- BEGIN PRIVATE KEY -----".
+ * (Note PEM Documents whose header describes the type of key as "RSA" or "EC"
+ * as in "----- BEGIN PRIVATE EC KEY-----" are PKCS1 documents that won't work
+ * here. They can be upgraded using
+ * > openssl pkcs8 -topk8 -inform PEM -in spec.private.pem -out private.pem -nocrypt
+ * Or other tools/libraries such as Bouncy Castle.
+ *
+ * The key is the byte content of PEM encoded PKCS8 data
+ * todo: Question: Is having the algorithm as a generic useful?
+ *   Subclassing might be more appropriate.
  */
-final case class PrivateKeySpec[+A <: AsymmetricKeyAlg](key: ByteVector, algorithm: A)
+final case class PKCS8KeySpec[+A <: AsymmetricKeyAlg](key: ByteVector, algorithm: A)
     extends PrivateKey[A]
-    with PrivateKeySpecPlatform[A]
+    with PKCS8KeySpecPlatform[A]
 
-/* The ByteVector is X509 encoded data
- * todo: renome to X509PublicKeySpec
- * q: what is the role of the algorithm?
- * note: JSON Web Key is the future
+/*
+ * Public Key specification given by byte vector as Simple public key infrastructure (SPKI)
+ * encoded data. These are often serialised as PEM Documents starting with
+ * "----- BEGIN PUBLIC KEY -----"
+ *
+ * * The key is the byte content of PEM encoded SPKI data. See test suite.
+ * todo: Question: Is having the algorithm as a generic useful?
+ *   Subclassing might be more appropriate.
  */
-final case class PublicKeySpec[+A <: AsymmetricKeyAlg](key: ByteVector, algorithm: A)
+final case class SPKIKeySpec[+A <: AsymmetricKeyAlg](key: ByteVector, algorithm: A)
     extends PublicKey[A]
-    with PublicKeySpecPlatform[A]
+    with SPKIKeySpecPlatform[A]

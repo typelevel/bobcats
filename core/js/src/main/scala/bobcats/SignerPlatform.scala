@@ -33,7 +33,7 @@ private[bobcats] trait SignerCompanionPlatform {
        * Given a Private Key specification and a Signature type, return a function from Byte
        * Vector to signatures
        */
-      override def sign(privSpec: PrivateKeySpec[_], sig: AsymmetricKeyAlg.Signature)(
+      override def sign(privSpec: PKCS8KeySpec[_], sig: AsymmetricKeyAlg.Signature)(
           data: ByteVector
       ): F[ByteVector] = for {
         key <- privSpec.toWebCryptoKey(sig)

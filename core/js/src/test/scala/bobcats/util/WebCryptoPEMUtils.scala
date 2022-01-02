@@ -16,7 +16,7 @@
 
 package bobcats.util
 
-import bobcats.{util, AsymmetricKeyAlg, PrivateKeySpec, PublicKeySpec}
+import bobcats.{util, AsymmetricKeyAlg, PKCS8KeySpec, SPKIKeySpec}
 import scodec.bits.ByteVector
 
 import scala.util.matching.Regex
@@ -45,7 +45,7 @@ object WebCryptoPEMUtils extends util.PEMUtils {
   override def getPrivateKeyFromPEM(
       pemStr: PKCS8_PEM,
       keyType: AsymmetricKeyAlg
-  ): Try[PrivateKeySpec[AsymmetricKeyAlg]] = {
+  ): Try[PKCS8KeySpec[AsymmetricKeyAlg]] = {
     for {
       base64data <- pemData(pemStr)
       bytes: ByteVector <- ByteVector
@@ -55,7 +55,7 @@ object WebCryptoPEMUtils extends util.PEMUtils {
         )
         .toTry
     } yield {
-      PrivateKeySpec(bytes, keyType)
+      PKCS8KeySpec(bytes, keyType)
     }
   }
 
@@ -70,7 +70,7 @@ object WebCryptoPEMUtils extends util.PEMUtils {
   override def getPublicKeyFromPEM(
       pemStr: SPKI_PEM,
       keyType: AsymmetricKeyAlg
-  ): Try[PublicKeySpec[AsymmetricKeyAlg]] = {
+  ): Try[SPKIKeySpec[AsymmetricKeyAlg]] = {
     for {
       base64data <- pemData(pemStr)
       bytes: ByteVector <- (ByteVector
@@ -80,7 +80,7 @@ object WebCryptoPEMUtils extends util.PEMUtils {
         ))
         .toTry
     } yield {
-      PublicKeySpec(bytes, keyType)
+      SPKIKeySpec(bytes, keyType)
     }
   }
 

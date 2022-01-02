@@ -16,7 +16,7 @@
 
 package bobcats.util
 
-import bobcats.{util, AsymmetricKeyAlg, PrivateKeySpec, PublicKeySpec}
+import bobcats.{util, AsymmetricKeyAlg, PKCS8KeySpec, SPKIKeySpec}
 import org.bouncycastle.asn1.pkcs.PrivateKeyInfo
 import org.bouncycastle.asn1.x509.SubjectPublicKeyInfo
 import org.bouncycastle.cert.X509CertificateHolder
@@ -40,7 +40,7 @@ object BouncyJavaPEMUtils extends util.PEMUtils {
 
   override def getPrivateKeyFromPEM(
       pemStr: String,
-      keyType: AsymmetricKeyAlg): Try[PrivateKeySpec[AsymmetricKeyAlg]] =
+      keyType: AsymmetricKeyAlg): Try[PKCS8KeySpec[AsymmetricKeyAlg]] =
     for {
       privateKey <- PEMtoPrivateKey(pemStr)
 //			alg <- AsymmetricKeyAlg.fromStringJava(privateKey.getAlgorithm).toRight(
@@ -48,12 +48,12 @@ object BouncyJavaPEMUtils extends util.PEMUtils {
 //			).toTry
     } yield {
 //			println("private key====>\n"+toPKCS8(privateKey))
-      PrivateKeySpec(ByteVector.view(privateKey.getEncoded), keyType)
+      PKCS8KeySpec(ByteVector.view(privateKey.getEncoded), keyType)
     }
 
   override def getPublicKeyFromPEM(
       pemStr: String,
-      keyType: AsymmetricKeyAlg): Try[PublicKeySpec[AsymmetricKeyAlg]] =
+      keyType: AsymmetricKeyAlg): Try[SPKIKeySpec[AsymmetricKeyAlg]] =
     for {
       publicKey <- PEMToPublicKey(pemStr)
 //			(alg: AsymmetricKeyAlg) <- AsymmetricKeyAlg.fromStringJava(publicKey.getAlgorithm).toRight(
@@ -62,7 +62,7 @@ object BouncyJavaPEMUtils extends util.PEMUtils {
 //			if alg == keyType
     } yield {
 //			println("public key====>\n"+toSPKI(publicKey))
-      PublicKeySpec(ByteVector.view(publicKey.getEncoded), keyType)
+      SPKIKeySpec(ByteVector.view(publicKey.getEncoded), keyType)
     }
 
   def PEMtoPrivateKey(privateKeyPem: String): Try[security.PrivateKey] =

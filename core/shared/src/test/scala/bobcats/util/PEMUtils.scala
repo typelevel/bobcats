@@ -16,7 +16,7 @@
 
 package bobcats.util
 
-import bobcats.{AsymmetricKeyAlg, PrivateKeySpec, PublicKeySpec}
+import bobcats.{AsymmetricKeyAlg, PKCS8KeySpec, SPKIKeySpec}
 
 import scala.util.Try
 
@@ -31,7 +31,7 @@ trait PEMUtils {
   def getPrivateKeyFromPEM(
       pemStr: PKCS8_PEM,
       keyType: AsymmetricKeyAlg // this is only needed for the JS-crypto API. Bouncy in Java can determine the key type
-  ): Try[PrivateKeySpec[AsymmetricKeyAlg]]
+  ): Try[PKCS8KeySpec[AsymmetricKeyAlg]]
 
   /**
    * Even though the keytype is in the SPKI key, the JS Web Crypto API requires prior knowledge
@@ -40,5 +40,5 @@ trait PEMUtils {
   def getPublicKeyFromPEM(
       pemStr: SPKI_PEM,
       keyType: AsymmetricKeyAlg // this is only needed for the JS-crypto API. Bouncy in Java can determine the key type
-  ): Try[PublicKeySpec[AsymmetricKeyAlg]]
+  ): Try[SPKIKeySpec[AsymmetricKeyAlg]]
 }

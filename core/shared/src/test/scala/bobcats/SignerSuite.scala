@@ -37,8 +37,8 @@ trait SignerSuite extends CatsEffectSuite {
 
   def testSigner[F[_]: Signer: Verifier: MonadErr](
       sigTest: SignatureExample,
-      pubKey: PublicKeySpec[_],
-      privKey: PrivateKeySpec[_]
+      pubKey: SPKIKeySpec[_],
+      privKey: PKCS8KeySpec[_]
   )(implicit ct: ClassTag[F[_]]): Unit = {
 
     val signatureTxtF: F[ByteVector] =
@@ -78,8 +78,8 @@ trait SignerSuite extends CatsEffectSuite {
   }
 
   def extractKeys(ex: SignatureExample)
-      : (PublicKeySpec[AsymmetricKeyAlg], PrivateKeySpec[AsymmetricKeyAlg]) = {
-    val res: Try[(PublicKeySpec[AsymmetricKeyAlg], PrivateKeySpec[AsymmetricKeyAlg])] = for {
+      : (SPKIKeySpec[AsymmetricKeyAlg], PKCS8KeySpec[AsymmetricKeyAlg]) = {
+    val res: Try[(SPKIKeySpec[AsymmetricKeyAlg], PKCS8KeySpec[AsymmetricKeyAlg])] = for {
       pub <- pemutils.getPublicKeyFromPEM(ex.keys.publicKeyNew, ex.keys.keyAlg)
       priv <- pemutils.getPrivateKeyFromPEM(ex.keys.privatePk8Key, ex.keys.keyAlg)
     } yield (pub, priv)

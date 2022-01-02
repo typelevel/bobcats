@@ -39,8 +39,8 @@ private[bobcats] trait PrivateKeyPlatform
 private[bobcats] trait SecretKeyPlatform
 
 private[bobcats] trait SecretKeySpecPlatform[+A <: Algorithm]
-private[bobcats] trait PrivateKeySpecPlatform[+A <: AsymmetricKeyAlg] {
-  self: PrivateKeySpec[A] =>
+private[bobcats] trait PKCS8KeySpecPlatform[+A <: AsymmetricKeyAlg] {
+  self: PKCS8KeySpec[A] =>
   def toWebCryptoKey[F[_]](signature: AsymmetricKeyAlg.Signature)(
       implicit F0: Async[F]
   ): F[org.scalajs.dom.CryptoKey] =
@@ -54,8 +54,8 @@ private[bobcats] trait PrivateKeySpecPlatform[+A <: AsymmetricKeyAlg] {
       )
     })
 }
-private[bobcats] trait PublicKeySpecPlatform[+A <: AsymmetricKeyAlg] {
-  self: PublicKeySpec[A] =>
+private[bobcats] trait SPKIKeySpecPlatform[+A <: AsymmetricKeyAlg] {
+  self: SPKIKeySpec[A] =>
   def toWebCryptoKey[F[_]](signature: AsymmetricKeyAlg.Signature)(
       implicit F0: Async[F]
   ): F[org.scalajs.dom.CryptoKey] =
