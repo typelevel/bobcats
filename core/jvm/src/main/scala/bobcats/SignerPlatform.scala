@@ -30,16 +30,22 @@ private[bobcats] trait SignerCompanionPlatform {
     new UnsealedSigner[F] {
       // one would really want a type that pairs the PKA and Sig, so as not to leave impossible combinations open
       override def sign( // it is not clear that adding [A <: PrivateKeyAlg, S <: PKA.Signature] helps
-          spec: PKCS8KeySpec[_],
-          sigType: AsymmetricKeyAlg.Signature)(
-          data: ByteVector
-      ): F[ByteVector] =
+          spec: PrivateKey[_],
+          sigType: AsymmetricKeyAlg.Signature
+      ): F[ByteVector => F[ByteVector]] =
         F.catchNonFatal {
+          // I believe PrivateKeys are immutable so they can be re-used
           val priv: security.PrivateKey = spec.toJava
-          val sig: java.security.Signature = sigType.toJava
-          sig.initSign(priv)
-          sig.update(data.toByteBuffer)
-          ByteVector.view(sig.sign())
+
+          (data: ByteVector) =>
+            F.catchNonFatal {
+              // signatures are not thread safe, so new ones must be created for each call
+              // (or .toJava would need to be fiber aware)
+              val sig: java.security.Signature = sigType.toJava
+              sig.initSign(priv)
+              sig.update(data.toByteBuffer)
+              ByteVector.view(sig.sign())
+            }
         }
     }
 }

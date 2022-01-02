@@ -34,11 +34,15 @@ import scala.scalajs.js.Promise
 
 private[bobcats] trait KeyPlatform
 private[bobcats] trait PublicKeyPlatform
-private[bobcats] trait PrivateKeyPlatform
+private[bobcats] trait PrivateKeyPlatform {
+  def toWebCryptoKey[F[_]](signature: AsymmetricKeyAlg.Signature)(
+      implicit F0: Async[F]
+  ): F[org.scalajs.dom.CryptoKey]
+}
 private[bobcats] trait SecretKeyPlatform
 
 private[bobcats] trait SecretKeySpecPlatform[+A <: Algorithm]
-private[bobcats] trait PKCS8KeySpecPlatform[+A <: AsymmetricKeyAlg] {
+private[bobcats] trait PKCS8KeySpecPlatform[+A <: AsymmetricKeyAlg] extends PrivateKeyPlatform {
   self: PKCS8KeySpec[A] =>
   def toWebCryptoKey[F[_]](signature: AsymmetricKeyAlg.Signature)(
       implicit F0: Async[F]

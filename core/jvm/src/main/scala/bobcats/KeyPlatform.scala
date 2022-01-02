@@ -29,6 +29,7 @@ private[bobcats] trait PublicKeyPlatform {
 }
 
 private[bobcats] trait PrivateKeyPlatform {
+  def toJava: security.PrivateKey
   def toJavaSpec: java.security.spec.PKCS8EncodedKeySpec
 }
 

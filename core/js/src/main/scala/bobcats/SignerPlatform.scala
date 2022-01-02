@@ -33,16 +33,22 @@ private[bobcats] trait SignerCompanionPlatform {
        * Given a Private Key specification and a Signature type, return a function from Byte
        * Vector to signatures
        */
-      override def sign(privSpec: PKCS8KeySpec[_], sig: AsymmetricKeyAlg.Signature)(
-          data: ByteVector
-      ): F[ByteVector] = for {
-        key <- privSpec.toWebCryptoKey(sig)
-        any <- FA.fromPromise(
-          FA.delay(
-            crypto.subtle.sign(JSKeySpec.signatureAlgorithm(sig), key, data.toJSArrayBuffer)
-          ))
-      } yield { // see https://github.com/scala-js/scala-js-dom/issues/660
-        ByteVector.fromJSArrayBuffer(any.asInstanceOf[js.typedarray.ArrayBuffer])
+      override def sign(
+          privKeySpec: PrivateKey[_],
+          sig: AsymmetricKeyAlg.Signature
+      ): F[ByteVector => F[ByteVector]] = {
+        for {
+          key <- privKeySpec.toWebCryptoKey(sig)
+        } yield { (data: ByteVector) =>
+          FA.fromPromise(
+            FA.delay(
+              crypto.subtle.sign(JSKeySpec.signatureAlgorithm(sig), key, data.toJSArrayBuffer)
+            ))
+            .map { any => // see https://github.com/scala-js/scala-js-dom/issues/660
+              ByteVector.fromJSArrayBuffer(any.asInstanceOf[js.typedarray.ArrayBuffer])
+            }
+        }
       }
     }
+
 }

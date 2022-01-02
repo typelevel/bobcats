@@ -48,7 +48,9 @@ trait SignerSuite extends CatsEffectSuite {
       s"${sigTest.description} with ${ct.runtimeClass.getSimpleName()}: can verify generated signature") {
       for {
         sigTextBytes <- signatureTxtF
-        signedTxt <- Signer[F].sign(privKey, sigTest.signatureAlg)(sigTextBytes)
+        sigFn <- Signer[F].sign(privKey, sigTest.signatureAlg)
+        //todoL here it would be good to have a Seq of sigTest examples to test with the same sigFn
+        signedTxt <- sigFn(sigTextBytes)
         b <- Verifier[F].verify(pubKey, sigTest.signatureAlg)(
           sigTextBytes,
           signedTxt
