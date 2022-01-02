@@ -28,16 +28,17 @@ class Rfc8792Test extends munit.FunSuite {
   // tricky example from https://www.ietf.org/archive/id/draft-ietf-httpbis-message-signatures-07.html#name-creating-a-signature
   // discussed https://github.com/httpwg/http-extensions/issues/1876
   test("example from Signing HTTP MEssages") {
-    val example = """"@method": GET
-							 |"@path": /foo
-							 |"@authority": example.org
-							 |"cache-control": max-age=60, must-revalidate
-							 |"x-empty-header": \
-							 |
-							 |"x-example": Example header with some whitespace.
-							 |"@signature-params": ("@method" "@path" "@authority" \
-							 |  "cache-control" "x-empty-header" "x-example");created=1618884475\
-							 |  ;keyid="test-key-rsa-pss"""".rfc8792single
+    val example =
+      """"@method": GET
+		 |"@path": /foo
+		 |"@authority": example.org
+		 |"cache-control": max-age=60, must-revalidate
+		 |"x-empty-header": \
+		 |
+		 |"x-example": Example header with some whitespace.
+		 |"@signature-params": ("@method" "@path" "@authority" \
+		 |  "cache-control" "x-empty-header" "x-example");created=1618884475\
+		 |  ;keyid="test-key-rsa-pss"""".rfc8792single
 
     // A Seq of Lines.
     val expected = Seq(

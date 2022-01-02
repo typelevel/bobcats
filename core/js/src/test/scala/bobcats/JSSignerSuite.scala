@@ -46,6 +46,7 @@ class JSSignerSuite extends SignerSuite {
   implicit val signer: Signer[IO] = Signer.forAsync[IO]
   implicit val verifier: Verifier[IO] = Verifier.forAsync[IO]
 
-  run[IO](SigningHttpMessages.signatureExamples)
+  if (!BuildInfo.runtime.contains("NodeJS"))
+    run[IO](SigningHttpMessages.signatureExamples)
 
 }

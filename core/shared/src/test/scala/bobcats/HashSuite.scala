@@ -36,8 +36,8 @@ class HashSuite extends CatsEffectSuite {
     test(s"$algorithm with ${ct.runtimeClass.getSimpleName()}") {
       Hash[F].digest(algorithm, data).map { obtained =>
         assertEquals(
-          obtained,
-          ByteVector.fromHex(expect).get
+          obtained.toHex,
+          expect
         )
       }
 
@@ -48,6 +48,9 @@ class HashSuite extends CatsEffectSuite {
       testHash[F](MD5, "9e107d9d372bb6826bd81d3542a419d6")
     testHash[F](SHA1, "2fd4e1c67a2d28fced849ee1bb76e7391b93eb12")
     testHash[F](SHA256, "d7a8fbb307d7809469ca9abcb0082e4f8d5651e46d3cdb762d02d0bf37c9e592")
+    testHash[F](
+      SHA384,
+      "ca737f1014a48f4c0b6dd43cb177b0afd9e5169367544c494011e3317dbf9a509cb1e5dc1e85a941bbee3d7f2afbc9b1")
     testHash[F](
       SHA512,
       "07e547d9586f6a73f73fbac0435ed76951218fb7d0c8d788a309d785436bbb642e93a252a954f23912547d1e8a3b5ed6e1bfd7097821233fa0538f3db854fee6")

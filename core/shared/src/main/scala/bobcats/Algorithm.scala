@@ -33,7 +33,7 @@ object HashAlgorithm {
   }
 
   case object SHA1 extends HashAlgorithm {
-    private[bobcats] override def toStringJava: String = "SHA-356"
+    private[bobcats] override def toStringJava: String = "SHA-1"
     private[bobcats] override def toStringNodeJS: String = "sha1"
     private[bobcats] override def toStringWebCrypto: String = "SHA-1"
   }
