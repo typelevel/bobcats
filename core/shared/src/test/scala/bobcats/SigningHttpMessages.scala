@@ -28,17 +28,41 @@ import bobcats.SignatureExample._
 object SigningHttpMessages extends SignatureExamples {
 
   def signatureExamples: Seq[SignatureExample] = Seq(
+    `§2.2.11_Example`,
     `§3.1_Signature`,
     `§4.3_Example`,
     `Appendix_B.2.1`,
+    `Appendix_B.2.2`,
+    `Appendix_B.2.3`,
     `Appendix_B.2.4`
   )
 
-  override def keyExamples: Seq[TestKeys] = Seq(
+  override def keyExamples: Seq[TestKey] = Seq(
     `test-key-rsa`,
     `test-key-rsa-pss`,
     `test-key-ecc-p256`
   )
+
+  object `§2.2.11_Example`
+      extends SignatureExample(
+        description = "§2.2.11 Request-Response Example",
+        sigtext = """"content-type": application/json
+			 |"content-length": 62
+			 |"@status": 200
+			 |"@request-response";key="sig1": :KuhJjsOKCiISnKHh2rln5ZNIrkRvue0DSu\
+			 |  5rif3g7ckTbbX7C4Jp3bcGmi8zZsFRURSQTcjbHdJtN8ZXlRptLOPGHkUa/3Qov79\
+			 |  gBeqvHNUO4bhI27p4WzD1bJDG9+6ml3gkrs7rOvMtROObPuc78A95fa4+skS/t2T7\
+			 |  OjkfsHAm/enxf1fAwkk15xj0n6kmriwZfgUlOqyff0XLwuH4XFvZ+ZTyxYNoo2+Ef\
+			 |  Fg4NVfqtSJch2WDY7n/qmhZOzMfyHlggWYFnDpyP27VrzQCQg8rM1Crp6MrwGLa94\
+			 |  v6qP8pq0sQVq2DLt4NJSoRRqXTvqlWIRnexmcKXjQFVz6YSA==:
+			 |"@signature-params": ("content-type" "content-length" "@status" \
+			 |  "@request-response";key="sig1");created=1618884475\
+			 |  ;keyid="test-key-ecc-p256"""".rfc8792single,
+        signature = """crVqK54rxvdx0j7qnt2RL1oQSf+o21S/6Uk2hyFpoIfOT0q+Hv\
+		  |  msYAXUXzo0Wn8NFWh/OjWQOXHAQdVnTk87Pw==""".rfc8792single,
+        keys = `test-key-ecc-p256`,
+        signatureAlg = AsymmetricKeyAlg.`ecdsa-p256-sha256`
+      )
 
   object `§3.1_Signature`
       extends SignatureExample(
@@ -62,6 +86,29 @@ object SigningHttpMessages extends SignatureExamples {
 			  |VMvMcOg==""".rfc8792single,
         keys = `test-key-rsa-pss`,
         signatureAlg = AsymmetricKeyAlg.`rsa-pss-sha512`
+      )
+
+  object `§4.3_Example`
+      extends SignatureExample(
+        description = "§4.3 Example",
+        sigtext =
+          """"signature";key="sig1": :P0wLUszWQjoi54udOtydf9IWTfNhy+r53jGFj9XZuP\
+				 |  4uKwxyJo1RSHi+oEF1FuX6O29d+lbxwwBao1BAgadijW+7O/PyezlTnqAOVPWx9Gl\
+				 |  yntiCiHzC87qmSQjvu1CFyFuWSjdGa3qLYYlNm7pVaJFalQiKWnUaqfT4LyttaXyo\
+				 |  yZW84jS8gyarxAiWI97mPXU+OVM64+HVBHmnEsS+lTeIsEQo36T3NFf2CujWARPQg\
+				 |  53r58RmpZ+J9eKR2CD6IJQvacn5A4Ix5BUAVGqlyp8JYm+S/CWJi31PNUjRRCusCV\
+				 |  Rj05NrxABNFv3r5S9IXf2fYJK+eyW4AiGVMvMcOg==:
+				 |"forwarded": for=192.0.2.123
+				 |"@signature-params": ("signature";key="sig1" "forwarded")\
+				 |  ;created=1618884480;keyid="test-key-rsa";alg="rsa-v1_5-sha256"""".rfc8792single,
+        signature = """cjGvZwbsq9JwexP9TIvdLiivxqLINwp/ybAc19KOSQuLvtmMt3EnZxNiE+797dXK2cj\
+							 |PPUFqoZxO8WWx1SnKhAU9SiXBr99NTXRmA1qGBjqus/1Yxwr8keB8xzFt4inv3J3zP0\
+							 |k6TlLkRJstkVnNjuhRIUA/ZQCo8jDYAl4zWJJjppy6Gd1XSg03iUa0sju1yj6rcKbMA\
+							 |BBuzhUz4G0u1hZkIGbQprCnk/FOsqZHpwaWvY8P3hmcDHkNaavcokmq+3EBDCQTzgwL\
+							 |qfDmV0vLCXtDda6CNO2Zyum/pMGboCnQn/VkQ+j8kSydKoFg6EbVuGbrQijth6I0dDX\
+							 |2/HYcJg==""".rfc8792single,
+        keys = `test-key-rsa`,
+        signatureAlg = AsymmetricKeyAlg.`rsa-v1_5-sha256`
       )
 
   object `Appendix_B.2.1`
@@ -134,32 +181,9 @@ object SigningHttpMessages extends SignatureExamples {
         signatureAlg = AsymmetricKeyAlg.`ecdsa-p256-sha256`
       )
 
-  object `§4.3_Example`
-      extends SignatureExample(
-        description = "§4.3 Example",
-        sigtext =
-          """"signature";key="sig1": :P0wLUszWQjoi54udOtydf9IWTfNhy+r53jGFj9XZuP\
-			  |  4uKwxyJo1RSHi+oEF1FuX6O29d+lbxwwBao1BAgadijW+7O/PyezlTnqAOVPWx9Gl\
-			  |  yntiCiHzC87qmSQjvu1CFyFuWSjdGa3qLYYlNm7pVaJFalQiKWnUaqfT4LyttaXyo\
-			  |  yZW84jS8gyarxAiWI97mPXU+OVM64+HVBHmnEsS+lTeIsEQo36T3NFf2CujWARPQg\
-			  |  53r58RmpZ+J9eKR2CD6IJQvacn5A4Ix5BUAVGqlyp8JYm+S/CWJi31PNUjRRCusCV\
-			  |  Rj05NrxABNFv3r5S9IXf2fYJK+eyW4AiGVMvMcOg==:
-			  |"forwarded": for=192.0.2.123
-			  |"@signature-params": ("signature";key="sig1" "forwarded")\
-			  |  ;created=1618884480;keyid="test-key-rsa";alg="rsa-v1_5-sha256"""".rfc8792single,
-        signature = """cjGvZwbsq9JwexP9TIvdLiivxqLINwp/ybAc19KOSQuLvtmMt3EnZxNiE+797dXK2cj\
-			  |PPUFqoZxO8WWx1SnKhAU9SiXBr99NTXRmA1qGBjqus/1Yxwr8keB8xzFt4inv3J3zP0\
-			  |k6TlLkRJstkVnNjuhRIUA/ZQCo8jDYAl4zWJJjppy6Gd1XSg03iUa0sju1yj6rcKbMA\
-			  |BBuzhUz4G0u1hZkIGbQprCnk/FOsqZHpwaWvY8P3hmcDHkNaavcokmq+3EBDCQTzgwL\
-			  |qfDmV0vLCXtDda6CNO2Zyum/pMGboCnQn/VkQ+j8kSydKoFg6EbVuGbrQijth6I0dDX\
-			  |2/HYcJg==""".rfc8792single,
-        keys = `test-key-rsa`,
-        signatureAlg = AsymmetricKeyAlg.`rsa-v1_5-sha256`
-      )
-
   // 2048-bit RSA public and private key pair,
   // given in https://www.ietf.org/archive/id/draft-ietf-httpbis-message-signatures-07.html#appendix-B.1.1
-  object `test-key-rsa` extends TestKeys {
+  object `test-key-rsa` extends TestKey {
     override def description: String = "test-key-rsa"
 
     override def privateKey: PrivateKeyPEM =
@@ -248,10 +272,10 @@ object SigningHttpMessages extends SignatureExamples {
 
   // 2048-bit RSA public and private key pair
   // taken from https://www.ietf.org/archive/id/draft-ietf-httpbis-message-signatures-07.html#name-example-rsa-pss-key
-  object `test-key-rsa-pss` extends TestKeys {
+  object `test-key-rsa-pss` extends TestKey {
     override def description: String = "test-key-rsa-pss"
 
-    // This was generated by converting the privatekey from spec into JWT and then using
+    // This was generated by converting the private key from spec into JWT and then using
     // pem-jwk node js lib to convert back to pem
     override def privateKey: PrivateKeyPEM =
       """-----BEGIN RSA PRIVATE KEY-----
@@ -326,7 +350,7 @@ object SigningHttpMessages extends SignatureExamples {
     override def keyAlg: AsymmetricKeyAlg = AsymmetricKeyAlg.RSA_PSS_Key
   }
 
-  object `test-key-ecc-p256` extends TestKeys {
+  object `test-key-ecc-p256` extends TestKey {
     override def description: String = "test-key-ecc-p256"
     override def privateKey: PrivateKeyPEM =
       """-----BEGIN EC PRIVATE KEY-----

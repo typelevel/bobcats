@@ -29,7 +29,7 @@ case class SignatureExample(
     description: String,
     sigtext: SigningString,
     signature: Signature,
-    keys: TestKeys,
+    keys: TestKey,
     signatureAlg: AsymmetricKeyAlg.Signature
 ) {
   //		def sigtest(keys: TestKeys, sig: PKA.Signature): SignatureTest =
@@ -38,7 +38,7 @@ case class SignatureExample(
 
 trait SignatureExamples {
   def signatureExamples: Seq[SignatureExample]
-  def keyExamples: Seq[TestKeys]
+  def keyExamples: Seq[TestKey]
 }
 
 //	case class SignatureTest(
@@ -62,7 +62,7 @@ object X {
  * Obviously, these should not be used other than for test cases! So place them here to make
  * them available in other tests.
  */
-trait TestKeys {
+trait TestKey {
   def description: String
   // the keys in the Signing HTTP messages Spec are PEM encoded.
   // One could transform the keys from PKCS#1 to PKCS#8 using

@@ -26,7 +26,7 @@ class PEMTestSuite extends munit.FunSuite {
 
   SigningHttpMessages.keyExamples.foreach(testPEM)
 
-  def testPEM(pem: TestKeys): Unit = {
+  def testPEM(pem: TestKey): Unit = {
     test(s"${pem.description}: test spec public key matches calculated spki key") {
       val pubkeyTry: Try[security.PublicKey] = pemutils.PEMToPublicKey(pem.publicKey)
       assert(pubkeyTry.isSuccess)
@@ -55,7 +55,7 @@ class PEMTestSuite extends munit.FunSuite {
 
   }
 
-  private def PEMNamesForKey(pem: TestKeys, isPriv: Boolean): String = {
+  private def PEMNamesForKey(pem: TestKey, isPriv: Boolean): String = {
     pem.keyAlg match {
       case _: Alg.EC => "ECDSA"
       case Alg.RSA_PSS_Key => "RSA"
