@@ -36,67 +36,77 @@ trait SignerSuite extends CatsEffectSuite {
   def pemutils: PEMUtils
 
   def testSigner[F[_]: Signer: Verifier: MonadErr](
-      sigTest: SignatureExample,
-      pubKey: SPKIKeySpec[_],
-      privKey: PKCS8KeySpec[_]
+      typedSignatures: Seq[SignatureExample] // these are non-empty lists
   )(implicit ct: ClassTag[F[_]]): Unit = {
+    val prototype = typedSignatures.head
+    val keypair: Try[(SPKIKeySpec[AsymmetricKeyAlg], PKCS8KeySpec[AsymmetricKeyAlg])] =
+      extractKeys(prototype)
+    test(s"${typedSignatures.head.keypair.description}: build key " +
+      s"spec for following ${typedSignatures.size} tests with ${typedSignatures.head.signatureAlg}") {
+      assert(keypair.isSuccess, keypair.toString)
+    }
+    val (pubKey, privKey) = keypair.get
+    val signerF = Signer[F].build(privKey, prototype.signatureAlg)
+    val verifierF = Verifier[F].build(pubKey, prototype.signatureAlg)
 
-    val signatureTxtF: F[ByteVector] =
-      implicitly[MonadErr[F]].fromEither(ByteVector.encodeAscii(sigTest.sigtext))
+    def signatureTxtF(signingStr: String): F[ByteVector] =
+      implicitly[MonadErr[F]].fromEither(ByteVector.encodeAscii(signingStr))
 
-    test(
-      s"${sigTest.description} with ${ct.runtimeClass.getSimpleName()}: can verify generated signature") {
-      for {
-        sigTextBytes <- signatureTxtF
-        sign <- Signer[F].build(privKey, sigTest.signatureAlg)
-        //todoL here it would be good to have a Seq of sigTest examples to test with the same sigFn
-        signedTxt <- sign(sigTextBytes)
-        verify <- Verifier[F].build(pubKey, sigTest.signatureAlg)
-        b <- verify(sigTextBytes, signedTxt)
-      } yield {
-        assertEquals(b, true, s"expected verify(>>${sigTest.sigtext}<<, >>$signedTxt<<)=true)")
+    // todo: extract the signer and verifier from signerF and verifierF and then run these
+    //    tests, so that we can test that we only need to construct those objects once.
+    //    not sure how to do that with munit
+    typedSignatures.foreach { sigTest =>
+      test(
+        s"${sigTest.description} with ${ct.runtimeClass.getSimpleName()}: can verify generated signature") {
+        for {
+          sign <- signerF
+          verify <- verifierF
+          sigTextBytes <- signatureTxtF(sigTest.sigtext)
+          // todo here it would be good to have a Seq of sigTest examples to test with the same sigFn
+          signedTxt <- sign(sigTextBytes)
+          b <- verify(sigTextBytes, signedTxt)
+        } yield {
+          assertEquals(
+            b,
+            true,
+            s"expected verify(>>${sigTest.sigtext}<<, >>$signedTxt<<)=true)")
+        }
+      }
+
+      test(
+        s"${sigTest.description} with ${ct.runtimeClass.getSimpleName()}: matches expected value") {
+        for {
+          verify <- verifierF
+          sigTextBytes <- signatureTxtF(sigTest.sigtext)
+          expectedSig <- implicitly[MonadErr[F]].fromEither(
+            ByteVector
+              .fromBase64Descriptive(sigTest.signature, scodec.bits.Bases.Alphabets.Base64)
+              .leftMap(new Exception(_))
+          )
+          b <- verify(sigTextBytes, expectedSig)
+        } yield {
+          assertEquals(b, true, s"expected to verify >>${sigTest.sigtext}<<")
+        }
       }
     }
 
-    test(
-      s"${sigTest.description} with ${ct.runtimeClass.getSimpleName()}: matches expected value") {
-      for {
-        sigTextBytes <- signatureTxtF
-        expectedSig <- implicitly[MonadErr[F]].fromEither(
-          ByteVector
-            .fromBase64Descriptive(sigTest.signature, scodec.bits.Bases.Alphabets.Base64)
-            .leftMap(new Exception(_))
-        )
-        verify <- Verifier[F].build(pubKey, sigTest.signatureAlg)
-        b <- verify(sigTextBytes, expectedSig)
-      } yield {
-        assertEquals(b, true, s"expected to verify >>${sigTest.sigtext}<<")
-      }
-    }
   }
 
-  def extractKeys(
-      ex: SignatureExample): (SPKIKeySpec[AsymmetricKeyAlg], PKCS8KeySpec[AsymmetricKeyAlg]) = {
-    val res: Try[(SPKIKeySpec[AsymmetricKeyAlg], PKCS8KeySpec[AsymmetricKeyAlg])] = for {
+  // using flatmap  would not work as F is something like IO that would
+  // delay the flapMap, meaning the tests would then not get registered.
+  def extractKeys(ex: SignatureExample)
+      : Try[(SPKIKeySpec[AsymmetricKeyAlg], PKCS8KeySpec[AsymmetricKeyAlg])] =
+    for {
       pub <- pemutils.getPublicKeyFromPEM(ex.keypair.publicKeyNew, ex.keypair.keyAlg)
       priv <- pemutils.getPrivateKeyFromPEM(ex.keypair.privatePk8Key, ex.keypair.keyAlg)
     } yield (pub, priv)
-
-    test(s"${ex.description}: parsing public and private keys") {
-      res.get
-    }
-    res.get
-  }
 
   // subclasses should call run
   def run[F[_]: Signer: Verifier: MonadErr](
       tests: Seq[SignatureExample]
   )(implicit ct: ClassTag[F[_]]): Unit = {
-    tests.foreach { sigTest =>
-      // using flatmap here would not work as F is something like IO that would
-      // delay the flapMap, meaning the tests would then not get registered.
-      val keys = extractKeys(sigTest)
-      testSigner[F](sigTest, keys._1, keys._2)
+    tests.groupBy(ex => (ex.keypair.publicKey, ex.signatureAlg)).values.foreach { sigTests =>
+      testSigner[F](sigTests)
     }
   }
 }
