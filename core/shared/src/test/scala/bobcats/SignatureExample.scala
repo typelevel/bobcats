@@ -25,7 +25,9 @@ object SignatureExample {
   type PublicKeyPEM = String
 }
 
-/** Collects a number of signatures for a given Key */
+/**
+ * Collects a number of signatures for a given Key
+ */
 case class SignatureExample(
     description: String,
     sigtext: SigningString,

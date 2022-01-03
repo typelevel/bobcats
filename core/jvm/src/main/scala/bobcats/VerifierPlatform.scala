@@ -36,12 +36,13 @@ private[bobcats] trait VerifierCompanionPlatform {
         F.catchNonFatal {
           val pubKey: security.PublicKey = spec.toJava
 
-          (signingStr: ByteVector, signature: ByteVector) => F.catchNonFatal {
-            val sig: java.security.Signature = sigType.toJava
-            sig.initVerify(pubKey)
-            sig.update(signingStr.toByteBuffer)
-            sig.verify(signature.toArray)
-          }
+          (signingStr: ByteVector, signature: ByteVector) =>
+            F.catchNonFatal {
+              val sig: java.security.Signature = sigType.toJava
+              sig.initVerify(pubKey)
+              sig.update(signingStr.toByteBuffer)
+              sig.verify(signature.toArray)
+            }
         }
     }
 }

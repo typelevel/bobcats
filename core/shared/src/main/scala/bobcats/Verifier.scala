@@ -32,7 +32,7 @@ sealed trait Verifier[F[_]] extends VerifierPlatform[F] {
    * This is returned in the Context F to allow for asynchronous execution (eg. in the
    * browser), and also captures two places where errors can occur: In the builing of the
    * verifier using the spec (e.g. a mangled certificate) and in the verification of a signature.
-  */
+   */
   def build(
       spec: SPKIKeySpec[_],
       sig: AsymmetricKeyAlg.Signature
