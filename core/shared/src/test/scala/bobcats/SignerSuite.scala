@@ -78,8 +78,8 @@ trait SignerSuite extends CatsEffectSuite {
   def extractKeys(
       ex: SignatureExample): (SPKIKeySpec[AsymmetricKeyAlg], PKCS8KeySpec[AsymmetricKeyAlg]) = {
     val res: Try[(SPKIKeySpec[AsymmetricKeyAlg], PKCS8KeySpec[AsymmetricKeyAlg])] = for {
-      pub <- pemutils.getPublicKeyFromPEM(ex.keys.publicKeyNew, ex.keys.keyAlg)
-      priv <- pemutils.getPrivateKeyFromPEM(ex.keys.privatePk8Key, ex.keys.keyAlg)
+      pub <- pemutils.getPublicKeyFromPEM(ex.keypair.publicKeyNew, ex.keypair.keyAlg)
+      priv <- pemutils.getPrivateKeyFromPEM(ex.keypair.privatePk8Key, ex.keypair.keyAlg)
     } yield (pub, priv)
 
     test(s"${ex.description}: parsing public and private keys") {

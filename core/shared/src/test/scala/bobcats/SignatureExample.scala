@@ -25,35 +25,17 @@ object SignatureExample {
   type PublicKeyPEM = String
 }
 
+/** Collects a number of signatures for a given Key */
 case class SignatureExample(
     description: String,
     sigtext: SigningString,
     signature: Signature,
-    keys: TestKey,
+    keypair: TestKeyPair,
     signatureAlg: AsymmetricKeyAlg.Signature
-) {
-  //		def sigtest(keys: TestKeys, sig: PKA.Signature): SignatureTest =
-  //			SignatureTest(sigtext, signature, keys.privateKeySpec, sig, keys.publicKeySpec, description)
-}
-
-trait SignatureExamples {
+)
+trait AsymmetricKeyExamples {
   def signatureExamples: Seq[SignatureExample]
-  def keyExamples: Seq[TestKey]
-}
-
-//	case class SignatureTest(
-//	  text: SignatureTest.SigningString,  sig: SignatureTest.Signature,
-//	  privateKeySpec: Try[PrivateKeySpec[_]], alg: PKA.Signature,
-//	  pubKeySpec: Try[PublicKeySpec[_]],
-//	  description: String
-//	)
-//
-
-object X {
-//	lazy val privateKeySpec: Try[PrivateKeySpec[_]] = pem.getPrivateKeyFromPEM(privateKey)
-//
-//	lazy val publicKeySpec: Try[PublicKeySpec[_]] = pem.getPublicKeyFromPEM(publicKey)
-
+  def keyExamples: Seq[TestKeyPair]
 }
 
 /**
@@ -62,7 +44,7 @@ object X {
  * Obviously, these should not be used other than for test cases! So place them here to make
  * them available in other tests.
  */
-trait TestKey {
+trait TestKeyPair {
   def description: String
   // the keys in the Signing HTTP messages Spec are PEM encoded.
   // One could transform the keys from PKCS#1 to PKCS#8 using
