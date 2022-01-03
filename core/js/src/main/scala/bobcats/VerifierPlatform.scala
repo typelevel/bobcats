@@ -18,7 +18,6 @@ package bobcats
 
 import cats.effect.kernel.Async
 import cats.implicits.toFunctorOps
-import cats.syntax.all._
 import org.scalajs.dom.crypto
 import scodec.bits.ByteVector
 
