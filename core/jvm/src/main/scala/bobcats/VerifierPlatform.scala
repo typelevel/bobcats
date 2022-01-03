@@ -27,7 +27,7 @@ private[bobcats] trait VerifierCompanionPlatform {
 
   implicit def forSync[F[_]](implicit F: Sync[F]): Verifier[F] =
     new UnsealedVerifier[F] {
-      override def verify(
+      override def build(
           spec: SPKIKeySpec[_],
           sigType: AsymmetricKeyAlg.Signature
       ): F[(SigningString, Signature) => F[Boolean]] =

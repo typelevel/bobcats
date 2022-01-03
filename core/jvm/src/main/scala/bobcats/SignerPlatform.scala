@@ -29,7 +29,7 @@ private[bobcats] trait SignerCompanionPlatform {
   implicit def forSync[F[_]](implicit F: Sync[F]): Signer[F] =
     new UnsealedSigner[F] {
       // one would really want a type that pairs the PKA and Sig, so as not to leave impossible combinations open
-      override def sign( // it is not clear that adding [A <: PrivateKeyAlg, S <: PKA.Signature] helps
+      override def build( // it is not clear that adding [A <: PrivateKeyAlg, S <: PKA.Signature] helps
           spec: PrivateKey[_],
           sigType: AsymmetricKeyAlg.Signature
       ): F[ByteVector => F[ByteVector]] =

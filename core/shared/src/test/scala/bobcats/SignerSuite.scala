@@ -48,11 +48,11 @@ trait SignerSuite extends CatsEffectSuite {
       s"${sigTest.description} with ${ct.runtimeClass.getSimpleName()}: can verify generated signature") {
       for {
         sigTextBytes <- signatureTxtF
-        sigFn <- Signer[F].sign(privKey, sigTest.signatureAlg)
+        sign <- Signer[F].build(privKey, sigTest.signatureAlg)
         //todoL here it would be good to have a Seq of sigTest examples to test with the same sigFn
-        signedTxt <- sigFn(sigTextBytes)
-        verifyFn <- Verifier[F].verify(pubKey, sigTest.signatureAlg)
-        b <- verifyFn(sigTextBytes, signedTxt)
+        signedTxt <- sign(sigTextBytes)
+        verify <- Verifier[F].build(pubKey, sigTest.signatureAlg)
+        b <- verify(sigTextBytes, signedTxt)
       } yield {
         assertEquals(b, true, s"expected verify(>>${sigTest.sigtext}<<, >>$signedTxt<<)=true)")
       }
@@ -67,8 +67,8 @@ trait SignerSuite extends CatsEffectSuite {
             .fromBase64Descriptive(sigTest.signature, scodec.bits.Bases.Alphabets.Base64)
             .leftMap(new Exception(_))
         )
-        verifyFn <- Verifier[F].verify(pubKey, sigTest.signatureAlg)
-        b <- verifyFn(sigTextBytes, expectedSig)
+        verify <- Verifier[F].build(pubKey, sigTest.signatureAlg)
+        b <- verify(sigTextBytes, expectedSig)
       } yield {
         assertEquals(b, true, s"expected to verify >>${sigTest.sigtext}<<")
       }

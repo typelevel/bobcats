@@ -33,7 +33,7 @@ private[bobcats] trait SignerCompanionPlatform {
        * Given a Private Key specification and a Signature type, return a function from Byte
        * Vector to signatures
        */
-      override def sign(
+      override def build(
           privKeySpec: PrivateKey[_],
           sig: AsymmetricKeyAlg.Signature
       ): F[ByteVector => F[ByteVector]] = {

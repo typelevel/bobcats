@@ -25,14 +25,15 @@ sealed trait Verifier[F[_]] extends VerifierPlatform[F] {
   type SigningString = ByteVector
   type Signature = ByteVector
   /*
-   * the first two arguments set up a reusable verifier fnct for a public key and signature type.
+   * Build a signature Verifier function
+   * The first two arguments set up a reusable verifier fnct for a public key and signature type.
    * This verifier function takes a signing string and a signature to a boolean,
    * i.e. it is a Predicate corresponding to HasSignature(signingString, signature)
    * This is returned in the Context F to allow for asynchronous execution (eg. in the
    * browser), and also captures two places where errors can occur: In the builing of the
    * verifier using the spec (e.g. a mangled certificate) and in the verification of a signature.
   */
-  def verify(
+  def build(
       spec: SPKIKeySpec[_],
       sig: AsymmetricKeyAlg.Signature
   ): F[(SigningString, Signature) => F[Boolean]]

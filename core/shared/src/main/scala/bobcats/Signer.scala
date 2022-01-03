@@ -24,10 +24,11 @@ import scodec.bits.ByteVector
 sealed trait Signer[F[_]] extends SignerPlatform[F] {
   // todo: the type of the signature should dependent on the private key type
   /**
+   * Build a Signer function.
    * Given a Private Key (specification) and a Signature type, return a function from Byte
    * Vector of to be signed text, to Byte Vectors of the Signed text in context F.
    */
-  def sign(
+  def build(
     spec: PrivateKey[_],
     sig: AsymmetricKeyAlg.Signature
   ): F[ByteVector => F[ByteVector]]
