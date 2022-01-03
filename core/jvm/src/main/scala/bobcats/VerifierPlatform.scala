@@ -30,18 +30,18 @@ private[bobcats] trait VerifierCompanionPlatform {
       override def verify(
           spec: SPKIKeySpec[_],
           sigType: AsymmetricKeyAlg.Signature
-      )(
-          signingStr: ByteVector,
-          signature: ByteVector
-      ): F[Boolean] =
+      ): F[(SigningString, Signature) => F[Boolean]] =
         // todo: if one is to catchNonFatal one should have exceptions that
         //   are consistent across JS and Java implementations (should one?)
         F.catchNonFatal {
           val pubKey: security.PublicKey = spec.toJava
-          val sig: java.security.Signature = sigType.toJava
-          sig.initVerify(pubKey)
-          sig.update(signingStr.toByteBuffer)
-          sig.verify(signature.toArray)
+
+          (signingStr: ByteVector, signature: ByteVector) => F.catchNonFatal {
+            val sig: java.security.Signature = sigType.toJava
+            sig.initVerify(pubKey)
+            sig.update(signingStr.toByteBuffer)
+            sig.verify(signature.toArray)
+          }
         }
     }
 }

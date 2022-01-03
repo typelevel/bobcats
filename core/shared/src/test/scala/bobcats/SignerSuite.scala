@@ -51,10 +51,8 @@ trait SignerSuite extends CatsEffectSuite {
         sigFn <- Signer[F].sign(privKey, sigTest.signatureAlg)
         //todoL here it would be good to have a Seq of sigTest examples to test with the same sigFn
         signedTxt <- sigFn(sigTextBytes)
-        b <- Verifier[F].verify(pubKey, sigTest.signatureAlg)(
-          sigTextBytes,
-          signedTxt
-        )
+        verifyFn <- Verifier[F].verify(pubKey, sigTest.signatureAlg)
+        b <- verifyFn(sigTextBytes, signedTxt)
       } yield {
         assertEquals(b, true, s"expected verify(>>${sigTest.sigtext}<<, >>$signedTxt<<)=true)")
       }
@@ -69,10 +67,8 @@ trait SignerSuite extends CatsEffectSuite {
             .fromBase64Descriptive(sigTest.signature, scodec.bits.Bases.Alphabets.Base64)
             .leftMap(new Exception(_))
         )
-        b <- Verifier[F].verify(pubKey, sigTest.signatureAlg)(
-          sigTextBytes,
-          expectedSig
-        )
+        verifyFn <- Verifier[F].verify(pubKey, sigTest.signatureAlg)
+        b <- verifyFn(sigTextBytes, expectedSig)
       } yield {
         assertEquals(b, true, s"expected to verify >>${sigTest.sigtext}<<")
       }
