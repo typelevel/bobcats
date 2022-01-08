@@ -22,7 +22,7 @@ import scala.scalajs.js.annotation.JSGlobal
 
 @js.native
 @JSGlobal
-@nowarn("cat=unused")
+@nowarn("msg=not used")
 private[bobcats] object crypto extends js.Any {
 
   def subtle: SubtleCrypto = js.native

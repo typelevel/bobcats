@@ -21,7 +21,7 @@ import scala.scalajs.js
 
 // https://nodejs.org/api/crypto.html
 @js.native
-@nowarn("cat=unused")
+@nowarn("msg=not used")
 private[bobcats] trait crypto extends js.Any {
 
   def createHash(algorithm: String): Hash = js.native

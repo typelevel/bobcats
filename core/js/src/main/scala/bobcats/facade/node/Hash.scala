@@ -20,7 +20,7 @@ import scala.scalajs.js
 import scala.annotation.nowarn
 
 @js.native
-@nowarn("cat=unused")
+@nowarn("msg=not used")
 private[bobcats] trait Hash extends js.Any {
 
   def digest(): js.typedarray.Uint8Array = js.native
