@@ -24,22 +24,18 @@ import JSEnv._
 
 name := "bobcats"
 
-ThisBuild / baseVersion := "0.1"
+ThisBuild / tlBaseVersion := "0.1"
+ThisBuild / tlUntaggedAreSnapshots := false
 
 // ThisBuild / organization := "org.typelevel"
 ThisBuild / organization := "com.armanbilge" // TODO remove
-ThisBuild / organizationName := "Typelevel"
-ThisBuild / publishGithubUser := "armanbilge"
-ThisBuild / publishFullName := "Arman Bilge"
+ThisBuild / developers := List(
+  tlGitHubDev("armanbilge", "Arman Bilge")
+)
 
-enablePlugins(SonatypeCiReleasePlugin)
-ThisBuild / spiewakCiReleaseSnapshots := true
-ThisBuild / spiewakMainBranches := Seq("main")
-
-ThisBuild / homepage := Some(url("https://github.com/typelevel/bobcats"))
-ThisBuild / scmInfo := Some(
-  ScmInfo(url("https://github.com/typelevel/bobcats"), "git@github.com:typelevel/bobcats.git"))
-sonatypeCredentialHost := "s01.oss.sonatype.org" // TODO remove
+enablePlugins(TypelevelCiReleasePlugin)
+ThisBuild / tlCiReleaseBranches := Seq("main")
+ThisBuild / tlSonatypeUseLegacyHost := false // TODO remove
 
 ThisBuild / crossScalaVersions := Seq("3.1.0", "2.12.15", "2.13.7")
 
@@ -47,12 +43,12 @@ ThisBuild / githubWorkflowBuildPreamble ++= Seq(
   WorkflowStep.Use(
     UseRef.Public("actions", "setup-node", "v2.4.0"),
     name = Some("Setup NodeJS v14 LTS"),
-    params = Map("node-version" -> "14")
+    params = Map("node-version" -> "14"),
+    cond = Some("matrix.ci == 'ciJS'")
   )
 )
 
-replaceCommandAlias("ci", CI.AllCIs.map(_.toString).mkString)
-addCommandAlias("ciJVM", CI.JVM.toString)
+tlReplaceCommandAlias("ciJS", List(CI.NodeJS, CI.Firefox, CI.Chrome).mkString)
 addCommandAlias("ciNodeJS", CI.NodeJS.toString)
 addCommandAlias("ciFirefox", CI.Firefox.toString)
 addCommandAlias("ciChrome", CI.Chrome.toString)
@@ -86,12 +82,7 @@ val munitVersion = "0.7.29"
 val munitCEVersion = "1.0.7"
 val disciplineMUnitVersion = "1.0.9"
 
-lazy val root =
-  project.in(file(".")).aggregate(rootJS, rootJVM).enablePlugins(NoPublishPlugin)
-lazy val rootJVM =
-  project.aggregate(core.jvm, testRuntime.jvm).enablePlugins(NoPublishPlugin)
-lazy val rootJS =
-  project.aggregate(core.js, testRuntime.js).enablePlugins(NoPublishPlugin)
+lazy val root = tlCrossRootProject.aggregate(core, testRuntime)
 
 lazy val core = crossProject(JSPlatform, JVMPlatform)
   .in(file("core"))
