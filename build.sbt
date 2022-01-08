@@ -32,6 +32,7 @@ ThisBuild / organization := "com.armanbilge" // TODO remove
 ThisBuild / developers := List(
   tlGitHubDev("armanbilge", "Arman Bilge")
 )
+ThisBuild / startYear := Some(2021)
 
 enablePlugins(TypelevelCiReleasePlugin)
 ThisBuild / tlCiReleaseBranches := Seq("main")
