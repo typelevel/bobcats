@@ -22,8 +22,7 @@ import scodec.bits.ByteVector
  * Signer must be created with a PrivateKey and a Signature Algorithm
  */
 sealed trait Verifier[F[_]] extends VerifierPlatform[F] {
-  type SigningString = ByteVector
-  type Signature = ByteVector
+  import Verifier.{Signature, SigningString}
   /*
    * Build a signature Verifier function
    * The first two arguments set up a reusable verifier fnct for a public key and signature type.
@@ -42,6 +41,8 @@ sealed trait Verifier[F[_]] extends VerifierPlatform[F] {
 private[bobcats] trait UnsealedVerifier[F[_]] extends Verifier[F]
 
 object Verifier extends VerifierCompanionPlatform {
+  type SigningString = ByteVector
+  type Signature = ByteVector
 
   def apply[F[_]](implicit verifier: Verifier[F]): verifier.type = verifier
 

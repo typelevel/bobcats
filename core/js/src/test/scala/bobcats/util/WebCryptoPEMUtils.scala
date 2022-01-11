@@ -42,7 +42,7 @@ import scala.util.{Failure, Success, Try}
 
 object WebCryptoPEMUtils extends util.PEMUtils {
 
-  override def getPrivateKeyFromPEM(
+  override def getPrivateKeySpec(
       pemStr: PKCS8_PEM,
       keyType: AsymmetricKeyAlg
   ): Try[PKCS8KeySpec[AsymmetricKeyAlg]] = {
@@ -67,7 +67,7 @@ object WebCryptoPEMUtils extends util.PEMUtils {
       case e => Failure(new Exception("does not match PEM syntax. " + e))
     }
 
-  override def getPublicKeyFromPEM(
+  override def getPublicKeySpec(
       pemStr: SPKI_PEM,
       keyType: AsymmetricKeyAlg
   ): Try[SPKIKeySpec[AsymmetricKeyAlg]] = {

@@ -110,10 +110,13 @@ lazy val core = crossProject(JSPlatform, JVMPlatform)
       "org.typelevel" %%% "cats-effect" % catsEffectVersion % Test,
       "org.typelevel" %%% "discipline-munit" % disciplineMUnitVersion % Test,
       "org.typelevel" %%% "munit-cats-effect-3" % munitCEVersion % Test
-    )
+    ),
+    Test / packageBin / publishArtifact := true,
+    Test / packageDoc / publishArtifact := false,
+    Test / packageSrc / publishArtifact := true
   )
   .jvmSettings(
-    libraryDependencies ++=Seq(
+    libraryDependencies ++= Seq(
       "org.bouncycastle" % "bcpkix-jdk15to18" % bouncyVersion % Test,
       "org.bouncycastle" % "bcprov-jdk15to18" % bouncyVersion % Test,
       "org.bouncycastle" % "bctls-jdk15to18" % bouncyVersion % Test,

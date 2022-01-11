@@ -97,8 +97,8 @@ trait SignerSuite extends CatsEffectSuite {
   def extractKeys(ex: SignatureExample)
       : Try[(SPKIKeySpec[AsymmetricKeyAlg], PKCS8KeySpec[AsymmetricKeyAlg])] =
     for {
-      pub <- pemutils.getPublicKeyFromPEM(ex.keypair.publicKeyNew, ex.keypair.keyAlg)
-      priv <- pemutils.getPrivateKeyFromPEM(ex.keypair.privatePk8Key, ex.keypair.keyAlg)
+      pub <- pemutils.getPublicKeySpec(ex.keypair.publicPk8Key, ex.keypair.keyAlg)
+      priv <- pemutils.getPrivateKeySpec(ex.keypair.privatePk8Key, ex.keypair.keyAlg)
     } yield (pub, priv)
 
   // subclasses should call run

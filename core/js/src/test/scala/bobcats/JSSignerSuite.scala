@@ -32,6 +32,7 @@ package bobcats
  * limitations under the License.
  */
 
+import bobcats.SigningHttpMessages.`Github-Issue-1509-Example`
 import bobcats.util.{PEMUtils, WebCryptoPEMUtils}
 import cats.effect.IO
 import cats.effect.kernel.Async
@@ -45,6 +46,6 @@ class JSSignerSuite extends SignerSuite {
   implicit val verifier: Verifier[IO] = Verifier.forAsync[IO]
 
   if (!BuildInfo.runtime.contains("NodeJS"))
-    run[IO](SigningHttpMessages.signatureExamples)
+    run[IO](SigningHttpMessages.signatureExamples.filterNot(_ == `Github-Issue-1509-Example`))
 
 }

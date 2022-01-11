@@ -34,13 +34,15 @@ object SigningHttpMessages extends AsymmetricKeyExamples {
     `Appendix_B.2.1`,
     `Appendix_B.2.2`,
     `Appendix_B.2.3`,
-    `Appendix_B.2.4`
+    `Appendix_B.2.4`,
+    `Github-Issue-1509-Example`
   )
 
   override def keyExamples: Seq[TestKeyPair] = Seq(
     `test-key-rsa`,
     `test-key-rsa-pss`,
-    `test-key-ecc-p256`
+    `test-key-ecc-p256`,
+    `test-key-ed25519`
   )
 
   object `§2.2.11_Example`
@@ -181,6 +183,25 @@ object SigningHttpMessages extends AsymmetricKeyExamples {
         signatureAlg = AsymmetricKeyAlg.`ecdsa-p256-sha256`
       )
 
+  object `Github-Issue-1509-Example`
+      extends SignatureExample(
+        description =
+          "Add Ed25519 support https://github.com/httpwg/http-extensions/issues/1509",
+        sigtext = """"date": Tue, 20 Apr 2021 02:07:56 GMT
+                    |"@method": POST
+                    |"@path": /foo
+                    |"@authority": example.com
+                    |"content-type": application/json
+                    |"content-length": 18
+                    |"@signature-params": ("date" "@method" "@path" "@authority" \
+                    |  "content-type" "content-length");created=1618884475\
+                    |  ;keyid="test-key-ed25519"""".rfc8792single,
+        signature = """u9DvOJe17NdTTuIJjKac9WncuAo/1d4gOh6TXMV6AN4hxLdttB\
+                      |  SegWS/RcWPZ+lENCtykh6YGl8GJiQrxgibBg==""".rfc8792single,
+        keypair = `test-key-ed25519`,
+        signatureAlg = bobcats.AsymmetricKeyAlg.`ed25119-pure`
+      )
+
   // 2048-bit RSA public and private key pair,
   // given in https://www.ietf.org/archive/id/draft-ietf-httpbis-message-signatures-07.html#appendix-B.1.1
   object `test-key-rsa` extends TestKeyPair {
@@ -255,7 +276,7 @@ object SigningHttpMessages extends AsymmetricKeyExamples {
         |PSXSfBDiUGhwOw76WuSSsf1D4b/vLoJ10wIDAQAB
         |-----END RSA PUBLIC KEY-----""".stripMargin
 
-    override def publicKeyNew =
+    override def publicPk8Key =
       """-----BEGIN PUBLIC KEY-----
         |MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAhAKYdtoeoy8zcAcR874L
         |8cnZxKzAGwd7v36APp7Pv6Q2jdsPBRrwWEBnez6d0UDKDwGbc6nxfEXAy5mbhgaj
@@ -375,6 +396,22 @@ object SigningHttpMessages extends AsymmetricKeyExamples {
 
     override def keyAlg: AsymmetricKeyAlg = AsymmetricKeyAlg.ECKey(AsymmetricKeyAlg.`P-256`)
 
+  }
+
+  object `test-key-ed25519` extends TestKeyPair {
+    override def description: String = "Ed25519 key"
+
+    override def privateKey: PrivateKeyPEM =
+      """-----BEGIN PRIVATE KEY-----
+        |MC4CAQAwBQYDK2VwBCIEIJ+DYvh6SEqVTm50DFtMDoQikTmiCqirVv9mWG9qfSnF
+        |-----END PRIVATE KEY-----""".stripMargin
+
+    override def publicKey: PublicKeyPEM =
+      """-----BEGIN PUBLIC KEY-----
+        |MCowBQYDK2VwAyEAJrQLj5P/89iXES9+vFgrIy29clF9CC/oPPsw3c5D0bs=
+        |-----END PUBLIC KEY-----""".stripMargin
+
+    override def keyAlg: AsymmetricKeyAlg = AsymmetricKeyAlg.Ed25519_Key
   }
 
 }

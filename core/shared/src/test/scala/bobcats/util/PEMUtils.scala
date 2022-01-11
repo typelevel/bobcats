@@ -28,7 +28,7 @@ trait PEMUtils {
    * Even though the keytype is in the PKCS8 key, the JS Web Crypto API requires prior knowledge
    * of the type
    */
-  def getPrivateKeyFromPEM(
+  def getPrivateKeySpec(
       pemStr: PKCS8_PEM,
       keyType: AsymmetricKeyAlg // this is only needed for the JS-crypto API. Bouncy in Java can determine the key type
   ): Try[PKCS8KeySpec[AsymmetricKeyAlg]]
@@ -37,7 +37,7 @@ trait PEMUtils {
    * Even though the keytype is in the SPKI key, the JS Web Crypto API requires prior knowledge
    * of it
    */
-  def getPublicKeyFromPEM(
+  def getPublicKeySpec(
       pemStr: SPKI_PEM,
       keyType: AsymmetricKeyAlg // this is only needed for the JS-crypto API. Bouncy in Java can determine the key type
   ): Try[SPKIKeySpec[AsymmetricKeyAlg]]

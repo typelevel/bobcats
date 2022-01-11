@@ -101,9 +101,10 @@ object AsymmetricKeyAlg {
     def hash: HashAlgorithm
   }
 
-  // key types
-  trait RSA
-  trait EC
+  // cryptosystems
+  trait RSA // Rivest–Shamir–Adleman
+  trait EC // Elliptic Curve
+  trait ED // Edwards Curve
 
   sealed trait EC_Curve
   case object `P-256` extends EC_Curve
@@ -126,6 +127,14 @@ object AsymmetricKeyAlg {
     override private[bobcats] def toStringJava = "RSASSA-PSS"
     override private[bobcats] def toStringNodeJS = ???
     override private[bobcats] def toStringWebCrypto = "RSA-PSS"
+  }
+
+  case object Ed25519_Key extends AsymmetricKeyAlg with ED {
+    override private[bobcats] def toStringJava = "Ed25519"
+
+    override private[bobcats] def toStringNodeJS = ???
+
+    override private[bobcats] def toStringWebCrypto = ???
   }
 
   case object SHA512 extends RSA_PKCS_Sig {
@@ -159,6 +168,8 @@ object AsymmetricKeyAlg {
     override private[bobcats] def toStringWebCrypto = "RSASSA-PKCS1-v1_5"
   }
 
+  trait Ed_Sig extends Signature with ED
+
   abstract class EC_Sig extends Signature with EC {
     def ecKeyAlg: ECKey // todo: don't think it is needed
   }
@@ -189,5 +200,12 @@ object AsymmetricKeyAlg {
       "ECDSA" // one has to pass an object with the sha
     override def hash: HashAlgorithm =
       HashAlgorithm.SHA256 // is this right? OR should it be optional?
+  }
+
+  case object `ed25119-pure` extends Ed_Sig {
+    override def hash: HashAlgorithm = ??? // no hash? Should hash then be Option?
+    override private[bobcats] def toStringJava = "Ed25519"
+    override private[bobcats] def toStringNodeJS = ???
+    override private[bobcats] def toStringWebCrypto = ???
   }
 }

@@ -38,7 +38,7 @@ import scala.util.Try
 object BouncyJavaPEMUtils extends util.PEMUtils {
   java.security.Security.addProvider(new org.bouncycastle.jce.provider.BouncyCastleProvider)
 
-  override def getPrivateKeyFromPEM(
+  override def getPrivateKeySpec(
       pemStr: String,
       keyType: AsymmetricKeyAlg): Try[PKCS8KeySpec[AsymmetricKeyAlg]] =
     for {
@@ -47,11 +47,11 @@ object BouncyJavaPEMUtils extends util.PEMUtils {
 //				new Exception(s"could not find bobcats.Algorithm object for ${privateKey.getAlgorithm}")
 //			).toTry
     } yield {
-//			println("private key====>\n"+toPKCS8(privateKey))
+//      println("private key====>\n" + toPKCS8(privateKey))
       PKCS8KeySpec(ByteVector.view(privateKey.getEncoded), keyType)
     }
 
-  override def getPublicKeyFromPEM(
+  override def getPublicKeySpec(
       pemStr: String,
       keyType: AsymmetricKeyAlg): Try[SPKIKeySpec[AsymmetricKeyAlg]] =
     for {
@@ -61,7 +61,7 @@ object BouncyJavaPEMUtils extends util.PEMUtils {
 //			).toTry
 //			if alg == keyType
     } yield {
-//			println("public key====>\n"+toSPKI(publicKey))
+//      println("public key====>\n" + toSPKI(publicKey))
       SPKIKeySpec(ByteVector.view(publicKey.getEncoded), keyType)
     }
 

@@ -16,7 +16,7 @@
 
 package bobcats
 
-import bobcats.SignatureExample.{Signature, SigningString}
+import bobcats.SignatureExample.{PrivateKeyPEM, PublicKeyPEM, Signature, SigningString}
 
 object SignatureExample {
   type SigningString = String
@@ -56,14 +56,14 @@ trait TestKeyPair {
   // spec when debugging the tests, and it would make it more difficult to send in
   // feedback to the IETF HttpBis WG.
 
-  def privateKey: SignatureExample.PrivateKeyPEM
+  def privateKey: PrivateKeyPEM
 
   // PKCS8 version of the private key
-  def privatePk8Key: SignatureExample.PrivateKeyPEM = privateKey
+  def privatePk8Key: PrivateKeyPEM = privateKey
 
-  def publicKey: SignatureExample.PublicKeyPEM
+  def publicKey: PublicKeyPEM
 
-  def publicKeyNew: String = publicKey
+  def publicPk8Key: PublicKeyPEM = publicKey
 
   def keyAlg: AsymmetricKeyAlg
 }
