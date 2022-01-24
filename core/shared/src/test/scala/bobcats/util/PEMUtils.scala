@@ -21,8 +21,7 @@ import bobcats.{AsymmetricKeyAlg, PKCS8KeySpec, SPKIKeySpec}
 import scala.util.Try
 
 trait PEMUtils {
-  type PKCS8_PEM = String
-  type SPKI_PEM = String
+  import PEMUtils.*
 
   /**
    * Even though the keytype is in the PKCS8 key, the JS Web Crypto API requires prior knowledge
@@ -41,4 +40,9 @@ trait PEMUtils {
       pemStr: SPKI_PEM,
       keyType: AsymmetricKeyAlg // this is only needed for the JS-crypto API. Bouncy in Java can determine the key type
   ): Try[SPKIKeySpec[AsymmetricKeyAlg]]
+}
+
+object PEMUtils {
+  type PKCS8_PEM = String
+  type SPKI_PEM = String
 }

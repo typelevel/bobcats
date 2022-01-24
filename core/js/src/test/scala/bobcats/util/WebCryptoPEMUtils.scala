@@ -16,6 +16,7 @@
 
 package bobcats.util
 
+import bobcats.util.PEMUtils.{PKCS8_PEM, SPKI_PEM}
 import bobcats.{util, AsymmetricKeyAlg, PKCS8KeySpec, SPKIKeySpec}
 import scodec.bits.ByteVector
 
