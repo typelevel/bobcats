@@ -25,10 +25,10 @@ import JSEnv._
 name := "bobcats"
 
 ThisBuild / tlBaseVersion := "0.2"
-ThisBuild / tlUntaggedAreSnapshots := false
+ThisBuild / tlUntaggedAreSnapshots := true 
 
 // ThisBuild / organization := "org.typelevel"
-ThisBuild / organization := "net.bblfish.typelevel" // TODO remove
+ThisBuild / organization := "net.bblfish.crypto" // TODO remove
 ThisBuild / developers := List(
   tlGitHubDev("armanbilge", "Arman Bilge"),
   tlGitHubDev("bblfish", "Henry Story")
@@ -36,8 +36,10 @@ ThisBuild / developers := List(
 ThisBuild / startYear := Some(2021)
 
 enablePlugins(TypelevelCiReleasePlugin)
+enablePlugins(TypelevelSonatypePlugin)
+
 ThisBuild / tlCiReleaseBranches := Seq("main")
-ThisBuild / tlSonatypeUseLegacyHost := false // TODO remove
+// ThisBuild / tlSonatypeUseLegacyHost := false // TODO remove
 
 ThisBuild / crossScalaVersions := Seq("3.1.0", "2.12.15", "2.13.8")
 
@@ -98,7 +100,7 @@ lazy val core = crossProject(JSPlatform, JVMPlatform)
   .in(file("core"))
   .settings(
     name := "bobcats",
-    sonatypeCredentialHost := "s01.oss.sonatype.org", // TODO remove
+    //sonatypeCredentialHost := "s01.oss.sonatype.org", // TODO remove
     libraryDependencies ++= Seq(
       "org.typelevel" %%% "cats-core" % catsVersion,
       "org.typelevel" %%% "cats-effect-kernel" % catsEffectVersion,
