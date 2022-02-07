@@ -16,12 +16,12 @@
 
 package bobcats.util
 
+import bobcats.util.PEMUtils.{PKCS8_PEM, SPKI_PEM}
 import bobcats.{AsymmetricKeyAlg, PKCS8KeySpec, SPKIKeySpec}
 
 import scala.util.Try
 
 trait PEMUtils {
-  import PEMUtils.*
 
   /**
    * Even though the keytype is in the PKCS8 key, the JS Web Crypto API requires prior knowledge

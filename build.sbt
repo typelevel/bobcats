@@ -24,35 +24,33 @@ import JSEnv._
 
 name := "bobcats"
 
-ThisBuild / baseVersion := "0.1"
+ThisBuild / tlBaseVersion := "0.2"
+ThisBuild / tlUntaggedAreSnapshots := false
 
 // ThisBuild / organization := "org.typelevel"
-ThisBuild / organization := "com.armanbilge" // TODO remove
-ThisBuild / organizationName := "Typelevel"
-ThisBuild / publishGithubUser := "armanbilge"
-ThisBuild / publishFullName := "Arman Bilge"
+ThisBuild / organization := "net.bblfish.typelevel" // TODO remove
+ThisBuild / developers := List(
+  tlGitHubDev("armanbilge", "Arman Bilge"),
+  tlGitHubDev("bblfish", "Henry Story")
+)
+ThisBuild / startYear := Some(2021)
 
-enablePlugins(SonatypeCiReleasePlugin)
-ThisBuild / spiewakCiReleaseSnapshots := true
-ThisBuild / spiewakMainBranches := Seq("main")
+enablePlugins(TypelevelCiReleasePlugin)
+ThisBuild / tlCiReleaseBranches := Seq("main")
+ThisBuild / tlSonatypeUseLegacyHost := false // TODO remove
 
-ThisBuild / homepage := Some(url("https://github.com/typelevel/bobcats"))
-ThisBuild / scmInfo := Some(
-  ScmInfo(url("https://github.com/typelevel/bobcats"), "git@github.com:typelevel/bobcats.git"))
-sonatypeCredentialHost := "s01.oss.sonatype.org" // TODO remove
-
-ThisBuild / crossScalaVersions := Seq("3.1.0", "2.12.15", "2.13.7")
+ThisBuild / crossScalaVersions := Seq("3.1.0", "2.12.15", "2.13.8")
 
 ThisBuild / githubWorkflowBuildPreamble ++= Seq(
   WorkflowStep.Use(
     UseRef.Public("actions", "setup-node", "v2.4.0"),
     name = Some("Setup NodeJS v14 LTS"),
-    params = Map("node-version" -> "14")
+    params = Map("node-version" -> "14"),
+    cond = Some("matrix.ci == 'ciJS'")
   )
 )
 
-replaceCommandAlias("ci", CI.AllCIs.map(_.toString).mkString)
-addCommandAlias("ciJVM", CI.JVM.toString)
+tlReplaceCommandAlias("ciJS", List(CI.NodeJS, CI.Firefox, CI.Chrome).mkString)
 addCommandAlias("ciNodeJS", CI.NodeJS.toString)
 addCommandAlias("ciFirefox", CI.Firefox.toString)
 addCommandAlias("ciChrome", CI.Chrome.toString)
@@ -80,7 +78,7 @@ ThisBuild / Test / jsEnv := {
 }
 
 val catsVersion = "2.7.0"
-val catsEffectVersion = "3.3.2"
+val catsEffectVersion = "3.3.5"
 val scodecBitsVersion = "1.1.30"
 val munitVersion = "0.7.29"
 val munitCEVersion = "1.0.7"

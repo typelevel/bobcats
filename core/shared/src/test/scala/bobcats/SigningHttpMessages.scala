@@ -71,15 +71,15 @@ object SigningHttpMessages extends AsymmetricKeyExamples {
         description = "§3.1_Signature example",
         sigtext = // defined https://www.ietf.org/archive/id/draft-ietf-httpbis-message-signatures-07.html#section-2.3
           """"@method": GET
-			  |"@path": /foo
-			  |"@authority": example.org
-			  |"cache-control": max-age=60, must-revalidate
-			  |"x-empty-header": \
-			  |
-			  |"x-example": Example header with some whitespace.
-			  |"@signature-params": ("@method" "@path" "@authority" \
-			  |  "cache-control" "x-empty-header" "x-example");created=1618884475\
-			  |  ;keyid="test-key-rsa-pss"""".rfc8792single,
+            |"@path": /foo
+            |"@authority": example.org
+            |"cache-control": max-age=60, must-revalidate
+            |"x-empty-header": \
+            |
+            |"x-example": Example header with some whitespace.
+            |"@signature-params": ("@method" "@path" "@authority" \
+            |  "cache-control" "x-empty-header" "x-example");created=1618884475\
+            |  ;keyid="test-key-rsa-pss"""".rfc8792single,
         signature = """P0wLUszWQjoi54udOtydf9IWTfNhy+r53jGFj9XZuP4uKwxyJo1RSHi+oEF1FuX6O29\
 			  |d+lbxwwBao1BAgadijW+7O/PyezlTnqAOVPWx9GlyntiCiHzC87qmSQjvu1CFyFuWSj\
 			  |dGa3qLYYlNm7pVaJFalQiKWnUaqfT4LyttaXyoyZW84jS8gyarxAiWI97mPXU+OVM64\
@@ -95,20 +95,20 @@ object SigningHttpMessages extends AsymmetricKeyExamples {
         description = "§4.3 Example",
         sigtext =
           """"signature";key="sig1": :P0wLUszWQjoi54udOtydf9IWTfNhy+r53jGFj9XZuP\
-				 |  4uKwxyJo1RSHi+oEF1FuX6O29d+lbxwwBao1BAgadijW+7O/PyezlTnqAOVPWx9Gl\
-				 |  yntiCiHzC87qmSQjvu1CFyFuWSjdGa3qLYYlNm7pVaJFalQiKWnUaqfT4LyttaXyo\
-				 |  yZW84jS8gyarxAiWI97mPXU+OVM64+HVBHmnEsS+lTeIsEQo36T3NFf2CujWARPQg\
-				 |  53r58RmpZ+J9eKR2CD6IJQvacn5A4Ix5BUAVGqlyp8JYm+S/CWJi31PNUjRRCusCV\
-				 |  Rj05NrxABNFv3r5S9IXf2fYJK+eyW4AiGVMvMcOg==:
-				 |"forwarded": for=192.0.2.123
-				 |"@signature-params": ("signature";key="sig1" "forwarded")\
-				 |  ;created=1618884480;keyid="test-key-rsa";alg="rsa-v1_5-sha256"""".rfc8792single,
+            |  4uKwxyJo1RSHi+oEF1FuX6O29d+lbxwwBao1BAgadijW+7O/PyezlTnqAOVPWx9Gl\
+            |  yntiCiHzC87qmSQjvu1CFyFuWSjdGa3qLYYlNm7pVaJFalQiKWnUaqfT4LyttaXyo\
+            |  yZW84jS8gyarxAiWI97mPXU+OVM64+HVBHmnEsS+lTeIsEQo36T3NFf2CujWARPQg\
+            |  53r58RmpZ+J9eKR2CD6IJQvacn5A4Ix5BUAVGqlyp8JYm+S/CWJi31PNUjRRCusCV\
+            |  Rj05NrxABNFv3r5S9IXf2fYJK+eyW4AiGVMvMcOg==:
+            |"forwarded": for=192.0.2.123
+            |"@signature-params": ("signature";key="sig1" "forwarded")\
+            |  ;created=1618884480;keyid="test-key-rsa";alg="rsa-v1_5-sha256"""".rfc8792single,
         signature = """cjGvZwbsq9JwexP9TIvdLiivxqLINwp/ybAc19KOSQuLvtmMt3EnZxNiE+797dXK2cj\
-							 |PPUFqoZxO8WWx1SnKhAU9SiXBr99NTXRmA1qGBjqus/1Yxwr8keB8xzFt4inv3J3zP0\
-							 |k6TlLkRJstkVnNjuhRIUA/ZQCo8jDYAl4zWJJjppy6Gd1XSg03iUa0sju1yj6rcKbMA\
-							 |BBuzhUz4G0u1hZkIGbQprCnk/FOsqZHpwaWvY8P3hmcDHkNaavcokmq+3EBDCQTzgwL\
-							 |qfDmV0vLCXtDda6CNO2Zyum/pMGboCnQn/VkQ+j8kSydKoFg6EbVuGbrQijth6I0dDX\
-							 |2/HYcJg==""".rfc8792single,
+            |PPUFqoZxO8WWx1SnKhAU9SiXBr99NTXRmA1qGBjqus/1Yxwr8keB8xzFt4inv3J3zP0\
+            |k6TlLkRJstkVnNjuhRIUA/ZQCo8jDYAl4zWJJjppy6Gd1XSg03iUa0sju1yj6rcKbMA\
+            |BBuzhUz4G0u1hZkIGbQprCnk/FOsqZHpwaWvY8P3hmcDHkNaavcokmq+3EBDCQTzgwL\
+            |qfDmV0vLCXtDda6CNO2Zyum/pMGboCnQn/VkQ+j8kSydKoFg6EbVuGbrQijth6I0dDX\
+            |2/HYcJg==""".rfc8792single,
         keypair = `test-key-rsa`,
         signatureAlg = AsymmetricKeyAlg.`rsa-v1_5-sha256`
       )
