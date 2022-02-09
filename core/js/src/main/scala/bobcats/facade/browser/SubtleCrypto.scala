@@ -20,7 +20,7 @@ import scala.annotation.nowarn
 import scala.scalajs.js
 
 @js.native
-@nowarn("cat=unused")
+@nowarn("msg=never used")
 private[bobcats] trait SubtleCrypto extends js.Any {
 
   def digest(

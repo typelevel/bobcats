@@ -16,7 +16,7 @@
 
 package bobcats
 
-import bobcats.AsymmetricKeyAlg.{RSA, RSA_PKCS_Sig, RSA_PSS_Sig}
+import bobcats.AsymmetricKeyAlg.{Ed25519_Key, RSA, RSA_PKCS_Sig, RSA_PSS_Sig}
 import cats.effect.kernel.Async
 import org.scalajs.dom
 import org.scalajs.dom.crypto.subtle
@@ -44,6 +44,7 @@ private[bobcats] trait SecretKeyPlatform
 private[bobcats] trait SecretKeySpecPlatform[+A <: Algorithm]
 private[bobcats] trait PKCS8KeySpecPlatform[+A <: AsymmetricKeyAlg] extends PrivateKeyPlatform {
   self: PKCS8KeySpec[A] =>
+  // A JS Web Crypto Key combines the public key and signature algorithms, unlike Java
   def toWebCryptoKey[F[_]](signature: AsymmetricKeyAlg.Signature)(
       implicit F0: Async[F]
   ): F[org.scalajs.dom.CryptoKey] =
@@ -89,6 +90,10 @@ object JSKeySpec {
           override val name: String = ecAlg.toStringWebCrypto
           override val namedCurve: String = p.toString
         }
+      case Ed25519_Key =>
+        throw new NotImplementedError(
+          "Ed25519 keys are not supported by the Web Cryptography API (yet). " +
+            "See https://github.com/typelevel/bobcats/issues/58")
     }
 
   def signatureAlgorithm(sig: AsymmetricKeyAlg.Signature): dom.Algorithm = {
@@ -107,6 +112,10 @@ object JSKeySpec {
           override val hash: HashAlgorithmIdentifier = ec.hash.toStringWebCrypto
           override val name: String = ec.toStringWebCrypto
         }
+      case _: AsymmetricKeyAlg.Ed_Sig =>
+        throw new NotImplementedError(
+          "Ed signatures are not supported by the Web Cryptography API (yet). " +
+            "see https://github.com/typelevel/bobcats/issues/58")
     }
   }
 

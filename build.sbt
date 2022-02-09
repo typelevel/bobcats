@@ -25,7 +25,7 @@ import JSEnv._
 name := "bobcats"
 
 ThisBuild / tlBaseVersion := "0.2"
-ThisBuild / tlUntaggedAreSnapshots := true 
+ThisBuild / tlUntaggedAreSnapshots := true
 
 // ThisBuild / organization := "org.typelevel"
 ThisBuild / organization := "net.bblfish.crypto" // TODO remove
@@ -51,6 +51,8 @@ ThisBuild / githubWorkflowBuildPreamble ++= Seq(
     cond = Some("matrix.ci == 'ciJS'")
   )
 )
+
+ThisBuild / githubWorkflowJavaVersions := Seq(JavaSpec.temurin("17"), JavaSpec.temurin("11"))
 
 tlReplaceCommandAlias("ciJS", List(CI.NodeJS, CI.Firefox, CI.Chrome).mkString)
 addCommandAlias("ciNodeJS", CI.NodeJS.toString)
@@ -100,7 +102,7 @@ lazy val core = crossProject(JSPlatform, JVMPlatform)
   .in(file("core"))
   .settings(
     name := "bobcats",
-    //sonatypeCredentialHost := "s01.oss.sonatype.org", // TODO remove
+    // sonatypeCredentialHost := "s01.oss.sonatype.org", // TODO remove
     libraryDependencies ++= Seq(
       "org.typelevel" %%% "cats-core" % catsVersion,
       "org.typelevel" %%% "cats-effect-kernel" % catsEffectVersion,
