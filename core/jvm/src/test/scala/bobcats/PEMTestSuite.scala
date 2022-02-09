@@ -16,7 +16,6 @@
 
 package bobcats
 
-import bobcats.util.BouncyJavaPEMUtils.toPKCS8
 import bobcats.{AsymmetricKeyAlg => Alg}
 
 import java.security

@@ -37,7 +37,7 @@ trait SignerSuite extends CatsEffectSuite {
 
   def testSigner[F[_]: Signer: Verifier: MonadErr](
       typedSignatures: Seq[SignatureExample] // these are non-empty lists
-  )(implicit ct: ClassTag[F[_]]): Unit = {
+  )(implicit ct: ClassTag[F[Nothing]]): Unit = {
     val prototype = typedSignatures.head
     val keypair: Try[(SPKIKeySpec[AsymmetricKeyAlg], PKCS8KeySpec[AsymmetricKeyAlg])] =
       extractKeys(prototype)
@@ -104,7 +104,7 @@ trait SignerSuite extends CatsEffectSuite {
   // subclasses should call run
   def run[F[_]: Signer: Verifier: MonadErr](
       tests: Seq[SignatureExample]
-  )(implicit ct: ClassTag[F[_]]): Unit = {
+  )(implicit ct: ClassTag[F[Nothing]]): Unit = {
     tests.groupBy(ex => (ex.keypair.publicKey, ex.signatureAlg)).values.foreach { sigTests =>
       testSigner[F](sigTests)
     }
