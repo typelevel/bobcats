@@ -52,6 +52,8 @@ ThisBuild / githubWorkflowBuildPreamble ++= Seq(
   )
 )
 
+ThisBuild / githubWorkflowJavaVersions := Seq(JavaSpec.temurin("17"), JavaSpec.temurin("11"))
+
 tlReplaceCommandAlias("ciJS", List(CI.NodeJS, CI.Firefox, CI.Chrome).mkString)
 addCommandAlias("ciNodeJS", CI.NodeJS.toString)
 addCommandAlias("ciFirefox", CI.Firefox.toString)

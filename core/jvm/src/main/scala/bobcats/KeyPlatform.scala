@@ -42,7 +42,7 @@ private[bobcats] trait SecretKeySpecPlatform[+A <: Algorithm] { self: SecretKeyS
     new crypto.spec.SecretKeySpec(key.toArray, algorithm.toStringJava)
 
 }
-
+//todo: should this class should be renamed to PKCS8PrivateKeySpec?
 private[bobcats] trait PKCS8KeySpecPlatform[+A <: AsymmetricKeyAlg] {
   self: PKCS8KeySpec[A] =>
   def toJava: security.PrivateKey = {
@@ -50,7 +50,6 @@ private[bobcats] trait PKCS8KeySpecPlatform[+A <: AsymmetricKeyAlg] {
     kf.generatePrivate(toJavaSpec)
   }
 
-  // this class should be renamed PKCS8PrivateKeySpec
   def toJavaSpec: java.security.spec.PKCS8EncodedKeySpec =
     new java.security.spec.PKCS8EncodedKeySpec(key.toArray, algorithm.toStringJava)
 }
