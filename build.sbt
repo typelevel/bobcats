@@ -39,7 +39,7 @@ ThisBuild / githubWorkflowBuildPreamble ++= Seq(
     UseRef.Public("actions", "setup-node", "v2.4.0"),
     name = Some("Setup NodeJS v14 LTS"),
     params = Map("node-version" -> "14"),
-    cond = Some("matrix.ci == 'ciJS'")
+    cond = Some("matrix.project == 'rootJS' && matrix.jsenv == 'NodeJS'")
   )
 )
 
