@@ -27,16 +27,10 @@ name := "bobcats"
 ThisBuild / tlBaseVersion := "0.1"
 ThisBuild / tlUntaggedAreSnapshots := false
 
-// ThisBuild / organization := "org.typelevel"
-ThisBuild / organization := "com.armanbilge" // TODO remove
 ThisBuild / developers := List(
   tlGitHubDev("armanbilge", "Arman Bilge")
 )
 ThisBuild / startYear := Some(2021)
-
-enablePlugins(TypelevelCiReleasePlugin)
-ThisBuild / tlCiReleaseBranches := Seq("main")
-ThisBuild / tlSonatypeUseLegacyHost := false // TODO remove
 
 ThisBuild / crossScalaVersions := Seq("3.1.0", "2.12.15", "2.13.8")
 
@@ -49,12 +43,15 @@ ThisBuild / githubWorkflowBuildPreamble ++= Seq(
   )
 )
 
-tlReplaceCommandAlias("ciJS", List(CI.NodeJS, CI.Firefox, CI.Chrome).mkString)
-addCommandAlias("ciNodeJS", CI.NodeJS.toString)
-addCommandAlias("ciFirefox", CI.Firefox.toString)
-addCommandAlias("ciChrome", CI.Chrome.toString)
-
-addCommandAlias("prePR", "; root/clean; scalafmtSbt; +root/scalafmtAll; +root/headerCreate")
+val jsenvs = List(NodeJS, Chrome, Firefox).map(_.toString)
+ThisBuild / githubWorkflowBuildMatrixAdditions += "jsenv" -> jsenvs
+ThisBuild / githubWorkflowBuildSbtStepPreamble += s"set Global / useJSEnv := JSEnv.$${{ matrix.jsenv }}"
+ThisBuild / githubWorkflowBuildMatrixExclusions ++= {
+  for {
+    scala <- (ThisBuild / crossScalaVersions).value.init
+    jsenv <- jsenvs.tail
+  } yield MatrixExclude(Map("scala" -> scala, "jsenv" -> jsenv))
+}
 
 lazy val useJSEnv =
   settingKey[JSEnv]("Use Node.js or a headless browser for running Scala.js tests")
@@ -89,7 +86,6 @@ lazy val core = crossProject(JSPlatform, JVMPlatform)
   .in(file("core"))
   .settings(
     name := "bobcats",
-    sonatypeCredentialHost := "s01.oss.sonatype.org", // TODO remove
     libraryDependencies ++= Seq(
       "org.typelevel" %%% "cats-core" % catsVersion,
       "org.typelevel" %%% "cats-effect-kernel" % catsEffectVersion,
