@@ -52,6 +52,11 @@ ThisBuild / githubWorkflowBuildMatrixExclusions ++= {
     jsenv <- jsenvs.tail
   } yield MatrixExclude(Map("scala" -> scala, "jsenv" -> jsenv))
 }
+ThisBuild / githubWorkflowBuildMatrixExclusions ++= {
+  for {
+    jsenv <- jsenvs.tail
+  } yield MatrixExclude(Map("project" -> "rootJVM", "jsenv" -> jsenv))
+}
 
 lazy val useJSEnv =
   settingKey[JSEnv]("Use Node.js or a headless browser for running Scala.js tests")
