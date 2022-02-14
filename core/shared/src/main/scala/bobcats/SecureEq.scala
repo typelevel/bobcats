@@ -21,7 +21,7 @@ import scodec.bits.ByteVector
 
 trait SecureEq[A] extends Eq[A]
 
-object SecureEq {
+object SecureEq extends SecureEqCompanionPlatform {
 
   def apply[A](implicit eq: SecureEq[A]): eq.type = eq
 
@@ -32,7 +32,7 @@ object SecureEq {
    * only on the length of `digesta`. It does not depend on the length of `digestb` or the
    * contents of `digesta` and `digestb`.
    */
-  implicit val secureEqForByteVector: SecureEq[ByteVector] = new SecureEq[ByteVector] {
+  private[bobcats] final class ByteVectorSecureEq extends SecureEq[ByteVector] {
     override def eqv(digesta: ByteVector, digestb: ByteVector): Boolean =
       (digesta eq digestb) || {
         val lenA = digesta.intSize.get
