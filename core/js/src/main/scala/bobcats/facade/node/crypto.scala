@@ -45,6 +45,11 @@ private[bobcats] trait crypto extends js.Any {
       callback: js.UndefOr[js.Function2[js.Error, js.typedarray.Uint8Array, Unit]]): Unit =
     js.native
 
+  def timingSafeEqual(
+      a: js.typedarray.Uint8Array,
+      b: js.typedarray.Uint8Array
+  ): Boolean = js.native
+
 }
 
 @js.native
