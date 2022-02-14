@@ -18,7 +18,7 @@ package bobcats
 
 import scodec.bits.ByteVector
 
-trait SecureEqCompanionPlatform { this: SecureEq.type =>
+private[bobcats] trait SecureEqCompanionPlatform { this: SecureEq.type =>
 
   implicit val secureEqForByteVector: SecureEq[ByteVector] = new ByteVectorSecureEq
 
