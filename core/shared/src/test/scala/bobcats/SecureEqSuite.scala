@@ -20,6 +20,7 @@ import cats.kernel.laws.discipline.EqTests
 import munit.DisciplineSuite
 import org.scalacheck.Arbitrary
 import org.scalacheck.Cogen
+import org.scalacheck.Prop.forAll
 import scodec.bits.ByteVector
 
 class SecureEqSuite extends DisciplineSuite {
@@ -31,5 +32,11 @@ class SecureEqSuite extends DisciplineSuite {
     Cogen[Vector[Byte]].contramap(_.toIndexedSeq.toVector)
 
   checkAll("SequreEq[ByteVector]", EqTests(SecureEq[ByteVector]).eqv)
+
+  property("non-trivial reflexivity") {
+    forAll { (bytes: Vector[Byte]) =>
+      SecureEq[ByteVector].eqv(ByteVector(bytes), ByteVector(bytes))
+    }
+  }
 
 }
