@@ -14,46 +14,59 @@
  * limitations under the License.
  */
 
+/*
+ * Copyright (c) 2000-2021 The Legion of the Bouncy Castle Inc. (https://www.bouncycastle.org)
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software
+ * and associated documentation files (the "Software"), to deal in the Software without restriction,
+ * including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense,
+ * and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so,
+ * subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all copies or substantial
+ * portions of the Software.
+ */
+
 package bobcats
 
 import cats.kernel.Eq
 import scodec.bits.ByteVector
 
-trait SecureEq[A] extends Eq[A]
+trait SecureEq[A] extends Eq[A] {
+
+  /**
+   * A constant time equals comparison - does not terminate early if test will fail. For best
+   * results always pass the expected value as the first parameter.
+   */
+  override def eqv(expected: A, supplied: A): Boolean
+}
 
 object SecureEq extends SecureEqCompanionPlatform {
 
   def apply[A](implicit eq: SecureEq[A]): eq.type = eq
 
-  /**
-   * A port of Java's `MessageDigest.isEqual`.
-   *
-   * All bytes in `digesta` are examined to determine equality. The calculation time depends
-   * only on the length of `digesta`. It does not depend on the length of `digestb` or the
-   * contents of `digesta` and `digestb`.
-   */
   private[bobcats] final class ByteVectorSecureEq extends SecureEq[ByteVector] {
-    override def eqv(digesta: ByteVector, digestb: ByteVector): Boolean =
-      (digesta eq digestb) || {
-        val lenA = digesta.intSize.get
-        val lenB = digestb.intSize.get
 
-        if (lenB == 0) {
-          lenA == 0
-        } else {
-          var result = 0
-          result |= lenA - lenB
+    override def eqv(expected: ByteVector, supplied: ByteVector): Boolean =
+      (expected eq supplied) || {
+        val expectedLen = expected.size
+        val suppliedLen = supplied.size
 
-          var i = 0
-          // time-constant comparison
-          while (i < lenA) {
-            val indexB = ((i - lenB) >>> 31) * i
-            result |= digesta(i.toLong) ^ digestb(indexB.toLong)
-            i += 1
-          }
-          result == 0
+        val len = Math.min(expectedLen, suppliedLen)
+        var nonEqual = expected.length ^ supplied.length;
 
+        var i = 0L
+        while (i != len) {
+          nonEqual |= (expected(i) ^ supplied(i))
+          i += 1
         }
+        i = len
+        while (i < suppliedLen) {
+          nonEqual |= (supplied(i) ^ ~supplied(i))
+          i += 1
+        }
+
+        nonEqual == 0
       }
 
   }

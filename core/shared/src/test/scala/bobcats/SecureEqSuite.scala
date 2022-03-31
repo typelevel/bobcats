@@ -16,23 +16,27 @@
 
 package bobcats
 
-import munit.DisciplineSuite
 import cats.kernel.laws.discipline.EqTests
-import scodec.bits.ByteVector
+import munit.DisciplineSuite
 import org.scalacheck.Arbitrary
+import org.scalacheck.Cogen
+import org.scalacheck.Prop.forAll
+import scodec.bits.ByteVector
 
 class SecureEqSuite extends DisciplineSuite {
 
   implicit val arbitraryByteVector: Arbitrary[ByteVector] = Arbitrary(
     Arbitrary.arbitrary[Vector[Byte]].map(ByteVector(_)))
 
-  implicit val arbitraryByteVectorFunction: Arbitrary[ByteVector => ByteVector] = Arbitrary(
-    Arbitrary
-      .arbitrary[Vector[Byte] => Vector[Byte]]
-      .map(
-        _.compose[ByteVector](_.toIndexedSeq.toVector).andThen(ByteVector(_))
-      ))
+  implicit val cogenByteVector: Cogen[ByteVector] =
+    Cogen[Vector[Byte]].contramap(_.toIndexedSeq.toVector)
 
   checkAll("SequreEq[ByteVector]", EqTests(SecureEq[ByteVector]).eqv)
+
+  property("non-trivial reflexivity") {
+    forAll { (bytes: Vector[Byte]) =>
+      SecureEq[ByteVector].eqv(ByteVector(bytes), ByteVector(bytes))
+    }
+  }
 
 }
