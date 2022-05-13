@@ -45,7 +45,7 @@ final class SecureRandom extends Random {
       i += 1
     }
 
-    next >>> (numBytes * 8 - numBits);
+    next >>> numBytes * 8 - numBits;
   }
 
 }

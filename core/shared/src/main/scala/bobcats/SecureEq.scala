@@ -57,12 +57,12 @@ object SecureEq extends SecureEqCompanionPlatform {
 
         var i = 0L
         while (i != len) {
-          nonEqual |= (expected(i) ^ supplied(i))
+          nonEqual |= expected(i) ^ supplied(i)
           i += 1
         }
         i = len
         while (i < suppliedLen) {
-          nonEqual |= (supplied(i) ^ ~supplied(i))
+          nonEqual |= supplied(i) ^ ~supplied(i)
           i += 1
         }
 

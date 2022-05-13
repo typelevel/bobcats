@@ -68,11 +68,11 @@ ThisBuild / Test / jsEnv := {
   useJSEnv.value match {
     case NodeJS => old
     case Firefox =>
-      val options = new FirefoxOptions()
+      val options = new FirefoxOptions
       options.setHeadless(true)
       new SeleniumJSEnv(options)
     case Chrome =>
-      val options = new ChromeOptions()
+      val options = new ChromeOptions
       options.setHeadless(true)
       new SeleniumJSEnv(options)
   }
