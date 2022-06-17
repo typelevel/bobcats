@@ -30,7 +30,8 @@ sealed trait Hotp[F[_]] {
   def generate(
       key: SecretKey[HmacAlgorithm.SHA1.type],
       movingFactor: Long
-  ): F[Int]
+  ): F[Int] =
+    generate(key, movingFactor, digits = 6)
 }
 
 private[bobcats] trait UnsealedHotp[F[_]] extends Hotp[F]
@@ -43,11 +44,6 @@ object Hotp {
 
   implicit def forSync[F[_]](implicit F: Sync[F], H: Hmac[F]): Hotp[F] =
     new UnsealedHotp[F] {
-      override def generate(
-          key: SecretKey[HmacAlgorithm.SHA1.type],
-          movingFactor: Long): F[Int] =
-        generate(key, movingFactor, digits = 6)
-
       override def generate(
           key: SecretKey[HmacAlgorithm.SHA1.type],
           movingFactor: Long,
