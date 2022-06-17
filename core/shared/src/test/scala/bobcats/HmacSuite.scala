@@ -29,6 +29,54 @@ class HmacSuite extends CatsEffectSuite {
 
   import HmacAlgorithm._
 
+  case class TestCase(key: ByteVector, data: ByteVector, digest: ByteVector)
+
+  // Test cases from RFC2022: https://datatracker.ietf.org/doc/html/rfc2202
+  val sha1TestCases = List(
+    TestCase(
+      ByteVector.fromHex("0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b").get,
+      ByteVector.encodeAscii("Hi There").toOption.get,
+      ByteVector.fromHex("b617318655057264e28bc0b6fb378c8ef146be00").get
+    ),
+    TestCase(
+      ByteVector.encodeAscii("Jefe").toOption.get,
+      ByteVector.encodeAscii("what do ya want for nothing?").toOption.get,
+      ByteVector.fromHex("effcdf6ae5eb2fa2d27416d5f184df9c259a7c79").get
+    ),
+    TestCase(
+      ByteVector.fromHex("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa").get,
+      ByteVector.fromHex("dd" * 50).get,
+      ByteVector.fromHex("125d7342b9ac11cd91a39af48aa17b4f63f175d3").get
+    ),
+    TestCase(
+      ByteVector.fromHex("0102030405060708090a0b0c0d0e0f10111213141516171819").get,
+      ByteVector.fromHex("cd" * 50).get,
+      ByteVector.fromHex("4c9007f4026250c6bc8414f9bf50c86c2d7235da").get
+    ),
+    TestCase(
+      ByteVector.fromHex("0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c").get,
+      ByteVector.encodeAscii("Test With Truncation").toOption.get,
+      ByteVector.fromHex("4c1a03424b55e07fe7f27be1d58bb9324a9a5a04").get
+    ),
+    TestCase(
+      ByteVector.fromHex("aa" * 80).get,
+      ByteVector
+        .encodeAscii("Test Using Larger Than Block-Size Key - Hash Key First")
+        .toOption
+        .get,
+      ByteVector.fromHex("aa4ae5e15272d00e95705637ce8a3b55ed402112").get
+    ),
+    TestCase(
+      ByteVector.fromHex("aa" * 80).get,
+      ByteVector
+        .encodeAscii(
+          "Test Using Larger Than Block-Size Key and Larger Than One Block-Size Data")
+        .toOption
+        .get,
+      ByteVector.fromHex("e8e99d0f45237d786d6bbaa7965c7808bbff1a91").get
+    )
+  )
+
   val key = ByteVector.encodeAscii("key").toOption.get
   val data = ByteVector.encodeAscii("The quick brown fox jumps over the lazy dog").toOption.get
 
@@ -43,7 +91,19 @@ class HmacSuite extends CatsEffectSuite {
       }
     }
 
+  def testHmacSha1[F[_]: Hmac: Functor](testCases: List[TestCase])(
+      implicit ct: ClassTag[F[Nothing]]) =
+    testCases.zipWithIndex.foreach {
+      case (TestCase(key, data, expected), idx) =>
+        test(s"SHA1 RFC2022 test case ${idx + 1} with ${ct.runtimeClass.getSimpleName()}") {
+          Hmac[F].digest(SecretKeySpec(key, SHA1), data).map { obtained =>
+            assertEquals(obtained, expected)
+          }
+        }
+    }
+
   def tests[F[_]: Hmac: Functor](implicit ct: ClassTag[F[Nothing]]) = {
+    testHmacSha1[F](sha1TestCases)
     testHmac[F](SHA1, "de7c9b85b8b78aa6bc8a7a36f70a90701c9db4d9")
     testHmac[F](SHA256, "f7bc83f430538424b13298e6aa6fb143ef4d59a14946175997479dbc2d1a3cd8")
     testHmac[F](
