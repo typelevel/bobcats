@@ -20,7 +20,7 @@ import cats.effect.kernel.Sync
 import cats.syntax.functor._
 import scodec.bits.ByteVector
 
-sealed trait Hotp[F[_]] extends HotpPlatform[F] {
+sealed trait Hotp[F[_]] {
   def generate(
       key: SecretKey[HmacAlgorithm.SHA1.type],
       movingFactor: Long,
@@ -35,7 +35,7 @@ sealed trait Hotp[F[_]] extends HotpPlatform[F] {
 
 private[bobcats] trait UnsealedHotp[F[_]] extends Hotp[F]
 
-object Hotp extends HotpCompanionPlatform {
+object Hotp {
   private val powersOfTen =
     Array(1, 10, 100, 1000, 10000, 100000, 1000000, 10000000, 100000000, 1000000000)
 
