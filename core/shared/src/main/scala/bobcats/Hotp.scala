@@ -24,7 +24,12 @@ sealed trait Hotp[F[_]] extends HotpPlatform[F] {
   def generate(
       key: SecretKey[HmacAlgorithm.SHA1.type],
       movingFactor: Long,
-      digits: Int = 6
+      digits: Int
+  ): F[Int]
+
+  def generate(
+      key: SecretKey[HmacAlgorithm.SHA1.type],
+      movingFactor: Long
   ): F[Int]
 }
 
@@ -40,9 +45,17 @@ object Hotp extends HotpCompanionPlatform {
     new UnsealedHotp[F] {
       override def generate(
           key: SecretKey[HmacAlgorithm.SHA1.type],
+          movingFactor: Long): F[Int] =
+        generate(key, movingFactor, digits = 6)
+
+      override def generate(
+          key: SecretKey[HmacAlgorithm.SHA1.type],
           movingFactor: Long,
           digits: Int
       ): F[Int] = {
+        require(digits >= 6, s"digits must be at least 6, was $digits")
+        require(digits < 10, s"digits must be less than 10, was $digits")
+
         H.digest(key, ByteVector.fromLong(movingFactor)).map { hmac =>
           val offset = hmac.last & 0xf
 
