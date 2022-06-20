@@ -20,10 +20,6 @@ import cats.Functor
 import cats.syntax.functor._
 import scodec.bits.ByteVector
 
-sealed trait Hotp[F[_]] {}
-
-private[bobcats] trait UnsealedHotp[F[_]] extends Hotp[F]
-
 object Hotp {
   private val powersOfTen =
     Array(1, 10, 100, 1000, 10000, 100000, 1000000, 10000000, 100000000, 1000000000)
