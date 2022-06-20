@@ -21,11 +21,11 @@ package bobcats
 import cats.Functor
 import cats.effect.IO
 import cats.effect.SyncIO
-import munit.CatsEffectSuite
 import cats.syntax.functor._
+import munit.CatsEffectSuite
+import scodec.bits.ByteVector
 
 import scala.reflect.ClassTag
-import scodec.bits.ByteVector
 
 class HotpSuite extends CatsEffectSuite {
 
@@ -35,20 +35,18 @@ class HotpSuite extends CatsEffectSuite {
     755224, 287082, 359152, 969429, 338314, 254676, 287922, 162583, 399871, 520489
   )
 
-  def tests[F[_]: Hotp: Functor](implicit ct: ClassTag[F[Nothing]]) = {
+  def tests[F[_]: Hmac: Functor](implicit ct: ClassTag[F[Nothing]]) = {
     expectedValues.zipWithIndex.foreach {
       case (expected, counter) =>
         test(s"RFC4226 test case ${counter} for ${ct.runtimeClass.getSimpleName()}") {
-          Hotp[F]
-            .generate(SecretKeySpec(key, HmacAlgorithm.SHA1), counter.toLong, digits = 6)
+          Hotp
+            .generate[F](SecretKeySpec(key, HmacAlgorithm.SHA1), counter.toLong, digits = 6)
             .map { obtained => assertEquals(obtained, expected) }
         }
     }
   }
 
-  if (Set("JVM", "NodeJS").contains(BuildInfo.runtime))
-    tests[SyncIO]
+  tests[SyncIO]
 
-  if (BuildInfo.runtime != "JVM")
-    tests[IO]
+  tests[IO]
 }
