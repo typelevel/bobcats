@@ -18,7 +18,6 @@ package bobcats
 
 import cats.Functor
 import cats.effect.IO
-import cats.effect.SyncIO
 import cats.syntax.all._
 import munit.CatsEffectSuite
 import scodec.bits.ByteVector
