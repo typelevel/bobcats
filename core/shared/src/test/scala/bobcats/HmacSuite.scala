@@ -18,7 +18,6 @@ package bobcats
 
 import cats.Functor
 import cats.effect.IO
-import cats.effect.SyncIO
 import cats.syntax.all._
 import munit.CatsEffectSuite
 import scodec.bits._
@@ -121,18 +120,7 @@ class HmacSuite extends CatsEffectSuite {
       }
     }
 
-  if (Set("JVM", "NodeJS").contains(BuildInfo.runtime))
-    tests[SyncIO]
+  tests[IO]
 
-  if (BuildInfo.runtime != "JVM")
-    tests[IO]
-
-  if (BuildInfo.runtime == "JVM")
-    List(SHA1, SHA256, SHA512).foreach(testGenerateKey[SyncIO])
-
-  if (!Set("JVM", "NodeJS").contains(
-      BuildInfo.runtime
-    )) // Disabled until testing against Node 16
-    List(SHA1, SHA256, SHA512).foreach(testGenerateKey[IO])
-
+  List(SHA1, SHA256, SHA512).foreach(testGenerateKey[IO])
 }
