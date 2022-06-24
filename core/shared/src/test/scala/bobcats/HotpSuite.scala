@@ -20,7 +20,6 @@ package bobcats
 
 import cats.Functor
 import cats.effect.IO
-import cats.effect.SyncIO
 import cats.syntax.functor._
 import munit.CatsEffectSuite
 import scodec.bits.ByteVector
@@ -45,8 +44,6 @@ class HotpSuite extends CatsEffectSuite {
         }
     }
   }
-
-  tests[SyncIO]
 
   tests[IO]
 }
