@@ -16,12 +16,13 @@
 
 package bobcats
 
-import cats.ApplicativeThrow
+import cats.effect.kernel.Async
 import scodec.bits.ByteVector
+
 import java.security.MessageDigest
 
 private[bobcats] trait HashCompanionPlatform {
-  implicit def forApplicativeThrow[F[_]](implicit F: ApplicativeThrow[F]): Hash[F] =
+  implicit def forAsync[F[_]](implicit F: Async[F]): Hash[F] =
     new UnsealedHash[F] {
       override def digest(algorithm: HashAlgorithm, data: ByteVector): F[ByteVector] =
         F.catchNonFatal {
