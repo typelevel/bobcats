@@ -16,8 +16,9 @@
 
 package bobcats
 
-import cats.effect.kernel.Sync
+import cats.effect.kernel.Async
 import scodec.bits.ByteVector
+
 import javax.crypto
 
 private[bobcats] trait HmacPlatform[F[_]] {
@@ -25,7 +26,7 @@ private[bobcats] trait HmacPlatform[F[_]] {
 }
 
 private[bobcats] trait HmacCompanionPlatform {
-  implicit def forSync[F[_]](implicit F: Sync[F]): Hmac[F] =
+  implicit def forAsync[F[_]](implicit F: Async[F]): Hmac[F] =
     new UnsealedHmac[F] {
 
       override def digest(key: SecretKey[HmacAlgorithm], data: ByteVector): F[ByteVector] =

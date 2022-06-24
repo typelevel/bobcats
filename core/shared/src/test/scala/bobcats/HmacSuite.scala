@@ -18,10 +18,9 @@ package bobcats
 
 import cats.Functor
 import cats.effect.IO
-import cats.effect.SyncIO
 import cats.syntax.all._
 import munit.CatsEffectSuite
-import scodec.bits.ByteVector
+import scodec.bits._
 
 import scala.reflect.ClassTag
 
@@ -29,26 +28,86 @@ class HmacSuite extends CatsEffectSuite {
 
   import HmacAlgorithm._
 
+  case class TestCase(key: ByteVector, data: ByteVector, digest: ByteVector)
+
+  // Test cases from RFC2022: https://datatracker.ietf.org/doc/html/rfc2202
+  val sha1TestCases = List(
+    TestCase(
+      hex"0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b",
+      ByteVector.encodeAscii("Hi There").toOption.get,
+      hex"b617318655057264e28bc0b6fb378c8ef146be00"
+    ),
+    TestCase(
+      ByteVector.encodeAscii("Jefe").toOption.get,
+      ByteVector.encodeAscii("what do ya want for nothing?").toOption.get,
+      hex"effcdf6ae5eb2fa2d27416d5f184df9c259a7c79"
+    ),
+    TestCase(
+      hex"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      ByteVector.fromHex("dd" * 50).get,
+      hex"125d7342b9ac11cd91a39af48aa17b4f63f175d3"
+    ),
+    TestCase(
+      hex"0102030405060708090a0b0c0d0e0f10111213141516171819",
+      ByteVector.fromHex("cd" * 50).get,
+      hex"4c9007f4026250c6bc8414f9bf50c86c2d7235da"
+    ),
+    TestCase(
+      hex"0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c",
+      ByteVector.encodeAscii("Test With Truncation").toOption.get,
+      hex"4c1a03424b55e07fe7f27be1d58bb9324a9a5a04"
+    ),
+    TestCase(
+      ByteVector.fromHex("aa" * 80).get,
+      ByteVector
+        .encodeAscii("Test Using Larger Than Block-Size Key - Hash Key First")
+        .toOption
+        .get,
+      hex"aa4ae5e15272d00e95705637ce8a3b55ed402112"
+    ),
+    TestCase(
+      ByteVector.fromHex("aa" * 80).get,
+      ByteVector
+        .encodeAscii(
+          "Test Using Larger Than Block-Size Key and Larger Than One Block-Size Data")
+        .toOption
+        .get,
+      hex"e8e99d0f45237d786d6bbaa7965c7808bbff1a91"
+    )
+  )
+
   val key = ByteVector.encodeAscii("key").toOption.get
   val data = ByteVector.encodeAscii("The quick brown fox jumps over the lazy dog").toOption.get
 
-  def testHmac[F[_]: Hmac: Functor](algorithm: HmacAlgorithm, expect: String)(
+  def testHmac[F[_]: Hmac: Functor](algorithm: HmacAlgorithm, expected: ByteVector)(
       implicit ct: ClassTag[F[Nothing]]) =
     test(s"$algorithm with ${ct.runtimeClass.getSimpleName()}") {
       Hmac[F].digest(SecretKeySpec(key, algorithm), data).map { obtained =>
         assertEquals(
           obtained,
-          ByteVector.fromHex(expect).get
+          expected
         )
       }
     }
 
+  def testHmacSha1[F[_]: Hmac: Functor](testCases: List[TestCase])(
+      implicit ct: ClassTag[F[Nothing]]) =
+    testCases.zipWithIndex.foreach {
+      case (TestCase(key, data, expected), idx) =>
+        test(s"SHA1 RFC2022 test case ${idx + 1} with ${ct.runtimeClass.getSimpleName()}") {
+          Hmac[F].digest(SecretKeySpec(key, SHA1), data).map { obtained =>
+            assertEquals(obtained, expected)
+          }
+        }
+    }
+
   def tests[F[_]: Hmac: Functor](implicit ct: ClassTag[F[Nothing]]) = {
-    testHmac[F](SHA1, "de7c9b85b8b78aa6bc8a7a36f70a90701c9db4d9")
-    testHmac[F](SHA256, "f7bc83f430538424b13298e6aa6fb143ef4d59a14946175997479dbc2d1a3cd8")
+    testHmacSha1[F](sha1TestCases)
+    testHmac[F](SHA1, hex"de7c9b85b8b78aa6bc8a7a36f70a90701c9db4d9")
+    testHmac[F](SHA256, hex"f7bc83f430538424b13298e6aa6fb143ef4d59a14946175997479dbc2d1a3cd8")
     testHmac[F](
       SHA512,
-      "b42af09057bac1e2d41708e48a902e09b5ff7f12ab428a4fe86653c73dd248fb82f948a549f7b791a5b41915ee4d1ec3935357e4e2317250d0372afa2ebeeb3a")
+      hex"b42af09057bac1e2d41708e48a902e09b5ff7f12ab428a4fe86653c73dd248fb82f948a549f7b791a5b41915ee4d1ec3935357e4e2317250d0372afa2ebeeb3a")
   }
 
   def testGenerateKey[F[_]: Functor: Hmac](algorithm: HmacAlgorithm)(
@@ -61,18 +120,7 @@ class HmacSuite extends CatsEffectSuite {
       }
     }
 
-  if (Set("JVM", "NodeJS").contains(BuildInfo.runtime))
-    tests[SyncIO]
+  tests[IO]
 
-  if (BuildInfo.runtime != "JVM")
-    tests[IO]
-
-  if (BuildInfo.runtime == "JVM")
-    List(SHA1, SHA256, SHA512).foreach(testGenerateKey[SyncIO])
-
-  if (!Set("JVM", "NodeJS").contains(
-      BuildInfo.runtime
-    )) // Disabled until testing against Node 16
-    List(SHA1, SHA256, SHA512).foreach(testGenerateKey[IO])
-
+  List(SHA1, SHA256, SHA512).foreach(testGenerateKey[IO])
 }

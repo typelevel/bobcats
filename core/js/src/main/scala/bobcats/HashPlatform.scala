@@ -16,35 +16,28 @@
 
 package bobcats
 
-import cats.MonadThrow
 import cats.effect.kernel.Async
 import cats.syntax.all._
 import scodec.bits.ByteVector
 
 private[bobcats] trait HashCompanionPlatform {
-  implicit def forAsyncOrMonadThrow[F[_]](
-      implicit F: Priority[Async[F], MonadThrow[F]]): Hash[F] =
+  implicit def forAsync[F[_]](implicit F: Async[F]): Hash[F] =
     if (facade.isNodeJSRuntime)
       new UnsealedHash[F] {
         override def digest(algorithm: HashAlgorithm, data: ByteVector): F[ByteVector] =
-          F.join[MonadThrow[F]].catchNonFatal {
+          F.catchNonFatal {
             val hash = facade.node.crypto.createHash(algorithm.toStringNodeJS)
             hash.update(data.toUint8Array)
             ByteVector.view(hash.digest())
           }
       }
     else
-      F.getPreferred
-        .map { implicit F: Async[F] =>
-          new UnsealedHash[F] {
-            import facade.browser._
-            override def digest(algorithm: HashAlgorithm, data: ByteVector): F[ByteVector] =
-              F.fromPromise(F.delay(
-                crypto.subtle.digest(algorithm.toStringWebCrypto, data.toUint8Array.buffer)))
-                .map(ByteVector.view)
-          }
-        }
-        .getOrElse(throw new UnsupportedOperationException(
-          "Hash[F] on browsers requires Async[F]"))
-
+      new UnsealedHash[F] {
+        import facade.browser._
+        override def digest(algorithm: HashAlgorithm, data: ByteVector): F[ByteVector] =
+          F.fromPromise(
+            F.delay(
+              crypto.subtle.digest(algorithm.toStringWebCrypto, data.toUint8Array.buffer)))
+            .map(ByteVector.view)
+      }
 }
