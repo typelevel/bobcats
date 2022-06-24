@@ -16,8 +16,6 @@
 
 package bobcats
 
-package bobcats
-
 import cats.Functor
 import cats.effect.IO
 import cats.syntax.functor._
