@@ -26,7 +26,7 @@ import scala.reflect.ClassTag
 
 class HotpSuite extends CatsEffectSuite {
 
-  val key = ByteVector.fromHex("3132333435363738393031323334353637383930").get
+  val key = hex"3132333435363738393031323334353637383930"
 
   val expectedValues = List(
     755224, 287082, 359152, 969429, 338314, 254676, 287922, 162583, 399871, 520489
