@@ -20,7 +20,7 @@ import cats.Functor
 import cats.effect.IO
 import cats.syntax.functor._
 import munit.CatsEffectSuite
-import scodec.bits.ByteVector
+import scodec.bits._
 
 import scala.reflect.ClassTag
 
