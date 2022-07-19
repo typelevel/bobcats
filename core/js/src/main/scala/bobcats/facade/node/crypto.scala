@@ -28,6 +28,16 @@ private[bobcats] trait crypto extends js.Any {
 
   def createHmac(algorithm: String, key: js.typedarray.Uint8Array): Hmac = js.native
 
+  def createCipheriv(
+      algorithm: String,
+      key: js.typedarray.Uint8Array,
+      iv: js.typedarray.Uint8Array): Cipher = js.native
+
+  def createDecipheriv(
+      algorithm: String,
+      key: js.typedarray.Uint8Array,
+      iv: js.typedarray.Uint8Array): Decipher = js.native
+
   def createSecretKey(key: js.typedarray.Uint8Array): SymmetricKeyObject = js.native
 
   def generateKey(
@@ -42,7 +52,7 @@ private[bobcats] trait crypto extends js.Any {
 
   def randomBytes(
       size: Int,
-      callback: js.UndefOr[js.Function2[js.Error, js.typedarray.Uint8Array, Unit]]): Unit =
+      callback: js.Function2[js.Error, js.typedarray.Uint8Array, Unit]): Unit =
     js.native
 
   def timingSafeEqual(
