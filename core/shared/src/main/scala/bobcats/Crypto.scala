@@ -19,6 +19,7 @@ package bobcats
 sealed trait Crypto[F[_]] {
   def hash: Hash[F]
   def hmac: Hmac[F]
+  def cipher: Cipher[F]
 }
 
 private[bobcats] trait UnsealedCrypto[F[_]] extends Crypto[F]

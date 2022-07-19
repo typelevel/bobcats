@@ -23,5 +23,6 @@ private[bobcats] trait CryptoCompanionPlatform {
     new UnsealedCrypto[F] {
       override def hash: Hash[F] = Hash[F]
       override def hmac: Hmac[F] = Hmac[F]
+      override def cipher: Cipher[F] = Cipher[F]
     }
 }

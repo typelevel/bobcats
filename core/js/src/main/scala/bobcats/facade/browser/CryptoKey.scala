@@ -20,3 +20,9 @@ import scala.scalajs.js
 
 @js.native
 private[bobcats] trait CryptoKey extends js.Any
+
+@js.native
+private[bobcats] trait HmacCryptoKey extends CryptoKey
+
+@js.native
+private[bobcats] trait AesCryptoKey extends CryptoKey

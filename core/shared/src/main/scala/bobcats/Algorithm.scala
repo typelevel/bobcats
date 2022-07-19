@@ -16,13 +16,15 @@
 
 package bobcats
 
-sealed trait Algorithm {
+import scodec.bits.ByteVector
+
+sealed trait Algorithm extends AlgorithmPlatform {
   private[bobcats] def toStringJava: String
   private[bobcats] def toStringNodeJS: String
   private[bobcats] def toStringWebCrypto: String
 }
 
-sealed trait HashAlgorithm extends Algorithm
+sealed trait HashAlgorithm extends Algorithm with HashAlgorithmPlatform
 object HashAlgorithm {
 
   case object MD5 extends HashAlgorithm {
@@ -51,7 +53,7 @@ object HashAlgorithm {
   }
 }
 
-sealed trait HmacAlgorithm extends Algorithm {
+sealed trait HmacAlgorithm extends Algorithm with HmacAlgorithmPlatform {
   private[bobcats] def minimumKeyLength: Int
 }
 object HmacAlgorithm {
@@ -85,3 +87,55 @@ object HmacAlgorithm {
     private[bobcats] override def minimumKeyLength: Int = 64
   }
 }
+
+sealed trait CipherAlgorithm extends Algorithm with CipherAlgorithmPlatform {
+  private[bobcats] def paddingMode: PaddingMode
+  private[bobcats] def toModeStringJava: String
+  private[bobcats] def recommendedIvLength: Int
+  private[bobcats] def keyLength: Int
+}
+
+object CipherAlgorithm {
+  private[bobcats] def fromStringJava(algorithm: String): Option[CipherAlgorithm] =
+    algorithm match {
+      case "AES/CBC/NoPadding" => Some(AESCBC256(PaddingMode.None))
+      case "AES/CBC/PKCS5Padding" => Some(AESCBC256(PaddingMode.PKCS7))
+      case "AES/GCM/NoPadding" => Some(AESGCM256(PaddingMode.None))
+      case "AES/GCM/PKCS5Padding" => Some(AESGCM256(PaddingMode.PKCS7))
+      case _ => None
+    }
+
+  sealed trait AESAlgorithm extends CipherAlgorithm {
+    private[bobcats] def toStringJava: String = "AES"
+  }
+
+  sealed trait AESCBCAlgorithm extends AESAlgorithm {
+    private[bobcats] override def recommendedIvLength: Int = 16
+    private[bobcats] override def toStringWebCrypto: String = "AES-CBC"
+  }
+
+  case class AESCBC256(paddingMode: PaddingMode) extends AESCBCAlgorithm {
+    private[bobcats] override def toModeStringJava: String = s"AES/CBC/${paddingMode.toStringJava}"
+    private[bobcats] override def toStringNodeJS: String = "aes-256-cbc"
+    private[bobcats] override def keyLength: Int = 256
+  }
+
+  sealed trait AESGCMAlgorithm extends AESAlgorithm {
+    private[bobcats] override def recommendedIvLength: Int = 12
+    private[bobcats] override def toStringWebCrypto: String = "AES-GCM"
+  }
+
+  case class AESGCM256(paddingMode: PaddingMode) extends AESGCMAlgorithm {
+    private[bobcats] override def toModeStringJava: String = s"AES/GCM/${paddingMode.toStringJava}"
+    private[bobcats] override def toStringNodeJS: String = "aes-256-gcm"
+    private[bobcats] override def keyLength: Int = 256
+  }
+}
+
+sealed trait AlgorithmParameterSpec[+A <: Algorithm] extends AlgorithmParameterSpecPlatform[A]
+
+case class IvParameterSpec[+A <: CipherAlgorithm](
+    initializationVector: ByteVector,
+    algorithm: A)
+    extends AlgorithmParameterSpec[A]
+    with IvParameterSpecPlatform[A]
