@@ -30,6 +30,7 @@ private[bobcats] trait CryptoCompanionPlatform {
         new UnsealedCrypto[F] {
           override def hash: Hash[F] = Hash.forAsyncSubtleCrypto
           override def hmac: Hmac[F] = Hmac.forAsyncSubtleCrypto
+          override def cipher: Cipher[F] = Cipher[F]
         }
       }
     )
