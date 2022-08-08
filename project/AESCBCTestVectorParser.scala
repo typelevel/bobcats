@@ -1,11 +1,8 @@
-package bobcats
-
 import cats.parse.{Numbers, Parser => P}
 import scodec.bits.ByteVector
 import cats.data.NonEmptyList
 
-// Parser for NIST .rsp Test Vector files
-object AESTestVectorParser {
+object AESCBCTestVectorParser {
   case class TestVectors(
       encrypt: NonEmptyList[TestVector],
       decrypt: NonEmptyList[TestVector]
@@ -65,7 +62,9 @@ object AESTestVectorParser {
   private val decryptSection = section("DECRYPT", decryptEntry)
 
   private val parser =
-    header *> (encryptSection ~ decryptSection).surroundedBy(whitespaces).map(TestVectors.tupled)
+    header *> (encryptSection ~ decryptSection)
+      .surroundedBy(whitespaces)
+      .map(TestVectors.tupled)
 
   def parse(input: String) =
     parser.parseAll(input)

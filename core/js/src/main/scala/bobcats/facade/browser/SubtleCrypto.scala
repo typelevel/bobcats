@@ -28,14 +28,14 @@ private[bobcats] trait SubtleCrypto extends js.Any {
       data: js.typedarray.ArrayBuffer): js.Promise[js.typedarray.ArrayBuffer] = js.native
 
   def encrypt(
-    algorithm: Algorithm,
-    key: CryptoKey,
-    data: js.typedarray.ArrayBuffer): js.Promise[js.typedarray.ArrayBuffer] = js.native
+      algorithm: Algorithm,
+      key: CryptoKey,
+      data: js.typedarray.ArrayBuffer): js.Promise[js.typedarray.ArrayBuffer] = js.native
 
   def decrypt(
-    algorithm: Algorithm,
-    key: CryptoKey,
-    data: js.typedarray.ArrayBuffer): js.Promise[js.typedarray.ArrayBuffer] = js.native
+      algorithm: Algorithm,
+      key: CryptoKey,
+      data: js.typedarray.ArrayBuffer): js.Promise[js.typedarray.ArrayBuffer] = js.native
 
   def exportKey(format: String, key: CryptoKey): js.Promise[js.typedarray.ArrayBuffer] =
     js.native

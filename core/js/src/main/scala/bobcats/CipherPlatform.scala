@@ -58,11 +58,13 @@ private[bobcats] trait CipherCompanionPlatform {
           key match {
             case SecretKeySpec(key, algorithm) =>
               F.catchNonFatal {
-                val cipher = crypto.createCipheriv(
-                  algorithm.toStringNodeJS,
-                  key.toUint8Array,
-                  iv.initializationVector.toUint8Array
-                ).setAutoPadding(algorithm.paddingMode.setAutoPaddingNodeJS)
+                val cipher = crypto
+                  .createCipheriv(
+                    algorithm.toStringNodeJS,
+                    key.toUint8Array,
+                    iv.initializationVector.toUint8Array
+                  )
+                  .setAutoPadding(algorithm.paddingMode.setAutoPaddingNodeJS)
                 val cipherText = cipher.update(data.toUint8Array)
                 ByteVector.view(cipherText) ++ ByteVector.view(cipher.`final`())
               }
@@ -76,11 +78,13 @@ private[bobcats] trait CipherCompanionPlatform {
           key match {
             case SecretKeySpec(key, algorithm) =>
               F.catchNonFatal {
-                val cipher = crypto.createDecipheriv(
-                  algorithm.toStringNodeJS,
-                  key.toUint8Array,
-                  iv.initializationVector.toUint8Array
-                ).setAutoPadding(algorithm.paddingMode.setAutoPaddingNodeJS)
+                val cipher = crypto
+                  .createDecipheriv(
+                    algorithm.toStringNodeJS,
+                    key.toUint8Array,
+                    iv.initializationVector.toUint8Array
+                  )
+                  .setAutoPadding(algorithm.paddingMode.setAutoPaddingNodeJS)
                 val cipherText = cipher.update(data.toUint8Array)
                 ByteVector.view(cipherText) ++ ByteVector.view(cipher.`final`())
               }
