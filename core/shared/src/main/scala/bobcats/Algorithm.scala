@@ -115,7 +115,8 @@ object CipherAlgorithm {
   }
 
   case class AESCBC256(paddingMode: PaddingMode) extends AESCBCAlgorithm {
-    private[bobcats] override def toModeStringJava: String = s"AES/CBC/${paddingMode.toStringJava}"
+    private[bobcats] override def toModeStringJava: String =
+      s"AES/CBC/${paddingMode.toStringJava}"
     private[bobcats] override def toStringNodeJS: String = "aes-256-cbc"
     private[bobcats] override def keyLength: Int = 256
   }
@@ -126,7 +127,8 @@ object CipherAlgorithm {
   }
 
   case class AESGCM256(paddingMode: PaddingMode) extends AESGCMAlgorithm {
-    private[bobcats] override def toModeStringJava: String = s"AES/GCM/${paddingMode.toStringJava}"
+    private[bobcats] override def toModeStringJava: String =
+      s"AES/GCM/${paddingMode.toStringJava}"
     private[bobcats] override def toStringNodeJS: String = "aes-256-gcm"
     private[bobcats] override def keyLength: Int = 256
   }

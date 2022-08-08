@@ -43,7 +43,10 @@ private[bobcats] trait CipherCompanionPlatform {
           new InvalidKeyException
         )
 
-      def encrypt[A <: CipherAlgorithm](key: SecretKey[A], iv: IvParameterSpec[A], data: ByteVector): F[ByteVector] =
+      def encrypt[A <: CipherAlgorithm](
+          key: SecretKey[A],
+          iv: IvParameterSpec[A],
+          data: ByteVector): F[ByteVector] =
         F.catchNonFatal {
           val cipher = crypto.Cipher.getInstance(key.algorithm.toModeStringJava)
           val sk = key.toJava
@@ -51,7 +54,10 @@ private[bobcats] trait CipherCompanionPlatform {
           ByteVector.view(cipher.doFinal(data.toArray))
         }
 
-      def decrypt[A <: CipherAlgorithm](key: SecretKey[A], iv: IvParameterSpec[A], data: ByteVector): F[ByteVector] =
+      def decrypt[A <: CipherAlgorithm](
+          key: SecretKey[A],
+          iv: IvParameterSpec[A],
+          data: ByteVector): F[ByteVector] =
         F.catchNonFatal {
           val cipher = crypto.Cipher.getInstance(key.algorithm.toModeStringJava)
           val sk = key.toJava
