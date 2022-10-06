@@ -41,7 +41,7 @@ enablePlugins(TypelevelSonatypePlugin)
 ThisBuild / tlCiReleaseBranches := Seq("main")
 // ThisBuild / tlSonatypeUseLegacyHost := false // TODO remove
 
-ThisBuild / crossScalaVersions := Seq("3.1.3", "2.12.15", "2.13.9")
+ThisBuild / crossScalaVersions := Seq("3.1.3", "2.12.15", "2.13.8")
 
 ThisBuild / githubWorkflowBuildPreamble ++= Seq(
   WorkflowStep.Use(
