@@ -41,7 +41,7 @@ enablePlugins(TypelevelSonatypePlugin)
 ThisBuild / tlCiReleaseBranches := Seq("main")
 // ThisBuild / tlSonatypeUseLegacyHost := false // TODO remove
 
-ThisBuild / crossScalaVersions := Seq("3.1.0", "2.12.15", "2.13.8")
+ThisBuild / crossScalaVersions := Seq("3.1.3", "2.12.15", "2.13.8")
 
 ThisBuild / githubWorkflowBuildPreamble ++= Seq(
   WorkflowStep.Use(
@@ -58,8 +58,6 @@ tlReplaceCommandAlias("ciJS", List(CI.NodeJS, CI.Firefox, CI.Chrome).mkString)
 addCommandAlias("ciNodeJS", CI.NodeJS.toString)
 addCommandAlias("ciFirefox", CI.Firefox.toString)
 addCommandAlias("ciChrome", CI.Chrome.toString)
-
-addCommandAlias("prePR", "; root/clean; scalafmtSbt; +root/scalafmtAll; +root/headerCreate")
 
 lazy val useJSEnv =
   settingKey[JSEnv]("Use Node.js or a headless browser for running Scala.js tests")
@@ -81,15 +79,15 @@ ThisBuild / Test / jsEnv := {
   }
 }
 
-val catsVersion = "2.7.0"
-val catsEffectVersion = "3.3.5"
-val scodecBitsVersion = "1.1.30"
-val munitVersion = "0.7.29"
+val catsVersion = "2.8.0"
+val catsEffectVersion = "3.3.14"
+val scodecBitsVersion = "1.1.33"
+val munitVersion = "1.0.0-M6"
 val munitCEVersion = "1.0.7"
 val disciplineMUnitVersion = "1.0.9"
-val bouncyVersion = "1.69"
-val domVersion = "2.0.0"
-val nimbusJWTVersion = "9.15.2"
+val bouncyVersion = "1.72"
+val domVersion = "2.3.0"
+val nimbusJWTVersion = "9.25.4"
 
 lazy val root =
   project.in(file(".")).aggregate(rootJS, rootJVM).enablePlugins(NoPublishPlugin)
