@@ -41,7 +41,7 @@ enablePlugins(TypelevelSonatypePlugin)
 ThisBuild / tlCiReleaseBranches := Seq("main")
 // ThisBuild / tlSonatypeUseLegacyHost := false // TODO remove
 
-ThisBuild / crossScalaVersions := Seq("3.1.3", "2.12.15", "2.13.8")
+ThisBuild / crossScalaVersions := Seq("3.1.3", "2.12.15", "2.13.9")
 
 ThisBuild / githubWorkflowBuildPreamble ++= Seq(
   WorkflowStep.Use(
@@ -51,17 +51,29 @@ ThisBuild / githubWorkflowBuildPreamble ++= Seq(
     cond = Some("matrix.ci == 'ciJS'")
   )
 )
+ThisBuild / tlJdkRelease := Some(9)
 
 ThisBuild / githubWorkflowJavaVersions := Seq(JavaSpec.temurin("17"), JavaSpec.temurin("11"))
-
-tlReplaceCommandAlias("ciJS", List(CI.NodeJS, CI.Firefox, CI.Chrome).mkString)
-addCommandAlias("ciNodeJS", CI.NodeJS.toString)
-addCommandAlias("ciFirefox", CI.Firefox.toString)
-addCommandAlias("ciChrome", CI.Chrome.toString)
 
 lazy val useJSEnv =
   settingKey[JSEnv]("Use Node.js or a headless browser for running Scala.js tests")
 Global / useJSEnv := NodeJS
+
+ThisBuild / Test / jsEnv := {
+  val old = (Test / jsEnv).value
+
+  useJSEnv.value match {
+    case NodeJS => old
+    case Firefox =>
+      val options = new FirefoxOptions()
+      options.setHeadless(true)
+      new SeleniumJSEnv(options)
+    case Chrome =>
+      val options = new ChromeOptions()
+      options.setHeadless(true)
+      new SeleniumJSEnv(options)
+  }
+}
 
 ThisBuild / Test / jsEnv := {
   val old = (Test / jsEnv).value
