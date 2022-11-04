@@ -38,9 +38,6 @@ ThisBuild / startYear := Some(2021)
 enablePlugins(TypelevelCiReleasePlugin)
 enablePlugins(TypelevelSonatypePlugin)
 
-ThisBuild / tlCiReleaseBranches := Seq("main")
-// ThisBuild / tlSonatypeUseLegacyHost := false // TODO remove
-
 ThisBuild / crossScalaVersions := Seq("3.1.3", "2.12.17", "2.13.8")
 
 ThisBuild / githubWorkflowBuildPreamble ++= Seq(
