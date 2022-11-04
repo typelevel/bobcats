@@ -32,12 +32,12 @@ package bobcats
  * limitations under the License.
  */
 
-import bobcats.SigningHttpMessages.`Github-Issue-1509-Example`
+import bobcats.HttpMessageSignaturesV07.`Github-Issue-1509-Example`
 import bobcats.util.{PEMUtils, WebCryptoPEMUtils}
 import cats.effect.IO
 import cats.effect.kernel.Async
 
-class JSSignerSuite extends SignerSuite {
+class JSSignerSuite07 extends SignerSuite {
   override implicit val pemutils: PEMUtils = WebCryptoPEMUtils
 
   implicit val synio: Async[IO] = IO.asyncForIO
@@ -45,7 +45,24 @@ class JSSignerSuite extends SignerSuite {
   implicit val signer: Signer[IO] = Signer.forAsync[IO]
   implicit val verifier: Verifier[IO] = Verifier.forAsync[IO]
 
-  if (!BuildInfo.runtime.contains("NodeJS"))
-    run[IO](SigningHttpMessages.signatureExamples.filterNot(_ == `Github-Issue-1509-Example`))
+  if (!BuildInfo.runtime.contains("NodeJS")) {
+    run[IO](HttpMessageSignaturesV07.sigExamples.filterNot(_ == `Github-Issue-1509-Example`))
+  }
+  // we have not implemented crypto for NodeJS yet
+    
+}
 
+class JSSignerSuite13 extends SignerSuite {
+  override implicit val pemutils: PEMUtils = WebCryptoPEMUtils
+
+  implicit val synio: Async[IO] = IO.asyncForIO
+
+  implicit val signer: Signer[IO] = Signer.forAsync[IO]
+  implicit val verifier: Verifier[IO] = Verifier.forAsync[IO]
+
+  if (!BuildInfo.runtime.contains("NodeJS")) {
+    run[IO](HttpMessageSignaturesV13.sigExamples.filterNot(_ == `Github-Issue-1509-Example`))
+//    runSym[IO](HttpMessageSignaturesV13.symSignExamples)
+  }
+  // we have not implemented crypto for NodeJS yet
 }

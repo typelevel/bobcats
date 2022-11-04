@@ -46,7 +46,7 @@ class JSBasicSignerSuite extends CatsEffectSuite {
     assertEquals(
       WebCryptoPEMUtils
         .getPrivateKeySpec(
-          bobcats.SigningHttpMessages.`test-key-rsa`.privatePk8Key,
+          bobcats.HttpMessageSignaturesV07.`test-key-rsa`.privatePk8Key,
           bobcats.AsymmetricKeyAlg.RSA_PKCS_Key
         )
         .map(pk => pk.algorithm),
@@ -58,7 +58,7 @@ class JSBasicSignerSuite extends CatsEffectSuite {
     assertEquals(
       WebCryptoPEMUtils
         .getPrivateKeySpec(
-          bobcats.SigningHttpMessages.`test-key-rsa-pss`.privatePk8Key,
+          bobcats.HttpMessageSignaturesV07.`test-key-rsa-pss`.privatePk8Key,
           AsymmetricKeyAlg.RSA_PSS_Key
         )
         .map(pk => pk.algorithm),
@@ -70,7 +70,7 @@ class JSBasicSignerSuite extends CatsEffectSuite {
     assertEquals(
       WebCryptoPEMUtils
         .getPrivateKeySpec(
-          bobcats.SigningHttpMessages.`test-key-ecc-p256`.privatePk8Key,
+          bobcats.HttpMessageSignaturesV07.`test-key-ecc-p256`.privatePk8Key,
           AsymmetricKeyAlg.ECKey(bobcats.AsymmetricKeyAlg.`P-256`)
         )
         .map(pk => pk.algorithm),

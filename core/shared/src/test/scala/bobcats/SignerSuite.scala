@@ -31,9 +31,31 @@ import scala.util.Try
 trait SignerSuite extends CatsEffectSuite {
   type MonadErr[T[_]] = MonadError[T, Throwable]
 
-  val tests: Seq[SignatureExample] = SigningHttpMessages.signatureExamples
-
   def pemutils: PEMUtils
+
+  def testSymmetricSigner[F[_]: Hmac: MonadErr](
+      typedSignatures: Seq[SymmetricSignatureExample] // these are non-empty lists
+  )(implicit ct: ClassTag[F[Nothing]]): Unit = {
+    val prototype = typedSignatures.head
+    val bytesV = ByteVector.fromBase64Descriptive(prototype.key.sharedKey)
+    test(s"${typedSignatures.head.key.description} build key") {
+      assert(bytesV.isRight, bytesV)
+    }
+    val keyF = Hmac[F].importKey(bytesV.toOption.get, prototype.signatureAlg)
+    typedSignatures.foreach { symTest =>
+      test(
+        s"${symTest.description} with ${ct.runtimeClass.getSimpleName()}: digest matches expected") {
+        for {
+          expectedBytes <- MonadError[F, Throwable].fromEither(
+            ByteVector.fromBase64Descriptive(symTest.signature).leftMap(new Exception(_)))
+          key <- keyF
+          sigTextBytes <- MonadError[F, Throwable].fromEither(
+            ByteVector.encodeAscii(symTest.sigtext).leftMap(new Exception(_)))
+          digest <- Hmac[F].digest(key, sigTextBytes)
+        } yield assertEquals(digest, expectedBytes)
+      }
+    }
+  }
 
   def testSigner[F[_]: Signer: Verifier: MonadErr](
       typedSignatures: Seq[SignatureExample] // these are non-empty lists
@@ -57,7 +79,8 @@ trait SignerSuite extends CatsEffectSuite {
     //    not sure how to do that with munit
     typedSignatures.foreach { sigTest =>
       test(
-        s"${sigTest.description} with ${ct.runtimeClass.getSimpleName()}: can verify generated signature") {
+        s"${sigTest.description} with ${ct.runtimeClass.getSimpleName()}: " +
+          "can verify generated signature") {
         for {
           sign <- signerF
           verify <- verifierF
@@ -92,8 +115,6 @@ trait SignerSuite extends CatsEffectSuite {
 
   }
 
-  // using flatmap  would not work as F is something like IO that would
-  // delay the flapMap, meaning the tests would then not get registered.
   def extractKeys(ex: SignatureExample)
       : Try[(SPKIKeySpec[AsymmetricKeyAlg], PKCS8KeySpec[AsymmetricKeyAlg])] =
     for {
@@ -101,12 +122,27 @@ trait SignerSuite extends CatsEffectSuite {
       priv <- pemutils.getPrivateKeySpec(ex.keypair.privatePk8Key, ex.keypair.keyAlg)
     } yield (pub, priv)
 
-  // subclasses should call run
+  /**
+   * create a class that statically calls run on startup. The `foreach` calls on existing data
+   * structures like `tests` runs the code which caputres any test creations adding them to the
+   * test DB to be executed later. Those tests can return IO Monads.
+   */
   def run[F[_]: Signer: Verifier: MonadErr](
       tests: Seq[SignatureExample]
   )(implicit ct: ClassTag[F[Nothing]]): Unit = {
     tests.groupBy(ex => (ex.keypair.publicKey, ex.signatureAlg)).values.foreach { sigTests =>
       testSigner[F](sigTests)
+    }
+  }
+
+  /**
+   * same as with run above
+   */
+  def runSym[F[_]: Hmac: MonadErr](
+      tests: Seq[SymmetricSignatureExample]
+  )(implicit ct: ClassTag[F[Nothing]]): Unit = {
+    tests.groupBy(ex => (ex.key, ex.signatureAlg)).values.foreach { sigTests =>
+      testSymmetricSigner[F](sigTests)
     }
   }
 }

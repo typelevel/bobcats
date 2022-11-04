@@ -19,7 +19,7 @@ package bobcats
 import bobcats.util.{BouncyJavaPEMUtils, PEMUtils}
 import cats.effect.{MonadCancel, Sync, SyncIO}
 
-class JavaSignerSuite extends SignerSuite {
+class JavaSignerSuite07 extends SignerSuite {
 
   override def pemutils: PEMUtils = BouncyJavaPEMUtils
 
@@ -27,5 +27,17 @@ class JavaSignerSuite extends SignerSuite {
   implicit val signer: Signer[SyncIO] = Signer.forSync[SyncIO]
   implicit val verifier: Verifier[SyncIO] = Verifier.forSync[SyncIO]
 
-  run[SyncIO](SigningHttpMessages.signatureExamples)
+  run[SyncIO](HttpMessageSignaturesV07.sigExamples)
+}
+
+class JavaSignerSuiteV13 extends SignerSuite {
+
+  override def pemutils: PEMUtils = BouncyJavaPEMUtils
+
+  implicit val synio: Sync[SyncIO] with MonadCancel[SyncIO, Throwable] = SyncIO.syncForSyncIO
+  implicit val signer: Signer[SyncIO] = Signer.forSync[SyncIO]
+  implicit val verifier: Verifier[SyncIO] = Verifier.forSync[SyncIO]
+
+  run[SyncIO](HttpMessageSignaturesV13.sigExamples)
+  runSym[SyncIO](HttpMessageSignaturesV13.symSignExamples)
 }

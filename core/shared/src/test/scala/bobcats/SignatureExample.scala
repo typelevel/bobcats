@@ -16,14 +16,18 @@
 
 package bobcats
 
-import bobcats.SignatureExample.{PrivateKeyPEM, PublicKeyPEM, Signature, SigningString}
-
 object SignatureExample {
   type SigningString = String
   type Signature = String
+  type Base64Bytes = String
+  
   type PrivateKeyPEM = String
   type PublicKeyPEM = String
 }
+
+import SignatureExample.{Base64Bytes, Signature, SigningString}
+
+sealed trait SigExample
 
 /**
  * Collects a number of signatures for a given Key
@@ -34,20 +38,39 @@ case class SignatureExample(
     signature: Signature,
     keypair: TestKeyPair,
     signatureAlg: AsymmetricKeyAlg.Signature
-)
+) extends SigExample
+
+case class SymmetricSignatureExample(
+  description: String,
+  sigtext: SigningString,
+  signature: Signature,
+  key: TestSharedKey,
+  signatureAlg: HmacAlgorithm
+) extends SigExample
+
 trait AsymmetricKeyExamples {
-  def signatureExamples: Seq[SignatureExample]
-  def keyExamples: Seq[TestKeyPair]
+  def sigExamples: Seq[SignatureExample]
+  def keyExamples: Set[TestKeyPair] = sigExamples.map(_.keypair).toSet
+}
+
+trait SymmetricKeyExamples {
+  def symSignExamples: Seq[SymmetricSignatureExample]
+  def sharedKeyExamples: Set[TestSharedKey] = symSignExamples.map(_.key).toSet
+}
+
+sealed trait TestKey {
+  def description: String
 }
 
 /**
- * Public and Private keys from
- * [[https://www.ietf.org/archive/id/draft-ietf-httpbis-message-signatures-04.html#section-b.1.1 Message Signatures §Appendix B.1.1]]
+ * Public and Private keys grouped together as in
+ * [[https://datatracker.ietf.org/doc/html/draft-ietf-httpbis-message-signatures HTTP Message Signatures §Appendix B.1]]
  * Obviously, these should not be used other than for test cases! So place them here to make
  * them available in other tests.
  */
-trait TestKeyPair {
-  def description: String
+trait TestKeyPair extends TestKey {
+  import SignatureExample.{PrivateKeyPEM, PublicKeyPEM}
+  
   // the keys in the Signing HTTP messages Spec are PEM encoded.
   // One could transform the keys from PKCS#1 to PKCS#8 using
   // openssl pkcs8 -topk8 -inform PEM -in spec.private.pem -out private.pem -nocrypt
@@ -55,7 +78,6 @@ trait TestKeyPair {
   // but then it would not be easy to compare the keys used here with those in the
   // spec when debugging the tests, and it would make it more difficult to send in
   // feedback to the IETF HttpBis WG.
-
   def privateKey: PrivateKeyPEM
 
   // PKCS8 version of the private key
@@ -66,4 +88,8 @@ trait TestKeyPair {
   def publicPk8Key: PublicKeyPEM = publicKey
 
   def keyAlg: AsymmetricKeyAlg
+}
+
+trait TestSharedKey extends TestKey {
+   def sharedKey: Base64Bytes
 }

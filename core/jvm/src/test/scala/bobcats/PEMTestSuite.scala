@@ -24,7 +24,7 @@ import scala.util.Try
 class PEMTestSuite extends munit.FunSuite {
   import util.{BouncyJavaPEMUtils => pemutils}
 
-  SigningHttpMessages.keyExamples.foreach(testPEM)
+  HttpMessageSignaturesV07.keyExamples.foreach(testPEM)
 
   def testPEM(pem: TestKeyPair): Unit = {
     test(s"${pem.description}: test spec public key matches calculated spki key") {

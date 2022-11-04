@@ -57,23 +57,8 @@ ThisBuild / githubWorkflowJavaVersions := Seq(JavaSpec.temurin("17"), JavaSpec.t
 
 lazy val useJSEnv =
   settingKey[JSEnv]("Use Node.js or a headless browser for running Scala.js tests")
+  
 Global / useJSEnv := NodeJS
-
-ThisBuild / Test / jsEnv := {
-  val old = (Test / jsEnv).value
-
-  useJSEnv.value match {
-    case NodeJS => old
-    case Firefox =>
-      val options = new FirefoxOptions()
-      options.setHeadless(true)
-      new SeleniumJSEnv(options)
-    case Chrome =>
-      val options = new ChromeOptions()
-      options.setHeadless(true)
-      new SeleniumJSEnv(options)
-  }
-}
 
 ThisBuild / Test / jsEnv := {
   val old = (Test / jsEnv).value
@@ -99,7 +84,7 @@ val munitCEVersion = "1.0.7"
 val disciplineMUnitVersion = "1.0.9"
 val bouncyVersion = "1.72"
 val domVersion = "2.3.0"
-val nimbusJWTVersion = "9.25.4"
+val nimbusJWTVersion = "9.25.6"
 
 lazy val root =
   project.in(file(".")).aggregate(rootJS, rootJVM).enablePlugins(NoPublishPlugin)
