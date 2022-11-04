@@ -56,7 +56,7 @@ object HttpMessageSignaturesV07 extends AsymmetricKeyExamples {
         signature = """crVqK54rxvdx0j7qnt2RL1oQSf+o21S/6Uk2hyFpoIfOT0q+Hv\
 		  |  msYAXUXzo0Wn8NFWh/OjWQOXHAQdVnTk87Pw==""".rfc8792single,
         keypair = `test-key-ecc-p256`,
-        signatureAlg = AsymmetricKeyAlg.`ecdsa-p256-sha256` //? is this correct?
+        signatureAlg = AsymmetricKeyAlg.`ecdsa-p256-sha256` // ? is this correct?
       )
 
   object `§3.1_Signature`

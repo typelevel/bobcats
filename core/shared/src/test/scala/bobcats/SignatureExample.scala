@@ -20,7 +20,7 @@ object SignatureExample {
   type SigningString = String
   type Signature = String
   type Base64Bytes = String
-  
+
   type PrivateKeyPEM = String
   type PublicKeyPEM = String
 }
@@ -41,11 +41,11 @@ case class SignatureExample(
 ) extends SigExample
 
 case class SymmetricSignatureExample(
-  description: String,
-  sigtext: SigningString,
-  signature: Signature,
-  key: TestSharedKey,
-  signatureAlg: HmacAlgorithm
+    description: String,
+    sigtext: SigningString,
+    signature: Signature,
+    key: TestSharedKey,
+    signatureAlg: HmacAlgorithm
 ) extends SigExample
 
 trait AsymmetricKeyExamples {
@@ -70,7 +70,7 @@ sealed trait TestKey {
  */
 trait TestKeyPair extends TestKey {
   import SignatureExample.{PrivateKeyPEM, PublicKeyPEM}
-  
+
   // the keys in the Signing HTTP messages Spec are PEM encoded.
   // One could transform the keys from PKCS#1 to PKCS#8 using
   // openssl pkcs8 -topk8 -inform PEM -in spec.private.pem -out private.pem -nocrypt
@@ -78,13 +78,17 @@ trait TestKeyPair extends TestKey {
   // but then it would not be easy to compare the keys used here with those in the
   // spec when debugging the tests, and it would make it more difficult to send in
   // feedback to the IETF HttpBis WG.
-  /** here we put the key from the spec */
+  /**
+   * here we put the key from the spec
+   */
   def privateKey: PrivateKeyPEM
 
   // PKCS8 version of the private key
   // there have been problems with keys in JS explained
   // https://github.com/httpwg/http-extensions/issues/1867
-  /** place the pkcs8 equivalent key here  */
+  /**
+   * place the pkcs8 equivalent key here
+   */
   def privatePk8Key: PrivateKeyPEM = privateKey
 
   def publicKey: PublicKeyPEM
@@ -95,5 +99,5 @@ trait TestKeyPair extends TestKey {
 }
 
 trait TestSharedKey extends TestKey {
-   def sharedKey: Base64Bytes
+  def sharedKey: Base64Bytes
 }

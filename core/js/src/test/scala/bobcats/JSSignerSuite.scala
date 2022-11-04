@@ -49,7 +49,7 @@ class JSSignerSuite07 extends SignerSuite {
     run[IO](HttpMessageSignaturesV07.sigExamples.filterNot(_ == `Github-Issue-1509-Example`))
   }
   // we have not implemented crypto for NodeJS yet
-    
+
 }
 
 class JSSignerSuite13 extends SignerSuite {

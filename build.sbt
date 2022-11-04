@@ -57,7 +57,7 @@ ThisBuild / githubWorkflowJavaVersions := Seq(JavaSpec.temurin("17"), JavaSpec.t
 
 lazy val useJSEnv =
   settingKey[JSEnv]("Use Node.js or a headless browser for running Scala.js tests")
-  
+
 Global / useJSEnv := NodeJS
 
 ThisBuild / Test / jsEnv := {
