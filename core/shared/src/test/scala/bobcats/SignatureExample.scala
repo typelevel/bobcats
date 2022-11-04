@@ -78,9 +78,13 @@ trait TestKeyPair extends TestKey {
   // but then it would not be easy to compare the keys used here with those in the
   // spec when debugging the tests, and it would make it more difficult to send in
   // feedback to the IETF HttpBis WG.
+  /** here we put the key from the spec */
   def privateKey: PrivateKeyPEM
 
   // PKCS8 version of the private key
+  // there have been problems with keys in JS explained
+  // https://github.com/httpwg/http-extensions/issues/1867
+  /** place the pkcs8 equivalent key here  */
   def privatePk8Key: PrivateKeyPEM = privateKey
 
   def publicKey: PublicKeyPEM
