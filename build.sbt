@@ -41,19 +41,35 @@ enablePlugins(TypelevelSonatypePlugin)
 ThisBuild / tlCiReleaseBranches := Seq("main")
 // ThisBuild / tlSonatypeUseLegacyHost := false // TODO remove
 
-ThisBuild / crossScalaVersions := Seq("3.1.3", "2.12.15", "2.13.8")
+ThisBuild / crossScalaVersions := Seq("3.1.3", "2.12.17", "2.13.8")
 
 ThisBuild / githubWorkflowBuildPreamble ++= Seq(
   WorkflowStep.Use(
-    UseRef.Public("actions", "setup-node", "v2.4.0"),
-    name = Some("Setup NodeJS v14 LTS"),
-    params = Map("node-version" -> "14"),
-    cond = Some("matrix.ci == 'ciJS'")
+    UseRef.Public("actions", "setup-node", "v3"),
+    name = Some("Setup NodeJS v16 LTS"),
+    params = Map("node-version" -> "16"),
+    cond = Some("matrix.project == 'rootJS' && matrix.jsenv == 'NodeJS'")
   )
 )
+
 ThisBuild / tlJdkRelease := Some(9)
 
 ThisBuild / githubWorkflowJavaVersions := Seq(JavaSpec.temurin("17"), JavaSpec.temurin("11"))
+
+val jsenvs = List(NodeJS, Chrome, Firefox).map(_.toString)
+ThisBuild / githubWorkflowBuildMatrixAdditions += "jsenv" -> jsenvs
+ThisBuild / githubWorkflowBuildSbtStepPreamble += s"set Global / useJSEnv := JSEnv.$${{ matrix.jsenv }}"
+ThisBuild / githubWorkflowBuildMatrixExclusions ++= {
+  for {
+    scala <- (ThisBuild / crossScalaVersions).value.init
+    jsenv <- jsenvs.tail
+  } yield MatrixExclude(Map("scala" -> scala, "jsenv" -> jsenv))
+}
+ThisBuild / githubWorkflowBuildMatrixExclusions ++= {
+  for {
+    jsenv <- jsenvs.tail
+  } yield MatrixExclude(Map("project" -> "rootJVM", "jsenv" -> jsenv))
+}
 
 lazy val useJSEnv =
   settingKey[JSEnv]("Use Node.js or a headless browser for running Scala.js tests")
@@ -78,7 +94,7 @@ ThisBuild / Test / jsEnv := {
 
 val catsVersion = "2.8.0"
 val catsEffectVersion = "3.3.14"
-val scodecBitsVersion = "1.1.33"
+val scodecBitsVersion = "1.1.34"
 val munitVersion = "0.7.29"
 val munitCEVersion = "1.0.7"
 val disciplineMUnitVersion = "1.0.9"
@@ -86,12 +102,7 @@ val bouncyVersion = "1.72"
 val domVersion = "2.3.0"
 val nimbusJWTVersion = "9.25.6"
 
-lazy val root =
-  project.in(file(".")).aggregate(rootJS, rootJVM).enablePlugins(NoPublishPlugin)
-lazy val rootJVM =
-  project.aggregate(core.jvm, testRuntime.jvm).enablePlugins(NoPublishPlugin)
-lazy val rootJS =
-  project.aggregate(core.js, testRuntime.js).enablePlugins(NoPublishPlugin)
+lazy val root = tlCrossRootProject.aggregate(core, testRuntime)
 
 lazy val core = crossProject(JSPlatform, JVMPlatform)
   .in(file("core"))
