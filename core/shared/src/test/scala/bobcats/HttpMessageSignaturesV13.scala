@@ -16,7 +16,7 @@
 
 package bobcats
 
-import bobcats.SignatureExample.{Base64Bytes, PublicKeyPEM}
+import bobcats.SignatureExample.Base64Bytes
 import util.StringUtils.StringW
 
 /**
@@ -172,11 +172,13 @@ object HttpMessageSignaturesV13 extends AsymmetricKeyExamples with SymmetricKeyE
   // this key did not change
   val `test-key-rsa` = HttpMessageSignaturesV07.`test-key-rsa`
 
-//  val `test-key-rsa-pss` = HttpMessageSignaturesV07.`test-key-rsa-pss`
+  val `test-key-rsa-pss` = HttpMessageSignaturesV07.`test-key-rsa-pss`
+
   /**
    * 2048-bit RSA public and private key pair taken from
    * [[https://datatracker.ietf.org/doc/html/draft-ietf-httpbis-message-signatures#appendix-B.1.2 draft 13 Appendix B.1.2]]
    */
+  /*
   object `test-key-rsa-pss` extends TestKeyPair {
     override def description: String = "test-key-rsa-pss"
 
@@ -226,6 +228,7 @@ object HttpMessageSignaturesV13 extends AsymmetricKeyExamples with SymmetricKeyE
 
     override def keyAlg: AsymmetricKeyAlg = AsymmetricKeyAlg.RSA_PSS_Key
   }
+   */
 
   /**
    * Taken from
