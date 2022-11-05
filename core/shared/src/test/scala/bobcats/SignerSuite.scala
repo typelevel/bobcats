@@ -17,8 +17,10 @@
 package bobcats
 
 import bobcats.util.PEMUtils
-import cats.MonadError
+import cats.effect.Sync
+import cats.effect.std.Random
 import cats.syntax.all._
+import cats.{Applicative, MonadError}
 import munit.CatsEffectSuite
 import scodec.bits.ByteVector
 
@@ -32,6 +34,18 @@ trait SignerSuite extends CatsEffectSuite {
   type MonadErr[T[_]] = MonadError[T, Throwable]
 
   def pemutils: PEMUtils
+
+  def alterOneRandomChar[F[_]: Applicative: Random](signingStr: String): F[String] = {
+    import cats.implicits._
+    (Random[F].nextAlphaNumeric, Random[F].betweenInt(0, signingStr.length)).mapN { (c, ri) =>
+      // we make our life easy, since we can make the string longer
+      if (ri == 0 || signingStr.charAt(ri) == c) { signingStr.appended(c) }
+      else {
+        val (a, b) = signingStr.splitAt(ri)
+        a + c + b.tail
+      }
+    }
+  }
 
   def testSymmetricSigner[F[_]: Hmac: MonadErr](
       typedSignatures: Seq[SymmetricSignatureExample] // these are non-empty lists
@@ -57,7 +71,7 @@ trait SignerSuite extends CatsEffectSuite {
     }
   }
 
-  def testSigner[F[_]: Signer: Verifier: MonadErr](
+  def testSigner[F[_]: Signer: Verifier: Sync](
       typedSignatures: Seq[SignatureExample] // these are non-empty lists
   )(implicit ct: ClassTag[F[Nothing]]): Unit = {
     val prototype = typedSignatures.head
@@ -107,8 +121,17 @@ trait SignerSuite extends CatsEffectSuite {
               .leftMap(new Exception(_))
           )
           b <- verify(sigTextBytes, expectedSig)
+          // next create a broken signature
+          random <- Random.scalaUtilRandom[F]
+          brokenText <- {
+            implicit val r: Random[F] = random
+            alterOneRandomChar(sigTest.sigtext)
+          }
+          sigBrokenTxtBytes <- signatureTxtF(brokenText)
+          b2 <- verify(sigBrokenTxtBytes, expectedSig)
         } yield {
           assertEquals(b, true, s"expected to verify >>${sigTest.sigtext}<<")
+          assertEquals(b2, false, s"expected not to verify altered text >>${brokenText}<<")
         }
       }
     }
@@ -127,7 +150,7 @@ trait SignerSuite extends CatsEffectSuite {
    * structures like `tests` runs the code which caputres any test creations adding them to the
    * test DB to be executed later. Those tests can return IO Monads.
    */
-  def run[F[_]: Signer: Verifier: MonadErr](
+  def run[F[_]: Signer: Verifier: Sync](
       tests: Seq[SignatureExample]
   )(implicit ct: ClassTag[F[Nothing]]): Unit = {
     tests.groupBy(ex => (ex.keypair.publicKey, ex.signatureAlg)).values.foreach { sigTests =>

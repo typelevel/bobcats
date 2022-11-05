@@ -35,7 +35,7 @@ package bobcats
 import bobcats.HttpMessageSignaturesV07.`Github-Issue-1509-Example`
 import bobcats.util.{PEMUtils, WebCryptoPEMUtils}
 import cats.effect.IO
-import cats.effect.kernel.Async
+import cats.effect.kernel.{Async, Sync}
 
 class JSSignerSuite07 extends SignerSuite {
   override implicit val pemutils: PEMUtils = WebCryptoPEMUtils
@@ -44,6 +44,7 @@ class JSSignerSuite07 extends SignerSuite {
 
   implicit val signer: Signer[IO] = Signer.forAsync[IO]
   implicit val verifier: Verifier[IO] = Verifier.forAsync[IO]
+  implicit val s: Sync[IO] = Async[IO]
 
   if (!BuildInfo.runtime.contains("NodeJS")) {
     run[IO](HttpMessageSignaturesV07.sigExamples.filterNot(_ == `Github-Issue-1509-Example`))
@@ -59,6 +60,7 @@ class JSSignerSuite13 extends SignerSuite {
 
   implicit val signer: Signer[IO] = Signer.forAsync[IO]
   implicit val verifier: Verifier[IO] = Verifier.forAsync[IO]
+  implicit val s: Sync[IO] = Async[IO]
 
   if (!BuildInfo.runtime.contains("NodeJS")) {
     run[IO](HttpMessageSignaturesV13.sigExamples.filterNot(_ == `Github-Issue-1509-Example`))
