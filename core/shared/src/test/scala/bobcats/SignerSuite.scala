@@ -39,7 +39,7 @@ trait SignerSuite extends CatsEffectSuite {
     import cats.implicits._
     (Random[F].nextAlphaNumeric, Random[F].betweenInt(0, signingStr.length)).mapN { (c, ri) =>
       // we make our life easy, since we can make the string longer
-      if (ri == 0 || signingStr.charAt(ri) == c) { signingStr.appended(c) }
+      if (ri == 0 || signingStr.charAt(ri) == c) { signingStr + c }
       else {
         val (a, b) = signingStr.splitAt(ri)
         a + c + b.tail
