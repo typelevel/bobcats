@@ -17,8 +17,10 @@
 package bobcats
 
 import bobcats.util.PEMUtils
-import cats.MonadError
+import cats.effect.Sync
+import cats.effect.std.Random
 import cats.syntax.all._
+import cats.{Applicative, MonadError}
 import munit.CatsEffectSuite
 import scodec.bits.ByteVector
 
@@ -26,16 +28,50 @@ import scala.reflect.ClassTag
 import scala.util.Try
 
 /*
- * todo: does one need CatsEffectSuite?  (We don't use assertIO, ...)
+ * Suite for testing signatures.
  */
 trait SignerSuite extends CatsEffectSuite {
   type MonadErr[T[_]] = MonadError[T, Throwable]
 
-  val tests: Seq[SignatureExample] = SigningHttpMessages.signatureExamples
-
   def pemutils: PEMUtils
 
-  def testSigner[F[_]: Signer: Verifier: MonadErr](
+  def alterOneRandomChar[F[_]: Applicative: Random](signingStr: String): F[String] = {
+    import cats.implicits._
+    (Random[F].nextAlphaNumeric, Random[F].betweenInt(0, signingStr.length)).mapN { (c, ri) =>
+      // we make our life easy, since we can make the string longer
+      if (ri == 0 || signingStr.charAt(ri) == c) { signingStr + c }
+      else {
+        val (a, b) = signingStr.splitAt(ri)
+        a + c + b.tail
+      }
+    }
+  }
+
+  def testSymmetricSigner[F[_]: Hmac: MonadErr](
+      typedSignatures: Seq[SymmetricSignatureExample] // these are non-empty lists
+  )(implicit ct: ClassTag[F[Nothing]]): Unit = {
+    val prototype = typedSignatures.head
+    val bytesV = ByteVector.fromBase64Descriptive(prototype.key.sharedKey)
+    test(s"${typedSignatures.head.key.description} build key") {
+      assert(bytesV.isRight, bytesV)
+    }
+    val keyF = Hmac[F].importKey(bytesV.toOption.get, prototype.signatureAlg)
+    typedSignatures.foreach { symTest =>
+      test(
+        s"${symTest.description} with ${ct.runtimeClass.getSimpleName()}: digest matches expected") {
+        for {
+          expectedBytes <- MonadError[F, Throwable].fromEither(
+            ByteVector.fromBase64Descriptive(symTest.signature).leftMap(new Exception(_)))
+          key <- keyF
+          sigTextBytes <- MonadError[F, Throwable].fromEither(
+            ByteVector.encodeAscii(symTest.sigtext).leftMap(new Exception(_)))
+          digest <- Hmac[F].digest(key, sigTextBytes)
+        } yield assertEquals(digest, expectedBytes)
+      }
+    }
+  }
+
+  def testSigner[F[_]: Signer: Verifier: Sync](
       typedSignatures: Seq[SignatureExample] // these are non-empty lists
   )(implicit ct: ClassTag[F[Nothing]]): Unit = {
     val prototype = typedSignatures.head
@@ -57,7 +93,8 @@ trait SignerSuite extends CatsEffectSuite {
     //    not sure how to do that with munit
     typedSignatures.foreach { sigTest =>
       test(
-        s"${sigTest.description} with ${ct.runtimeClass.getSimpleName()}: can verify generated signature") {
+        s"${sigTest.description} with ${ct.runtimeClass.getSimpleName()}: " +
+          "can verify generated signature") {
         for {
           sign <- signerF
           verify <- verifierF
@@ -84,16 +121,23 @@ trait SignerSuite extends CatsEffectSuite {
               .leftMap(new Exception(_))
           )
           b <- verify(sigTextBytes, expectedSig)
+          // next create a broken signature
+          random <- Random.scalaUtilRandom[F]
+          brokenText <- {
+            implicit val r: Random[F] = random
+            alterOneRandomChar(sigTest.sigtext)
+          }
+          sigBrokenTxtBytes <- signatureTxtF(brokenText)
+          b2 <- verify(sigBrokenTxtBytes, expectedSig)
         } yield {
           assertEquals(b, true, s"expected to verify >>${sigTest.sigtext}<<")
+          assertEquals(b2, false, s"expected not to verify altered text >>${brokenText}<<")
         }
       }
     }
 
   }
 
-  // using flatmap  would not work as F is something like IO that would
-  // delay the flapMap, meaning the tests would then not get registered.
   def extractKeys(ex: SignatureExample)
       : Try[(SPKIKeySpec[AsymmetricKeyAlg], PKCS8KeySpec[AsymmetricKeyAlg])] =
     for {
@@ -101,12 +145,27 @@ trait SignerSuite extends CatsEffectSuite {
       priv <- pemutils.getPrivateKeySpec(ex.keypair.privatePk8Key, ex.keypair.keyAlg)
     } yield (pub, priv)
 
-  // subclasses should call run
-  def run[F[_]: Signer: Verifier: MonadErr](
+  /**
+   * create a class that statically calls run on startup. The `foreach` calls on existing data
+   * structures like `tests` runs the code which caputres any test creations adding them to the
+   * test DB to be executed later. Those tests can return IO Monads.
+   */
+  def run[F[_]: Signer: Verifier: Sync](
       tests: Seq[SignatureExample]
   )(implicit ct: ClassTag[F[Nothing]]): Unit = {
     tests.groupBy(ex => (ex.keypair.publicKey, ex.signatureAlg)).values.foreach { sigTests =>
       testSigner[F](sigTests)
+    }
+  }
+
+  /**
+   * same as with run above
+   */
+  def runSym[F[_]: Hmac: MonadErr](
+      tests: Seq[SymmetricSignatureExample]
+  )(implicit ct: ClassTag[F[Nothing]]): Unit = {
+    tests.groupBy(ex => (ex.key, ex.signatureAlg)).values.foreach { sigTests =>
+      testSymmetricSigner[F](sigTests)
     }
   }
 }

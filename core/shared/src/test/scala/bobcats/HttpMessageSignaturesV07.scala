@@ -25,9 +25,9 @@ import bobcats.SignatureExample._
  * @see
  *   https://www.ietf.org/archive/id/draft-ietf-httpbis-message-signatures-07.html
  */
-object SigningHttpMessages extends AsymmetricKeyExamples {
+object HttpMessageSignaturesV07 extends AsymmetricKeyExamples {
 
-  def signatureExamples: Seq[SignatureExample] = Seq(
+  def sigExamples: Seq[SignatureExample] = Seq(
     `§2.2.11_Example`,
     `§3.1_Signature`,
     `§4.3_Example`,
@@ -36,13 +36,6 @@ object SigningHttpMessages extends AsymmetricKeyExamples {
     `Appendix_B.2.3`,
     `Appendix_B.2.4`,
     `Github-Issue-1509-Example`
-  )
-
-  override def keyExamples: Seq[TestKeyPair] = Seq(
-    `test-key-rsa`,
-    `test-key-rsa-pss`,
-    `test-key-ecc-p256`,
-    `test-key-ed25519`
   )
 
   object `§2.2.11_Example`
@@ -63,7 +56,7 @@ object SigningHttpMessages extends AsymmetricKeyExamples {
         signature = """crVqK54rxvdx0j7qnt2RL1oQSf+o21S/6Uk2hyFpoIfOT0q+Hv\
 		  |  msYAXUXzo0Wn8NFWh/OjWQOXHAQdVnTk87Pw==""".rfc8792single,
         keypair = `test-key-ecc-p256`,
-        signatureAlg = AsymmetricKeyAlg.`ecdsa-p256-sha256`
+        signatureAlg = AsymmetricKeyAlg.`ecdsa-p256-sha256` // ? is this correct?
       )
 
   object `§3.1_Signature`
@@ -199,7 +192,7 @@ object SigningHttpMessages extends AsymmetricKeyExamples {
         signature = """u9DvOJe17NdTTuIJjKac9WncuAo/1d4gOh6TXMV6AN4hxLdttB\
                       |  SegWS/RcWPZ+lENCtykh6YGl8GJiQrxgibBg==""".rfc8792single,
         keypair = `test-key-ed25519`,
-        signatureAlg = bobcats.AsymmetricKeyAlg.`ed25119-pure`
+        signatureAlg = bobcats.AsymmetricKeyAlg.ed25119
       )
 
   // 2048-bit RSA public and private key pair,
@@ -399,7 +392,7 @@ object SigningHttpMessages extends AsymmetricKeyExamples {
   }
 
   object `test-key-ed25519` extends TestKeyPair {
-    override def description: String = "Ed25519 key"
+    override def description: String = "test-key-ed25519"
 
     override def privateKey: PrivateKeyPEM =
       """-----BEGIN PRIVATE KEY-----
@@ -412,6 +405,21 @@ object SigningHttpMessages extends AsymmetricKeyExamples {
         |-----END PUBLIC KEY-----""".stripMargin
 
     override def keyAlg: AsymmetricKeyAlg = AsymmetricKeyAlg.Ed25519_Key
+
+    /**
+     * platform limitation descriptions that can be used to filter out tests and also provide
+     * some readalbe documentation
+     */
+    override def limitation: Set[NotFor] = Set(
+      NoWebCryptAPI(
+        "At the moment: On 6 Nov 2022 only Node.js and Deno runtimes implement Ed25519 as per Secure Curves " +
+          "in the Web Cryptography API.",
+        List(
+          new java.net.URI(
+            "https://github.com/httpwg/http-extensions/issues/2290#issuecomment-1304763239"),
+          new java.net.URI("https://wicg.github.io/webcrypto-secure-curves/")
+        )
+      ))
   }
 
 }

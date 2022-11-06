@@ -32,20 +32,55 @@ package bobcats
  * limitations under the License.
  */
 
-import bobcats.SigningHttpMessages.`Github-Issue-1509-Example`
 import bobcats.util.{PEMUtils, WebCryptoPEMUtils}
 import cats.effect.IO
-import cats.effect.kernel.Async
+import cats.effect.kernel.{Async, Sync}
 
-class JSSignerSuite extends SignerSuite {
+class JSSignerSuite07 extends SignerSuite {
   override implicit val pemutils: PEMUtils = WebCryptoPEMUtils
 
   implicit val synio: Async[IO] = IO.asyncForIO
 
   implicit val signer: Signer[IO] = Signer.forAsync[IO]
   implicit val verifier: Verifier[IO] = Verifier.forAsync[IO]
+  implicit val s: Sync[IO] = Async[IO]
 
-  if (!BuildInfo.runtime.contains("NodeJS"))
-    run[IO](SigningHttpMessages.signatureExamples.filterNot(_ == `Github-Issue-1509-Example`))
+  if (!BuildInfo.runtime.contains("NodeJS")) {
+    // this could be perhaps done with `munit.Tag`s . Also it would be nice to
+    // have this be in a warning color.
+    val okForWebCryptAPI = HttpMessageSignaturesV07.sigExamples.groupBy { sigEx =>
+      sigEx.notFor().collectFirst { case _: NoWebCryptAPI => false }.getOrElse(true)
+    }
+    for (sigEx <- okForWebCryptAPI(false)) {
+      test(s"cannot run test ${sigEx.description} because of ${sigEx.notFor()}") {}
+    }
+    run[IO](okForWebCryptAPI(true))
+  }
+  // we have not implemented crypto for NodeJS yet
 
+}
+
+class JSSignerSuite13 extends SignerSuite {
+  override implicit val pemutils: PEMUtils = WebCryptoPEMUtils
+
+  implicit val synio: Async[IO] = IO.asyncForIO
+
+  implicit val signer: Signer[IO] = Signer.forAsync[IO]
+  implicit val verifier: Verifier[IO] = Verifier.forAsync[IO]
+  implicit val hmac: Hmac[IO] = Hmac.forAsyncOrSync[IO]
+  implicit val s: Sync[IO] = Async[IO]
+
+  if (!BuildInfo.runtime.contains("NodeJS")) {
+    // this could be perhaps done with `munit.Tag`s . Also it would be nice to
+    // have this be in a warning color.
+    val okForWebCryptAPI = HttpMessageSignaturesV07.sigExamples.groupBy { sigEx =>
+      sigEx.notFor().collectFirst { case _: NoWebCryptAPI => false }.getOrElse(true)
+    }
+    for (sigEx <- okForWebCryptAPI(false)) {
+      test(s"cannot run test ${sigEx.description} because of ${sigEx.notFor()}") {}
+    }
+    run[IO](okForWebCryptAPI(true))
+    runSym[IO](HttpMessageSignaturesV13.symSignExamples)
+  }
+  // we have not implemented crypto for NodeJS yet
 }

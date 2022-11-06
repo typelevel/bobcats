@@ -24,14 +24,14 @@ class JWKCryptoSuite extends munit.FunSuite {
 
   test("transform PEM private to JWK") {
     val jwk = JWK.parseFromPEMEncodedObjects(
-      SigningHttpMessages.`test-key-rsa-pss`.privateKey
+      HttpMessageSignaturesV07.`test-key-rsa-pss`.privateKey
     )
     assertEquals(jwk.getKeyType.toString, "RSA")
   }
 
   test("transform PEM public to JWK") {
     val jwk = JWK.parseFromPEMEncodedObjects(
-      SigningHttpMessages.`test-key-rsa-pss`.publicKey
+      HttpMessageSignaturesV13.`test-key-rsa-pss`.publicKey
     )
     assertEquals(jwk.getKeyType.toString, "RSA")
 

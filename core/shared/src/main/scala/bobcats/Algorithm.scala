@@ -180,8 +180,7 @@ object AsymmetricKeyAlg {
   // note PSS requires extra arguments to be passed.
   case object `rsa-pss-sha512` extends RSA_PSS_Sig {
     override def saltLength: Int = 64
-    override def hash: HashAlgorithm =
-      HashAlgorithm.SHA512 // is this right? OR should it be optional?
+    override def hash: HashAlgorithm = HashAlgorithm.SHA512
   }
 
   case object `rsa-v1_5-sha256` extends RSA_PKCS_Sig {
@@ -202,7 +201,7 @@ object AsymmetricKeyAlg {
       HashAlgorithm.SHA256 // is this right? OR should it be optional?
   }
 
-  case object `ed25119-pure` extends Ed_Sig {
+  case object `ed25119` extends Ed_Sig {
     override def hash: HashAlgorithm = ??? // no hash? Should hash then be Option?
     override private[bobcats] def toStringJava = "Ed25519"
     override private[bobcats] def toStringNodeJS = ???

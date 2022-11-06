@@ -16,38 +16,68 @@
 
 package bobcats
 
-import bobcats.SignatureExample.{PrivateKeyPEM, PublicKeyPEM, Signature, SigningString}
-
 object SignatureExample {
   type SigningString = String
   type Signature = String
+  type Base64Bytes = String
+
   type PrivateKeyPEM = String
   type PublicKeyPEM = String
 }
+
+import SignatureExample.{Base64Bytes, Signature, SigningString}
+
+sealed trait SigExample
 
 /**
  * Collects a number of signatures for a given Key
  */
 case class SignatureExample(
+    description: String, // description of the example
+    sigtext: SigningString, // the text to be signed
+    signature: Signature, // the expected sigature
+    keypair: TestKeyPair, // the key pair that can sign and verify the
+    signatureAlg: AsymmetricKeyAlg.Signature,
+    valid: Boolean = true
+) extends SigExample {
+  def notFor(): Set[NotFor] = keypair.limitation
+}
+
+case class SymmetricSignatureExample(
     description: String,
     sigtext: SigningString,
     signature: Signature,
-    keypair: TestKeyPair,
-    signatureAlg: AsymmetricKeyAlg.Signature
-)
+    key: TestSharedKey,
+    signatureAlg: HmacAlgorithm,
+    valid: Boolean = true
+) extends SigExample
+
 trait AsymmetricKeyExamples {
-  def signatureExamples: Seq[SignatureExample]
-  def keyExamples: Seq[TestKeyPair]
+  def sigExamples: Seq[SignatureExample]
+  def keyExamples: Set[TestKeyPair] = sigExamples.map(_.keypair).toSet
 }
 
+trait SymmetricKeyExamples {
+  def symSignExamples: Seq[SymmetricSignatureExample]
+  def sharedKeyExamples: Set[TestSharedKey] = symSignExamples.map(_.key).toSet
+}
+
+sealed trait TestKey {
+  def description: String
+}
+
+sealed trait NotFor
+case class NoWebCryptAPI(msg: String, doc: List[java.net.URI]) extends NotFor
+
 /**
- * Public and Private keys from
- * [[https://www.ietf.org/archive/id/draft-ietf-httpbis-message-signatures-04.html#section-b.1.1 Message Signatures §Appendix B.1.1]]
+ * Public and Private keys grouped together as in
+ * [[https://datatracker.ietf.org/doc/html/draft-ietf-httpbis-message-signatures HTTP Message Signatures §Appendix B.1]]
  * Obviously, these should not be used other than for test cases! So place them here to make
  * them available in other tests.
  */
-trait TestKeyPair {
-  def description: String
+trait TestKeyPair extends TestKey {
+  import SignatureExample.{PrivateKeyPEM, PublicKeyPEM}
+
   // the keys in the Signing HTTP messages Spec are PEM encoded.
   // One could transform the keys from PKCS#1 to PKCS#8 using
   // openssl pkcs8 -topk8 -inform PEM -in spec.private.pem -out private.pem -nocrypt
@@ -55,10 +85,17 @@ trait TestKeyPair {
   // but then it would not be easy to compare the keys used here with those in the
   // spec when debugging the tests, and it would make it more difficult to send in
   // feedback to the IETF HttpBis WG.
-
+  /**
+   * here we put the key from the spec
+   */
   def privateKey: PrivateKeyPEM
 
   // PKCS8 version of the private key
+  // there have been problems with keys in JS explained
+  // https://github.com/httpwg/http-extensions/issues/1867
+  /**
+   * place the pkcs8 equivalent key here
+   */
   def privatePk8Key: PrivateKeyPEM = privateKey
 
   def publicKey: PublicKeyPEM
@@ -66,4 +103,14 @@ trait TestKeyPair {
   def publicPk8Key: PublicKeyPEM = publicKey
 
   def keyAlg: AsymmetricKeyAlg
+
+  /**
+   * platform limitation descriptions that can be used to filter out tests and also provide some
+   * readalbe documentation
+   */
+  def limitation: Set[NotFor] = Set()
+}
+
+trait TestSharedKey extends TestKey {
+  def sharedKey: Base64Bytes
 }

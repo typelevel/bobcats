@@ -42,6 +42,7 @@ private[bobcats] trait PrivateKeyPlatform {
 private[bobcats] trait SecretKeyPlatform
 
 private[bobcats] trait SecretKeySpecPlatform[+A <: Algorithm]
+
 private[bobcats] trait PKCS8KeySpecPlatform[+A <: AsymmetricKeyAlg] extends PrivateKeyPlatform {
   self: PKCS8KeySpec[A] =>
   // A JS Web Crypto Key combines the public key and signature algorithms, unlike Java
@@ -54,12 +55,16 @@ private[bobcats] trait PKCS8KeySpecPlatform[+A <: AsymmetricKeyAlg] extends Priv
         key.toJSArrayBuffer,
         JSKeySpec.importAlgorithm(algorithm, signature),
         true,
-        js.Array(dom.KeyUsage.sign)
+        js.Array(
+          dom.KeyUsage.sign
+        ) // private keys sign (and cna also encrypt) -- todo how to set encryption?
       )
     })
 }
+
 private[bobcats] trait SPKIKeySpecPlatform[+A <: AsymmetricKeyAlg] {
   self: SPKIKeySpec[A] =>
+
   def toWebCryptoKey[F[_]](signature: AsymmetricKeyAlg.Signature)(
       implicit F0: Async[F]
   ): F[org.scalajs.dom.CryptoKey] =
@@ -69,7 +74,7 @@ private[bobcats] trait SPKIKeySpecPlatform[+A <: AsymmetricKeyAlg] {
         key.toJSArrayBuffer,
         JSKeySpec.importAlgorithm(algorithm, signature),
         true, // todo: do we always want extractable?
-        js.Array(dom.KeyUsage.verify) // todo: we may want other key usages?
+        js.Array(dom.KeyUsage.verify) // public keys (SPKI) verify
       )
     })
 }
