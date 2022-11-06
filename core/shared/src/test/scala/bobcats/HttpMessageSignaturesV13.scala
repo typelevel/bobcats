@@ -172,7 +172,7 @@ object HttpMessageSignaturesV13 extends AsymmetricKeyExamples with SymmetricKeyE
 
   object `Appendix_B.2.6`
       extends SignatureExample(
-        description = "Abbpendix B.2.6 Signing a Request using ed25519",
+        description = "Appendix B.2.6 Signing a Request using ed25519",
         sigtext = """\
        |"date": Tue, 20 Apr 2021 02:07:55 GMT
        |"@method": POST

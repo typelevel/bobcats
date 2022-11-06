@@ -405,6 +405,21 @@ object HttpMessageSignaturesV07 extends AsymmetricKeyExamples {
         |-----END PUBLIC KEY-----""".stripMargin
 
     override def keyAlg: AsymmetricKeyAlg = AsymmetricKeyAlg.Ed25519_Key
+
+    /**
+     * platform limitation descriptions that can be used to filter out tests and also provide
+     * some readalbe documentation
+     */
+    override def limitation: Set[NotFor] = Set(
+      NoWebCryptAPI(
+        "At the moment: On 6 Nov 2022 only Node.js and Deno runtimes implement Ed25519 as per Secure Curves " +
+          "in the Web Cryptography API.",
+        List(
+          new java.net.URI(
+            "https://github.com/httpwg/http-extensions/issues/2290#issuecomment-1304763239"),
+          new java.net.URI("https://wicg.github.io/webcrypto-secure-curves/")
+        )
+      ))
   }
 
 }

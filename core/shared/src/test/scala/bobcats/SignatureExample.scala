@@ -39,7 +39,9 @@ case class SignatureExample(
     keypair: TestKeyPair, // the key pair that can sign and verify the
     signatureAlg: AsymmetricKeyAlg.Signature,
     valid: Boolean = true
-) extends SigExample
+) extends SigExample {
+  def notFor(): Set[NotFor] = keypair.limitation
+}
 
 case class SymmetricSignatureExample(
     description: String,
@@ -63,6 +65,9 @@ trait SymmetricKeyExamples {
 sealed trait TestKey {
   def description: String
 }
+
+sealed trait NotFor
+case class NoWebCryptAPI(msg: String, doc: List[java.net.URI]) extends NotFor
 
 /**
  * Public and Private keys grouped together as in
@@ -98,6 +103,12 @@ trait TestKeyPair extends TestKey {
   def publicPk8Key: PublicKeyPEM = publicKey
 
   def keyAlg: AsymmetricKeyAlg
+
+  /**
+   * platform limitation descriptions that can be used to filter out tests and also provide some
+   * readalbe documentation
+   */
+  def limitation: Set[NotFor] = Set()
 }
 
 trait TestSharedKey extends TestKey {
