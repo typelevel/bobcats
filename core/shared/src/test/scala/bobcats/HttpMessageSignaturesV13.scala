@@ -234,14 +234,23 @@ object HttpMessageSignaturesV13 extends AsymmetricKeyExamples with SymmetricKeyE
   // thanks to sjrd for this tip
   def isJS: Boolean = 1.0.toString() == "1"
 
-  // 2048-bit RSA public and private key pair,
-  // given in https://www.ietf.org/archive/id/draft-ietf-httpbis-message-signatures-07.html#appendix-B.1.1
-  // this key did not change
+  /**
+   * 2048-bit RSA public and private key pair, given in
+   * https://www.ietf.org/archive/id/draft-ietf-httpbis-message-signatures-07.html#appendix-B.1.1
+   * this key did not change note: the private key needed to be updated to pkcs8
+   */
   val `test-key-rsa` = HttpMessageSignaturesV07.`test-key-rsa`
 
   /**
    * 2048-bit RSA public and private key pair taken from
    * [[https://datatracker.ietf.org/doc/html/draft-ietf-httpbis-message-signatures#appendix-B.1.2 draft 13 Appendix B.1.2]]
+   * @panva
+   *   [https://github.com/w3c/webcrypto/issues/330#issuecomment-1304759709 wrote on the
+   *   webcrypto](https://github.com/w3c/webcrypto/issues/330#issuecomment-1304759709) issue:
+   *   "The private key in appendix-B.1.2 is 1.2.840.113549.1.1.10 (id-RSASSA-PSS). WebCryptoAPI
+   *   implementations only generally accept 1.2.840.113549.1.1.1 (rsaEncryption) keys.
+   *   Recommend using rsaEncryption OID PKCS8 PEM or JWK if they ought to be imported as
+   *   CryptoKey reliably."
    */
   def `test-key-rsa-pss` = if (isJS)
     HttpMessageSignaturesV07.`test-key-rsa-pss`
@@ -299,7 +308,11 @@ object HttpMessageSignaturesV13 extends AsymmetricKeyExamples with SymmetricKeyE
   /**
    * Taken from
    * [[https://datatracker.ietf.org/doc/html/draft-ietf-httpbis-message-signatures#appendix-B.1.3 draft 13 Appendix B.1.3]]
-   * This did not change from draft 7
+   * But as panva tells us on
+   * [[https://github.com/w3c/webcrypto/issues/330#issuecomment-1304759709 issue 330 of webcrypto]]:
+   * "The private key in appendix-B.1.3 is in SEC1 format, which isn't accepted by webcrypto at
+   * all. Recommend using id-ecPublicKey OID PKCS8 PEM or JWK if they ought to be imported as
+   * CryptoKey reliably." We somehow managed to update the key to the correct version in v07.
    */
   val `test-key-ecc-p256`: TestKeyPair = HttpMessageSignaturesV07.`test-key-ecc-p256`
 
