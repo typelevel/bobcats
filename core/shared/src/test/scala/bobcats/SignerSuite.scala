@@ -28,7 +28,7 @@ import scala.reflect.ClassTag
 import scala.util.Try
 
 /*
- * todo: does one need CatsEffectSuite?  (We don't use assertIO, ...)
+ * Suite for testing signatures.
  */
 trait SignerSuite extends CatsEffectSuite {
   type MonadErr[T[_]] = MonadError[T, Throwable]

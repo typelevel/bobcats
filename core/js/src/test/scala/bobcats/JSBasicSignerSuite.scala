@@ -33,6 +33,7 @@
 package bobcats
 
 import bobcats.util.WebCryptoPEMUtils
+import cats.effect.IO
 import munit.CatsEffectSuite
 
 import scala.util.Success
@@ -40,6 +41,7 @@ import scala.util.Success
 //todo: thos test only makes sense for Java at present as BouncyCastle actually
 // parses the content. Move to Java.
 class JSBasicSignerSuite extends CatsEffectSuite {
+  implicit val signer: Signer[IO] = Signer.forAsync[IO]
 
   test("parse `test-key-rsa`") {
 //		assertIO(IO(4),4)

@@ -16,7 +16,7 @@
 
 package bobcats
 
-import bobcats.SignatureExample.Base64Bytes
+import bobcats.SignatureExample.{Base64Bytes, PublicKeyPEM}
 import util.StringUtils.StringW
 
 /**
@@ -38,7 +38,10 @@ object HttpMessageSignaturesV13 extends AsymmetricKeyExamples with SymmetricKeyE
     `§2.5_Example`,
     `Appendix_B.2.2`,
     `Appendix_B.2.3`,
-    `Appendix_B.2.4`
+    `Appendix_B.2.4`,
+    `Appendix_B.2.6`,
+    `Appendix_B.3`,
+    `Appendix_B.4`
   )
 
   object `§2.4_Example`
@@ -167,82 +170,145 @@ object HttpMessageSignaturesV13 extends AsymmetricKeyExamples with SymmetricKeyE
         key = `test-shared-secret`,
         signatureAlg = HmacAlgorithm.SHA256)
 
+  object `Appendix_B.2.6`
+      extends SignatureExample(
+        description = "Abbpendix B.2.6 Signing a Request using ed25519",
+        sigtext = """\
+       |"date": Tue, 20 Apr 2021 02:07:55 GMT
+       |"@method": POST
+       |"@path": /foo
+       |"@authority": example.com
+       |"content-type": application/json
+       |"content-length": 18
+       |"@signature-params": ("date" "@method" "@path" "@authority" \
+       |  "content-type" "content-length");created=1618884473\
+       |  ;keyid="test-key-ed25519"""".rfc8792single,
+        signature = """wqcAqbmYJ2ji2glfAMaRy4gruYYnx2nEFN2HN6jrnDnQCK1\
+         u02Gb04v9EDgwUPiu4A0w6vuQv5lIp5WPpBKRCw==""".rfc8792single,
+        keypair = `test-key-ed25519`,
+        signatureAlg = AsymmetricKeyAlg.`ed25119`,
+        valid = true)
+
+  object `Appendix_B.3`
+      extends SignatureExample(
+        description = "Appendix B.3: TLS-Terminating Example",
+        sigtext =
+          """\
+       |"@path": /foo
+       |"@query": ?param=Value&Pet=dog
+       |"@method": POST
+       |"@authority": service.internal.example
+       |"client-cert": :MIIBqDCCAU6gAwIBAgIBBzAKBggqhkjOPQQDAjA6MRswGQYDVQQ\
+       |  KDBJMZXQncyBBdXRoZW50aWNhdGUxGzAZBgNVBAMMEkxBIEludGVybWVkaWF0ZSBD\
+       |  QTAeFw0yMDAxMTQyMjU1MzNaFw0yMTAxMjMyMjU1MzNaMA0xCzAJBgNVBAMMAkJDM\
+       |  FkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAE8YnXXfaUgmnMtOXU/IncWalRhebrXm\
+       |  ckC8vdgJ1p5Be5F/3YC8OthxM4+k1M6aEAEFcGzkJiNy6J84y7uzo9M6NyMHAwCQY\
+       |  DVR0TBAIwADAfBgNVHSMEGDAWgBRm3WjLa38lbEYCuiCPct0ZaSED2DAOBgNVHQ8B\
+       |  Af8EBAMCBsAwEwYDVR0lBAwwCgYIKwYBBQUHAwIwHQYDVR0RAQH/BBMwEYEPYmRjQ\
+       |  GV4YW1wbGUuY29tMAoGCCqGSM49BAMCA0gAMEUCIBHda/r1vaL6G3VliL4/Di6YK0\
+       |  Q6bMjeSkC3dFCOOB8TAiEAx/kHSB4urmiZ0NX5r5XarmPk0wmuydBVoU4hBVZ1yhk=:
+       |"@signature-params": ("@path" "@query" "@method" "@authority" \
+       |  "client-cert");created=1618884473;keyid="test-key-ecc-p256"""".rfc8792single,
+        signature = """xVMHVpawaAC/0SbHrKRs9i8I3eOs5RtTMGCWXm/9nvZzoHsIg6Mce9315T6xoklyy0y\
+       zhD9ah4JHRwMLOgmizw==""".rfc8792single,
+        keypair = `test-key-ecc-p256`,
+        signatureAlg = AsymmetricKeyAlg.`ecdsa-p256-sha256`,
+        valid = true)
+
+  object `Appendix_B.4`
+      extends SignatureExample(
+        description = "Appendix B.4 Http Message Transforamation",
+        sigtext = """\
+            |"@method": GET
+            |"@path": /demo
+            |"@authority": example.org
+            |"accept": application/json, */*
+            |"@signature-params": ("@method" "@path" "@authority" "accept")\
+            |  ;created=1618884473;keyid="test-key-ed25519"""".rfc8792single,
+        signature = """ZT1kooQsEHpZ0I1IjCqtQppOmIqlJPeo7DHR3SoMn0s5J\
+         Z1eRGS0A+vyYP9t/LXlh5QMFFQ6cpLt2m0pmj3NDA==""".rfc8792single,
+        keypair = `test-key-ed25519`,
+        signatureAlg = AsymmetricKeyAlg.`ed25119`,
+        valid = true)
+
+  // thanks to sjrd for this tip
+  def isJS: Boolean = 1.0.toString() == "1"
+
   // 2048-bit RSA public and private key pair,
   // given in https://www.ietf.org/archive/id/draft-ietf-httpbis-message-signatures-07.html#appendix-B.1.1
   // this key did not change
   val `test-key-rsa` = HttpMessageSignaturesV07.`test-key-rsa`
 
-  val `test-key-rsa-pss` = HttpMessageSignaturesV07.`test-key-rsa-pss`
-
   /**
    * 2048-bit RSA public and private key pair taken from
    * [[https://datatracker.ietf.org/doc/html/draft-ietf-httpbis-message-signatures#appendix-B.1.2 draft 13 Appendix B.1.2]]
    */
-  /*
-  object `test-key-rsa-pss` extends TestKeyPair {
-    override def description: String = "test-key-rsa-pss"
+  def `test-key-rsa-pss` = if (isJS)
+    HttpMessageSignaturesV07.`test-key-rsa-pss`
+  else {
+    // these are the new keys, but they can't be loaded into Web Crypto API
+    // https://github.com/httpwg/http-extensions/issues/2290
+    new TestKeyPair {
+      override def description: String = "test-key-rsa-pss"
 
-    override def privateKey: PrivateKeyPEM =
-      """-----BEGIN PRIVATE KEY-----
-        |MIIEvgIBADALBgkqhkiG9w0BAQoEggSqMIIEpgIBAAKCAQEAr4tmm3r20Wd/Pbqv
-        |P1s2+QEtvpuRaV8Yq40gjUR8y2Rjxa6dpG2GXHbPfvMs8ct+Lh1GH45x28Rw3Ry5
-        |3mm+oAXjyQ86OnDkZ5N8lYbggD4O3w6M6pAvLkhk95AndTrifbIFPNU8PPMO7Oyr
-        |FAHqgDsznjPFmTOtCEcN2Z1FpWgchwuYLPL+Wokqltd11nqqzi+bJ9cvSKADYdUA
-        |AN5WUtzdpiy6LbTgSxP7ociU4Tn0g5I6aDZJ7A8Lzo0KSyZYoA485mqcO0GVAdVw
-        |9lq4aOT9v6d+nb4bnNkQVklLQ3fVAvJm+xdDOp9LCNCN48V2pnDOkFV6+U9nV5oy
-        |c6XI2wIDAQABAoIBAQCUB8ip+kJiiZVKF8AqfB/aUP0jTAqOQewK1kKJ/iQCXBCq
-        |pbo360gvdt05H5VZ/RDVkEgO2k73VSsbulqezKs8RFs2tEmU+JgTI9MeQJPWcP6X
-        |aKy6LIYs0E2cWgp8GADgoBs8llBq0UhX0KffglIeek3n7Z6Gt4YFge2TAcW2WbN4
-        |XfK7lupFyo6HHyWRiYHMMARQXLJeOSdTn5aMBP0PO4bQyk5ORxTUSeOciPJUFktQ
-        |HkvGbym7KryEfwH8Tks0L7WhzyP60PL3xS9FNOJi9m+zztwYIXGDQuKM2GDsITeD
-        |2mI2oHoPMyAD0wdI7BwSVW18p1h+jgfc4dlexKYRAoGBAOVfuiEiOchGghV5vn5N
-        |RDNscAFnpHj1QgMr6/UG05RTgmcLfVsI1I4bSkbrIuVKviGGf7atlkROALOG/xRx
-        |DLadgBEeNyHL5lz6ihQaFJLVQ0u3U4SB67J0YtVO3R6lXcIjBDHuY8SjYJ7Ci6Z6
-        |vuDcoaEujnlrtUhaMxvSfcUJAoGBAMPsCHXte1uWNAqYad2WdLjPDlKtQJK1diCm
-        |rqmB2g8QE99hDOHItjDBEdpyFBKOIP+NpVtM2KLhRajjcL9Ph8jrID6XUqikQuVi
-        |4J9FV2m42jXMuioTT13idAILanYg8D3idvy/3isDVkON0X3UAVKrgMEne0hJpkPL
-        |FYqgetvDAoGBAKLQ6JZMbSe0pPIJkSamQhsehgL5Rs51iX4m1z7+sYFAJfhvN3Q/
-        |OGIHDRp6HjMUcxHpHw7U+S1TETxePwKLnLKj6hw8jnX2/nZRgWHzgVcY+sPsReRx
-        |NJVf+Cfh6yOtznfX00p+JWOXdSY8glSSHJwRAMog+hFGW1AYdt7w80XBAoGBAImR
-        |NUugqapgaEA8TrFxkJmngXYaAqpA0iYRA7kv3S4QavPBUGtFJHBNULzitydkNtVZ
-        |3w6hgce0h9YThTo/nKc+OZDZbgfN9s7cQ75x0PQCAO4fx2P91Q+mDzDUVTeG30mE
-        |t2m3S0dGe47JiJxifV9P3wNBNrZGSIF3mrORBVNDAoGBAI0QKn2Iv7Sgo4T/XjND
-        |dl2kZTXqGAk8dOhpUiw/HdM3OGWbhHj2NdCzBliOmPyQtAr770GITWvbAI+IRYyF
-        |S7Fnk6ZVVVHsxjtaHy1uJGFlaZzKR4AGNaUTOJMs6NadzCmGPAxNQQOCqoUjn4XR
-        |rOjr9w349JooGXhOxbu8nOxX
-        |-----END PRIVATE KEY-----""".stripMargin
+      override def privateKey: PrivateKeyPEM =
+        """-----BEGIN PRIVATE KEY-----
+          |MIIEvgIBADALBgkqhkiG9w0BAQoEggSqMIIEpgIBAAKCAQEAr4tmm3r20Wd/Pbqv
+          |P1s2+QEtvpuRaV8Yq40gjUR8y2Rjxa6dpG2GXHbPfvMs8ct+Lh1GH45x28Rw3Ry5
+          |3mm+oAXjyQ86OnDkZ5N8lYbggD4O3w6M6pAvLkhk95AndTrifbIFPNU8PPMO7Oyr
+          |FAHqgDsznjPFmTOtCEcN2Z1FpWgchwuYLPL+Wokqltd11nqqzi+bJ9cvSKADYdUA
+          |AN5WUtzdpiy6LbTgSxP7ociU4Tn0g5I6aDZJ7A8Lzo0KSyZYoA485mqcO0GVAdVw
+          |9lq4aOT9v6d+nb4bnNkQVklLQ3fVAvJm+xdDOp9LCNCN48V2pnDOkFV6+U9nV5oy
+          |c6XI2wIDAQABAoIBAQCUB8ip+kJiiZVKF8AqfB/aUP0jTAqOQewK1kKJ/iQCXBCq
+          |pbo360gvdt05H5VZ/RDVkEgO2k73VSsbulqezKs8RFs2tEmU+JgTI9MeQJPWcP6X
+          |aKy6LIYs0E2cWgp8GADgoBs8llBq0UhX0KffglIeek3n7Z6Gt4YFge2TAcW2WbN4
+          |XfK7lupFyo6HHyWRiYHMMARQXLJeOSdTn5aMBP0PO4bQyk5ORxTUSeOciPJUFktQ
+          |HkvGbym7KryEfwH8Tks0L7WhzyP60PL3xS9FNOJi9m+zztwYIXGDQuKM2GDsITeD
+          |2mI2oHoPMyAD0wdI7BwSVW18p1h+jgfc4dlexKYRAoGBAOVfuiEiOchGghV5vn5N
+          |RDNscAFnpHj1QgMr6/UG05RTgmcLfVsI1I4bSkbrIuVKviGGf7atlkROALOG/xRx
+          |DLadgBEeNyHL5lz6ihQaFJLVQ0u3U4SB67J0YtVO3R6lXcIjBDHuY8SjYJ7Ci6Z6
+          |vuDcoaEujnlrtUhaMxvSfcUJAoGBAMPsCHXte1uWNAqYad2WdLjPDlKtQJK1diCm
+          |rqmB2g8QE99hDOHItjDBEdpyFBKOIP+NpVtM2KLhRajjcL9Ph8jrID6XUqikQuVi
+          |4J9FV2m42jXMuioTT13idAILanYg8D3idvy/3isDVkON0X3UAVKrgMEne0hJpkPL
+          |FYqgetvDAoGBAKLQ6JZMbSe0pPIJkSamQhsehgL5Rs51iX4m1z7+sYFAJfhvN3Q/
+          |OGIHDRp6HjMUcxHpHw7U+S1TETxePwKLnLKj6hw8jnX2/nZRgWHzgVcY+sPsReRx
+          |NJVf+Cfh6yOtznfX00p+JWOXdSY8glSSHJwRAMog+hFGW1AYdt7w80XBAoGBAImR
+          |NUugqapgaEA8TrFxkJmngXYaAqpA0iYRA7kv3S4QavPBUGtFJHBNULzitydkNtVZ
+          |3w6hgce0h9YThTo/nKc+OZDZbgfN9s7cQ75x0PQCAO4fx2P91Q+mDzDUVTeG30mE
+          |t2m3S0dGe47JiJxifV9P3wNBNrZGSIF3mrORBVNDAoGBAI0QKn2Iv7Sgo4T/XjND
+          |dl2kZTXqGAk8dOhpUiw/HdM3OGWbhHj2NdCzBliOmPyQtAr770GITWvbAI+IRYyF
+          |S7Fnk6ZVVVHsxjtaHy1uJGFlaZzKR4AGNaUTOJMs6NadzCmGPAxNQQOCqoUjn4XR
+          |rOjr9w349JooGXhOxbu8nOxX
+          |-----END PRIVATE KEY-----""".stripMargin
 
-    override def privatePk8Key: PrivateKeyPEM =
-      HttpMessageSignaturesV07.`test-key-rsa-pss`.privatePk8Key
+      override def publicKey: PublicKeyPEM =
+        """-----BEGIN PUBLIC KEY-----
+          |MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAr4tmm3r20Wd/PbqvP1s2
+          |+QEtvpuRaV8Yq40gjUR8y2Rjxa6dpG2GXHbPfvMs8ct+Lh1GH45x28Rw3Ry53mm+
+          |oAXjyQ86OnDkZ5N8lYbggD4O3w6M6pAvLkhk95AndTrifbIFPNU8PPMO7OyrFAHq
+          |gDsznjPFmTOtCEcN2Z1FpWgchwuYLPL+Wokqltd11nqqzi+bJ9cvSKADYdUAAN5W
+          |Utzdpiy6LbTgSxP7ociU4Tn0g5I6aDZJ7A8Lzo0KSyZYoA485mqcO0GVAdVw9lq4
+          |aOT9v6d+nb4bnNkQVklLQ3fVAvJm+xdDOp9LCNCN48V2pnDOkFV6+U9nV5oyc6XI
+          |2wIDAQAB
+          |-----END PUBLIC KEY-----"""".stripMargin
 
-    override def publicKey: PublicKeyPEM =
-      """-----BEGIN PUBLIC KEY-----
-        |MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAr4tmm3r20Wd/PbqvP1s2
-        |+QEtvpuRaV8Yq40gjUR8y2Rjxa6dpG2GXHbPfvMs8ct+Lh1GH45x28Rw3Ry53mm+
-        |oAXjyQ86OnDkZ5N8lYbggD4O3w6M6pAvLkhk95AndTrifbIFPNU8PPMO7OyrFAHq
-        |gDsznjPFmTOtCEcN2Z1FpWgchwuYLPL+Wokqltd11nqqzi+bJ9cvSKADYdUAAN5W
-        |Utzdpiy6LbTgSxP7ociU4Tn0g5I6aDZJ7A8Lzo0KSyZYoA485mqcO0GVAdVw9lq4
-        |aOT9v6d+nb4bnNkQVklLQ3fVAvJm+xdDOp9LCNCN48V2pnDOkFV6+U9nV5oyc6XI
-        |2wIDAQAB
-        |-----END PUBLIC KEY-----"""".stripMargin
-
-    override def keyAlg: AsymmetricKeyAlg = AsymmetricKeyAlg.RSA_PSS_Key
+      override def keyAlg: AsymmetricKeyAlg = AsymmetricKeyAlg.RSA_PSS_Key
+    }
   }
-   */
 
   /**
    * Taken from
    * [[https://datatracker.ietf.org/doc/html/draft-ietf-httpbis-message-signatures#appendix-B.1.3 draft 13 Appendix B.1.3]]
    * This did not change from draft 7
    */
-  val `test-key-ecc-p256` = HttpMessageSignaturesV07.`test-key-ecc-p256`
+  val `test-key-ecc-p256`: TestKeyPair = HttpMessageSignaturesV07.`test-key-ecc-p256`
 
   /**
    * Taken from
    * [[https://datatracker.ietf.org/doc/html/draft-ietf-httpbis-message-signatures#appendix-B.1.3 draft 13 Appendix B.1.4]]
    * This did not change from draft 7
    */
-  val `test-key-ed25519` = HttpMessageSignaturesV07.`test-key-ed25519`
+  val `test-key-ed25519`: TestKeyPair = HttpMessageSignaturesV07.`test-key-ed25519`
 
   /**
    * Symmetric key from Appendix B.1.5

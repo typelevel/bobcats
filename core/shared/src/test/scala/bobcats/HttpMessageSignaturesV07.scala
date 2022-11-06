@@ -192,7 +192,7 @@ object HttpMessageSignaturesV07 extends AsymmetricKeyExamples {
         signature = """u9DvOJe17NdTTuIJjKac9WncuAo/1d4gOh6TXMV6AN4hxLdttB\
                       |  SegWS/RcWPZ+lENCtykh6YGl8GJiQrxgibBg==""".rfc8792single,
         keypair = `test-key-ed25519`,
-        signatureAlg = bobcats.AsymmetricKeyAlg.`ed25119-pure`
+        signatureAlg = bobcats.AsymmetricKeyAlg.ed25119
       )
 
   // 2048-bit RSA public and private key pair,

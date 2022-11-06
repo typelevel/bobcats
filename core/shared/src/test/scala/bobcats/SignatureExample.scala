@@ -33,11 +33,12 @@ sealed trait SigExample
  * Collects a number of signatures for a given Key
  */
 case class SignatureExample(
-    description: String,
-    sigtext: SigningString,
-    signature: Signature,
-    keypair: TestKeyPair,
-    signatureAlg: AsymmetricKeyAlg.Signature
+    description: String, // description of the example
+    sigtext: SigningString, // the text to be signed
+    signature: Signature, // the expected sigature
+    keypair: TestKeyPair, // the key pair that can sign and verify the
+    signatureAlg: AsymmetricKeyAlg.Signature,
+    valid: Boolean = true
 ) extends SigExample
 
 case class SymmetricSignatureExample(
@@ -45,7 +46,8 @@ case class SymmetricSignatureExample(
     sigtext: SigningString,
     signature: Signature,
     key: TestSharedKey,
-    signatureAlg: HmacAlgorithm
+    signatureAlg: HmacAlgorithm,
+    valid: Boolean = true
 ) extends SigExample
 
 trait AsymmetricKeyExamples {
