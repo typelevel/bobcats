@@ -38,7 +38,7 @@ ThisBuild / startYear := Some(2021)
 enablePlugins(TypelevelCiReleasePlugin)
 enablePlugins(TypelevelSonatypePlugin)
 
-ThisBuild / crossScalaVersions := Seq("3.2.1", "2.12.17", "2.13.10")
+ThisBuild / crossScalaVersions := Seq("3.2.1", "2.13.10")
 
 ThisBuild / githubWorkflowBuildPreamble ++= Seq(
   WorkflowStep.Use(
