@@ -16,13 +16,11 @@
 
 package bobcats.facade.browser
 
-import scala.annotation.nowarn
 import scala.scalajs.js
 import scala.scalajs.js.annotation.JSGlobal
 
 @js.native
 @JSGlobal
-@nowarn("msg=never used")
 private[bobcats] object crypto extends js.Any {
 
   def subtle: SubtleCrypto = js.native
