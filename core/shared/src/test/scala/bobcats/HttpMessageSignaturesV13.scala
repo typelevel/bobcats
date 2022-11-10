@@ -234,6 +234,10 @@ object HttpMessageSignaturesV13 extends AsymmetricKeyExamples with SymmetricKeyE
   // thanks to sjrd for this tip
   def isJS: Boolean = 1.0.toString() == "1"
 
+  // It turned out all the keys from this version were the same as 07
+  // The only tricky one was test-key-rsa-pss which was the same key
+  // in a different encoding.
+
   /**
    * 2048-bit RSA public and private key pair, given in
    * https://www.ietf.org/archive/id/draft-ietf-httpbis-message-signatures-07.html#appendix-B.1.1
@@ -244,13 +248,11 @@ object HttpMessageSignaturesV13 extends AsymmetricKeyExamples with SymmetricKeyE
   /**
    * 2048-bit RSA public and private key pair taken from
    * [[https://datatracker.ietf.org/doc/html/draft-ietf-httpbis-message-signatures#appendix-B.1.2 draft 13 Appendix B.1.2]]
-   * @panva
-   *   [https://github.com/w3c/webcrypto/issues/330#issuecomment-1304759709 wrote on the
-   *   webcrypto](https://github.com/w3c/webcrypto/issues/330#issuecomment-1304759709) issue:
-   *   "The private key in appendix-B.1.2 is 1.2.840.113549.1.1.10 (id-RSASSA-PSS). WebCryptoAPI
-   *   implementations only generally accept 1.2.840.113549.1.1.1 (rsaEncryption) keys.
-   *   Recommend using rsaEncryption OID PKCS8 PEM or JWK if they ought to be imported as
-   *   CryptoKey reliably."
+   * [[https://github.com/w3c/webcrypto/issues/330#issuecomment-1304759709 wrote on the webcrypto https://github.com/w3c/webcrypto/issues/330#issuecomment-1304759709]]
+   * issue: "The private key in appendix-B.1.2 is 1.2.840.113549.1.1.10 (id-RSASSA-PSS).
+   * WebCryptoAPI implementations only generally accept 1.2.840.113549.1.1.1 (rsaEncryption)
+   * keys. Recommend using rsaEncryption OID PKCS8 PEM or JWK if they ought to be imported as
+   * CryptoKey reliably."
    */
   def `test-key-rsa-pss` = if (isJS)
     HttpMessageSignaturesV07.`test-key-rsa-pss`
@@ -300,6 +302,9 @@ object HttpMessageSignaturesV13 extends AsymmetricKeyExamples with SymmetricKeyE
           |aOT9v6d+nb4bnNkQVklLQ3fVAvJm+xdDOp9LCNCN48V2pnDOkFV6+U9nV5oyc6XI
           |2wIDAQAB
           |-----END PUBLIC KEY-----"""".stripMargin
+
+      override def privateJwkKey: Map[String, String] =
+        HttpMessageSignaturesV07.`test-key-rsa-pss`.privateJwkKey
 
       override def keyAlg: AsymmetricKeyAlg = AsymmetricKeyAlg.RSA_PSS_Key
     }

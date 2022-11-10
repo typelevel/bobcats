@@ -1,9 +1,10 @@
 package bobcats
 
-import sbt._
-import sbt.Keys._
-import scala.language.implicitConversions
 import org.portablescala.sbtplatformdeps.PlatformDepsPlugin.autoImport._
+import sbt.Keys._
+import sbt._
+
+import scala.language.implicitConversions
 
 object Dependencies {
 
@@ -40,6 +41,11 @@ object Dependencies {
      * Needed for Java JWK support (JS Web Crypto API supports it natively)
      * @see
      *   https://connect2id.com/products/nimbus-jose-jwt/examples/jwk-conversion
+     * @see
+     *   https://mvnrepository.com/artifact/com.nimbusds/nimbus-jose-jwt
+     * @see
+     *   https://hackmd.io/@FCN75Uk9TCqMmxSE6vEn5A/rkhCBUP0O for an overview of many jwk crypto
+     *   libs
      */
     object nimbus {
       val jose_jwt = "com.nimbusds" % "nimbus-jose-jwt" % V.nimbus

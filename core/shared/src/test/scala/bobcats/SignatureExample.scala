@@ -104,6 +104,11 @@ trait TestKeyPair extends TestKey {
 
   def keyAlg: AsymmetricKeyAlg
 
+  def privateJwkKey: Map[String, String]
+ 
+  /** The JS platform cares that one does not give it a private key. Nimbus does not */
+  def publicJwkKey: Map[String, String] = privateJwkKey
+
   /**
    * platform limitation descriptions that can be used to filter out tests and also provide some
    * readalbe documentation

@@ -33,12 +33,14 @@ import scala.scalajs.js
 import scala.scalajs.js.Promise
 
 private[bobcats] trait KeyPlatform
-private[bobcats] trait PublicKeyPlatform
-private[bobcats] trait PrivateKeyPlatform {
+private[bobcats] trait AsymetricKeyPlatform extends KeyPlatform {
   def toWebCryptoKey[F[_]](signature: AsymmetricKeyAlg.Signature)(
       implicit F0: Async[F]
   ): F[org.scalajs.dom.CryptoKey]
 }
+private[bobcats] trait PublicKeyPlatform extends AsymetricKeyPlatform
+private[bobcats] trait PrivateKeyPlatform extends AsymetricKeyPlatform
+
 private[bobcats] trait SecretKeyPlatform
 
 private[bobcats] trait SecretKeySpecPlatform[+A <: Algorithm]
@@ -62,7 +64,31 @@ private[bobcats] trait PKCS8KeySpecPlatform[+A <: AsymmetricKeyAlg] extends Priv
     })
 }
 
-private[bobcats] trait SPKIKeySpecPlatform[+A <: AsymmetricKeyAlg] {
+private[bobcats] trait JWKPrivateKeySpecPlatform[+A <: AsymmetricKeyAlg]
+    extends PrivateKeyPlatform {
+  self: JWKPrivateKeySpec[A] =>
+  import scala.scalajs.js.JSConverters._
+
+  // A JS Web Crypto Key combines the public key and signature algorithms, unlike Java
+  def toWebCryptoKey[F[_]](signature: AsymmetricKeyAlg.Signature)(
+      implicit F0: Async[F]
+  ): F[org.scalajs.dom.CryptoKey] = {
+    F0.fromPromise(F0.delay[Promise[org.scalajs.dom.CryptoKey]] {
+      val jwk = key.toJSDictionary.asInstanceOf[org.scalajs.dom.JsonWebKey]
+      subtle.importKey(
+        dom.KeyFormat.jwk,
+        jwk,
+        JSKeySpec.importAlgorithm(algorithm, signature),
+        true,
+        js.Array(
+          dom.KeyUsage.sign
+        ) // private keys sign (and cna also encrypt) -- todo how to set encryption?
+      )
+    })
+  }
+}
+
+private[bobcats] trait SPKIKeySpecPlatform[+A <: AsymmetricKeyAlg] extends PublicKeyPlatform {
   self: SPKIKeySpec[A] =>
 
   def toWebCryptoKey[F[_]](signature: AsymmetricKeyAlg.Signature)(
@@ -77,6 +103,27 @@ private[bobcats] trait SPKIKeySpecPlatform[+A <: AsymmetricKeyAlg] {
         js.Array(dom.KeyUsage.verify) // public keys (SPKI) verify
       )
     })
+}
+
+private[bobcats] trait JWKPublicKeySpecPlatform[+A <: AsymmetricKeyAlg]
+    extends PublicKeyPlatform {
+  self: JWKPublicKeySpec[A] =>
+
+  import scala.scalajs.js.JSConverters._
+  def toWebCryptoKey[F[_]](signature: AsymmetricKeyAlg.Signature)(
+      implicit F0: Async[F]
+  ): F[org.scalajs.dom.CryptoKey] = {
+    val jwk = key.toJSDictionary.asInstanceOf[org.scalajs.dom.JsonWebKey]
+    F0.fromPromise(F0.delay {
+      subtle.importKey(
+        dom.KeyFormat.jwk,
+        jwk,
+        JSKeySpec.importAlgorithm(algorithm, signature),
+        true, // todo: do we always want extractable?
+        js.Array(dom.KeyUsage.verify) // public keys (SPKI) verify
+      )
+    })
+  }
 }
 
 object JSKeySpec {

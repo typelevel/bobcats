@@ -97,6 +97,8 @@ sealed trait AsymmetricKeyAlg extends Algorithm
 
 object AsymmetricKeyAlg {
 
+  // todo: make the Signature a dependent type on the Algorithm, so that one can make
+  // sure they are correctly tied together
   sealed trait Signature extends Algorithm with SignaturePlatform {
     def hash: HashAlgorithm
   }
