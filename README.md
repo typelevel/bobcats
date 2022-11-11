@@ -4,7 +4,7 @@ Cross-platform cryptography (JVM, Node.js, browsers) for the Cats ecosystem.
 To learn more about the concept please see [http4s/http4s#5044](https://github.com/http4s/http4s/issues/5044).
 
 ```scala
-libraryDependencies += "net.bblfish.crypto" %% "bobcats" % "0.2-${hash}-SNAPSHOT" 
+libraryDependencies += "net.bblfish.crypto" %% "bobcats" % "0.3-${hash}-SNAPSHOT" 
 ```
 
 where hash is one of the hashes published in the sonatype [net.bblfish.crypto](https://oss.sonatype.org/content/repositories/snapshots/net/bblfish/crypto/) snapshot repo.
