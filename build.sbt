@@ -14,14 +14,11 @@
  * limitations under the License.
  */
 
-import org.openqa.selenium.WebDriver
-import org.openqa.selenium.chrome.{ChromeDriver, ChromeOptions}
-import org.openqa.selenium.firefox.{FirefoxOptions, FirefoxProfile}
-import org.openqa.selenium.remote.server.{DriverFactory, DriverProvider}
-import org.scalajs.jsenv.selenium.SeleniumJSEnv
-
 import JSEnv._
 import bobcats.{Dependencies => D}
+import org.openqa.selenium.chrome.ChromeOptions
+import org.openqa.selenium.firefox.FirefoxOptions
+import org.scalajs.jsenv.selenium.SeleniumJSEnv
 
 name := "bobcats"
 
@@ -52,7 +49,7 @@ ThisBuild / githubWorkflowBuildPreamble ++= Seq(
 
 ThisBuild / tlJdkRelease := Some(9)
 
-ThisBuild / githubWorkflowJavaVersions := Seq(JavaSpec.temurin("17"), JavaSpec.temurin("11"))
+ThisBuild / githubWorkflowJavaVersions := Seq(JavaSpec.temurin("17"), JavaSpec.temurin("15"))
 
 val jsenvs = List(NodeJS, Chrome, Firefox).map(_.toString)
 ThisBuild / githubWorkflowBuildMatrixAdditions += "jsenv" -> jsenvs
