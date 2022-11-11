@@ -14,17 +14,15 @@
  * limitations under the License.
  */
 
-import org.openqa.selenium.WebDriver
-import org.openqa.selenium.chrome.{ChromeDriver, ChromeOptions}
-import org.openqa.selenium.firefox.{FirefoxOptions, FirefoxProfile}
-import org.openqa.selenium.remote.server.{DriverFactory, DriverProvider}
-import org.scalajs.jsenv.selenium.SeleniumJSEnv
-
 import JSEnv._
+import bobcats.{Dependencies => D}
+import org.openqa.selenium.chrome.ChromeOptions
+import org.openqa.selenium.firefox.FirefoxOptions
+import org.scalajs.jsenv.selenium.SeleniumJSEnv
 
 name := "bobcats"
 
-ThisBuild / tlBaseVersion := "0.2"
+ThisBuild / tlBaseVersion := "0.3"
 ThisBuild / tlUntaggedAreSnapshots := true
 
 // ThisBuild / organization := "org.typelevel"
@@ -38,7 +36,7 @@ ThisBuild / startYear := Some(2021)
 enablePlugins(TypelevelCiReleasePlugin)
 enablePlugins(TypelevelSonatypePlugin)
 
-ThisBuild / crossScalaVersions := Seq("3.1.3", "2.12.17", "2.13.8")
+ThisBuild / crossScalaVersions := Seq("3.2.1", "2.13.10")
 
 ThisBuild / githubWorkflowBuildPreamble ++= Seq(
   WorkflowStep.Use(
@@ -50,8 +48,10 @@ ThisBuild / githubWorkflowBuildPreamble ++= Seq(
 )
 
 ThisBuild / tlJdkRelease := Some(9)
-
-ThisBuild / githubWorkflowJavaVersions := Seq(JavaSpec.temurin("17"), JavaSpec.temurin("11"))
+// links to java  https://github.com/actions/setup-java
+// list of jdks for scala  https://github.com/typelevel/jdk-index
+// note jdk 11 is out because of ED25519 support (send in patch using libs like google tink if earlier versions needed)
+ThisBuild / githubWorkflowJavaVersions := Seq(JavaSpec.temurin("19"), JavaSpec.temurin("17"))
 
 val jsenvs = List(NodeJS, Chrome, Firefox).map(_.toString)
 ThisBuild / githubWorkflowBuildMatrixAdditions += "jsenv" -> jsenvs
@@ -89,16 +89,6 @@ ThisBuild / Test / jsEnv := {
   }
 }
 
-val catsVersion = "2.8.0"
-val catsEffectVersion = "3.3.14"
-val scodecBitsVersion = "1.1.34"
-val munitVersion = "0.7.29"
-val munitCEVersion = "1.0.7"
-val disciplineMUnitVersion = "1.0.9"
-val bouncyVersion = "1.72"
-val domVersion = "2.3.0"
-val nimbusJWTVersion = "9.25.6"
-
 lazy val root = tlCrossRootProject.aggregate(core, testRuntime)
 
 lazy val core = crossProject(JSPlatform, JVMPlatform)
@@ -107,14 +97,14 @@ lazy val core = crossProject(JSPlatform, JVMPlatform)
     name := "bobcats",
     // sonatypeCredentialHost := "s01.oss.sonatype.org", // TODO remove
     libraryDependencies ++= Seq(
-      "org.typelevel" %%% "cats-core" % catsVersion,
-      "org.typelevel" %%% "cats-effect-kernel" % catsEffectVersion,
-      "org.scodec" %%% "scodec-bits" % scodecBitsVersion,
-      "org.scalameta" %%% "munit" % munitVersion % Test,
-      "org.typelevel" %%% "cats-laws" % catsVersion % Test,
-      "org.typelevel" %%% "cats-effect" % catsEffectVersion % Test,
-      "org.typelevel" %%% "discipline-munit" % disciplineMUnitVersion % Test,
-      "org.typelevel" %%% "munit-cats-effect-3" % munitCEVersion % Test
+      D.scala.cats.value,
+      D.scala.catsEffect.value,
+      D.scala.scodec.value,
+      D.tests.munit.value,
+      D.tests.catsLaws.value,
+      D.scala.catsEffect.value,
+      D.tests.discipline.value,
+      D.tests.munit_cats.value
     ),
     Test / packageBin / publishArtifact := true,
     Test / packageDoc / publishArtifact := false,
@@ -122,15 +112,15 @@ lazy val core = crossProject(JSPlatform, JVMPlatform)
   )
   .jvmSettings(
     libraryDependencies ++= Seq(
-      "org.bouncycastle" % "bcpkix-jdk15to18" % bouncyVersion % Test,
-      "org.bouncycastle" % "bcprov-jdk15to18" % bouncyVersion % Test,
-      "org.bouncycastle" % "bctls-jdk15to18" % bouncyVersion % Test,
-      "com.nimbusds" % "nimbus-jose-jwt" % nimbusJWTVersion % Test
+      D.jdk.bouncy.pkix,
+      D.jdk.bouncy.prov,
+      D.jdk.bouncy.tls,
+      D.jdk.nimbus.jose_jwt
     )
   )
-  .jsSettings(
-    libraryDependencies += "org.scala-js" %%% "scalajs-dom" % domVersion
-  )
+  .jsSettings(libraryDependencies ++= Seq(
+    D.scalajs.dom.value
+  ))
   .dependsOn(testRuntime % Test)
 
 lazy val testRuntime = crossProject(JSPlatform, JVMPlatform)

@@ -52,7 +52,8 @@ trait SignerSuite extends CatsEffectSuite {
   )(implicit ct: ClassTag[F[Nothing]]): Unit = {
     val prototype = typedSignatures.head
     val bytesV = ByteVector.fromBase64Descriptive(prototype.key.sharedKey)
-    test(s"${typedSignatures.head.key.description} build key") {
+    test(
+      s"Symmetric ${typedSignatures.head.key.description} in ${typedSignatures.head.description} build key") {
       assert(bytesV.isRight, bytesV)
     }
     val keyF = Hmac[F].importKey(bytesV.toOption.get, prototype.signatureAlg)
@@ -72,18 +73,13 @@ trait SignerSuite extends CatsEffectSuite {
   }
 
   def testSigner[F[_]: Signer: Verifier: Sync](
+      publicKey: PublicKey[_],
+      privateKey: PrivateKey[_],
+      signatureAlg: AsymmetricKeyAlg.Signature,
       typedSignatures: Seq[SignatureExample] // these are non-empty lists
   )(implicit ct: ClassTag[F[Nothing]]): Unit = {
-    val prototype = typedSignatures.head
-    val keypair: Try[(SPKIKeySpec[AsymmetricKeyAlg], PKCS8KeySpec[AsymmetricKeyAlg])] =
-      extractKeys(prototype)
-    test(s"${typedSignatures.head.keypair.description}: build key " +
-      s"spec for following ${typedSignatures.size} tests with ${typedSignatures.head.signatureAlg}") {
-      assert(keypair.isSuccess, keypair.toString)
-    }
-    val (pubKey, privKey) = keypair.get
-    val signerF = Signer[F].build(privKey, prototype.signatureAlg)
-    val verifierF = Verifier[F].build(pubKey, prototype.signatureAlg)
+    val signerF = Signer[F].build(privateKey, signatureAlg)
+    val verifierF = Verifier[F].build(publicKey, signatureAlg)
 
     def signatureTxtF(signingStr: String): F[ByteVector] =
       implicitly[MonadErr[F]].fromEither(ByteVector.encodeAscii(signingStr))
@@ -93,8 +89,8 @@ trait SignerSuite extends CatsEffectSuite {
     //    not sure how to do that with munit
     typedSignatures.foreach { sigTest =>
       test(
-        s"${sigTest.description} with ${ct.runtimeClass.getSimpleName()}: " +
-          "can verify generated signature") {
+        s"${sigTest.keypair.description} ${sigTest.signatureAlg} ${ct.runtimeClass.getSimpleName()}: verify generated ex."
+      ) {
         for {
           sign <- signerF
           verify <- verifierF
@@ -111,7 +107,7 @@ trait SignerSuite extends CatsEffectSuite {
       }
 
       test(
-        s"${sigTest.description} with ${ct.runtimeClass.getSimpleName()}: matches expected value") {
+        s"${sigTest.keypair.description} ${sigTest.signatureAlg} ${ct.runtimeClass.getSimpleName()}: matches expected in ${sigTest.description}") {
         for {
           verify <- verifierF
           sigTextBytes <- signatureTxtF(sigTest.sigtext)
@@ -138,7 +134,7 @@ trait SignerSuite extends CatsEffectSuite {
 
   }
 
-  def extractKeys(ex: SignatureExample)
+  def extractKeysPem(ex: SignatureExample)
       : Try[(SPKIKeySpec[AsymmetricKeyAlg], PKCS8KeySpec[AsymmetricKeyAlg])] =
     for {
       pub <- pemutils.getPublicKeySpec(ex.keypair.publicPk8Key, ex.keypair.keyAlg)
@@ -154,7 +150,26 @@ trait SignerSuite extends CatsEffectSuite {
       tests: Seq[SignatureExample]
   )(implicit ct: ClassTag[F[Nothing]]): Unit = {
     tests.groupBy(ex => (ex.keypair.publicKey, ex.signatureAlg)).values.foreach { sigTests =>
-      testSigner[F](sigTests)
+      val prototype = sigTests.head
+      val keypair: Try[(SPKIKeySpec[AsymmetricKeyAlg], PKCS8KeySpec[AsymmetricKeyAlg])] =
+        extractKeysPem(prototype)
+      test(s"${sigTests.head.keypair.description}: build PEM based keys " +
+        s"for following ${sigTests.size} tests with ${sigTests.head.signatureAlg}") {
+        assert(keypair.isSuccess, keypair.toString)
+      }
+      val (pubKey, privKey) = keypair.get
+      testSigner[F](pubKey, privKey, prototype.signatureAlg, sigTests)
+      val pubJwk = JWKPublicKeySpec(prototype.keypair.publicJwkKey, prototype.keypair.keyAlg)
+      val privJwk = JWKPrivateKeySpec(prototype.keypair.privateJwkKey, prototype.keypair.keyAlg)
+      test(s"${sigTests.head.keypair.description}: build JWK based keys " +
+        s"for following ${sigTests.size} tests with ${sigTests.head.signatureAlg})") {
+        assert(pubJwk != null)
+        assert(privJwk != null)
+        // see if one can have tests inside tests...
+      }
+      // is that going to work to just pass the same key in both?
+      testSigner[F](pubJwk, privJwk, prototype.signatureAlg, sigTests)
+
     }
   }
 

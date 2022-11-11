@@ -29,7 +29,7 @@ private[bobcats] trait VerifierCompanionPlatform {
     new UnsealedVerifier[F] {
       import Verifier.{Signature, SigningString}
       override def build(
-          spec: SPKIKeySpec[_],
+          spec: bobcats.PublicKey[_],
           sigType: AsymmetricKeyAlg.Signature
       ): F[(SigningString, Signature) => F[Boolean]] =
         // todo: if one is to catchNonFatal one should have exceptions that

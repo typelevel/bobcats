@@ -17,10 +17,8 @@
 package bobcats.facade.node
 
 import scala.scalajs.js
-import scala.annotation.nowarn
 
 @js.native
-@nowarn("msg=never used")
 private[bobcats] trait Hmac extends js.Any {
 
   def digest(): js.typedarray.Uint8Array = js.native

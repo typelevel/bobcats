@@ -19,7 +19,7 @@ package bobcats
 import bobcats.util.{BouncyJavaPEMUtils, PEMUtils}
 import cats.effect.{MonadCancel, Sync, SyncIO}
 
-class JavaSignerSuite07 extends SignerSuite {
+class JavaSignerSuiteV07 extends SignerSuite {
 
   override def pemutils: PEMUtils = BouncyJavaPEMUtils
 

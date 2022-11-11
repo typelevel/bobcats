@@ -36,7 +36,7 @@ import bobcats.util.{PEMUtils, WebCryptoPEMUtils}
 import cats.effect.IO
 import cats.effect.kernel.{Async, Sync}
 
-class JSSignerSuite07 extends SignerSuite {
+class JSSignerSuiteV07 extends SignerSuite {
   override implicit val pemutils: PEMUtils = WebCryptoPEMUtils
 
   implicit val synio: Async[IO] = IO.asyncForIO
@@ -60,7 +60,7 @@ class JSSignerSuite07 extends SignerSuite {
 
 }
 
-class JSSignerSuite13 extends SignerSuite {
+class JSSignerSuiteV13 extends SignerSuite {
   override implicit val pemutils: PEMUtils = WebCryptoPEMUtils
 
   implicit val synio: Async[IO] = IO.asyncForIO

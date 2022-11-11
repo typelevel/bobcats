@@ -33,7 +33,7 @@ sealed trait Verifier[F[_]] extends VerifierPlatform[F] {
    * verifier using the spec (e.g. a mangled certificate) and in the verification of a signature.
    */
   def build(
-      spec: SPKIKeySpec[_],
+      spec: PublicKey[_],
       sig: AsymmetricKeyAlg.Signature
   ): F[(SigningString, Signature) => F[Boolean]]
 }

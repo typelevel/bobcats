@@ -28,7 +28,7 @@ private[bobcats] trait VerifierCompanionPlatform {
     new UnsealedVerifier[F] {
       import Verifier.{Signature, SigningString}
       override def build(
-          spec: SPKIKeySpec[_],
+          spec: PublicKey[_],
           sig: AsymmetricKeyAlg.Signature
       ): F[(SigningString, Signature) => F[Boolean]] =
         // todo: optimise so that key is only calculated once
