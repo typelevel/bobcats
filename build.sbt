@@ -49,7 +49,7 @@ ThisBuild / githubWorkflowBuildPreamble ++= Seq(
 
 ThisBuild / tlJdkRelease := Some(9)
 
-ThisBuild / githubWorkflowJavaVersions := Seq(JavaSpec.temurin("17"), JavaSpec.temurin("15"))
+ThisBuild / githubWorkflowJavaVersions := Seq(JavaSpec.temurin("17"), JavaSpec.oracle("15"))
 
 val jsenvs = List(NodeJS, Chrome, Firefox).map(_.toString)
 ThisBuild / githubWorkflowBuildMatrixAdditions += "jsenv" -> jsenvs
