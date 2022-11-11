@@ -48,8 +48,10 @@ ThisBuild / githubWorkflowBuildPreamble ++= Seq(
 )
 
 ThisBuild / tlJdkRelease := Some(9)
-// links to distributions https://github.com/actions/setup-java
-ThisBuild / githubWorkflowJavaVersions := Seq(JavaSpec.temurin("17"), JavaSpec.corretto("15"))
+// links to java  https://github.com/actions/setup-java
+// list of jdks for scala  https://github.com/typelevel/jdk-index
+// note jdk 11 is out because of ED25519 support (send in patch using libs like google tink if earlier versions needed)
+ThisBuild / githubWorkflowJavaVersions := Seq(JavaSpec.temurin("19"), JavaSpec.temurin("17"))
 
 val jsenvs = List(NodeJS, Chrome, Firefox).map(_.toString)
 ThisBuild / githubWorkflowBuildMatrixAdditions += "jsenv" -> jsenvs
