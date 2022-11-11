@@ -494,7 +494,8 @@ object HttpMessageSignaturesV07 extends AsymmetricKeyExamples {
     /**
      * The JS platform cares that one does not give it a private key. Nimbus does not
      */
-    override def publicJwkKey: Map[String, String] = privateJwkKey.view.filterKeys(_ != "d").toMap
+    override def publicJwkKey: Map[String, String] =
+      privateJwkKey.view.filterKeys(_ != "d").toMap
 
     override def privateJwkKey: Map[String, String] = Map(
       "kty" -> "OKP",

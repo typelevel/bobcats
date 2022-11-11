@@ -16,12 +16,10 @@
 
 package bobcats
 
-import com.nimbusds.jose.util.Base64URL
-
 import java.math.BigInteger
 import java.security
-import java.security.{KeyFactory, spec}
-import java.security.spec.{EdECPrivateKeySpec, EdECPublicKeySpec, NamedParameterSpec}
+import java.security.KeyFactory
+import java.security.spec.{EdECPublicKeySpec, NamedParameterSpec}
 import javax.crypto
 
 private[bobcats] trait KeyPlatform {}
@@ -82,7 +80,7 @@ private[bobcats] trait JWKPublicKeySpecPlatform[+A <: AsymmetricKeyAlg]
     pubJWK.getKeyType.getValue match {
       case "EC" => pubJWK.toECKey.toPublicKey
       case "RSA" => pubJWK.toRSAKey.toPublicKey
-      case "OKP" => {   //Ed25519
+      case "OKP" => { // Ed25519
         // jwk.toOctetKeyPair.toPublicKey
         // that will throw an exception as nimbus have not yet provided an implementation
         // https://bitbucket.org/connect2id/nimbus-jose-jwt/issues/359/add-export-to-java-keypair-from
@@ -90,11 +88,11 @@ private[bobcats] trait JWKPublicKeySpecPlatform[+A <: AsymmetricKeyAlg]
         val okp = pubJWK.toOctetKeyPair
         val publicKeyBytes: Array[Byte] = okp.getX.decode()
         // Byte array is in little endian encoding// Byte array is in little endian encoding
-        
-        //https://www.rfc-editor.org/rfc/rfc8032.html#section-3.1
+
+        // https://www.rfc-editor.org/rfc/rfc8032.html#section-3.1
         // The most significant bit in final octet indicates if X is negative or not:
-        val b = publicKeyBytes.length
-        val xBit = (publicKeyBytes(b - 1) & 0x80) ne 0
+        val b: Int = publicKeyBytes.length
+        val xBit: Boolean = (publicKeyBytes(b - 1) & 0x80) != 0
 
         // Recover y value by clearing x-bit.
         publicKeyBytes(b - 1) = (publicKeyBytes(b - 1) & 0x7f).asInstanceOf[Byte]
@@ -102,7 +100,7 @@ private[bobcats] trait JWKPublicKeySpecPlatform[+A <: AsymmetricKeyAlg]
         // Switch to big endian encoding
         val publicKeyBytesBE = new Array[Byte](b)
         var i = 0
-        while ( {i < b}) {
+        while ({ i < b }) {
           publicKeyBytesBE(i) = publicKeyBytes(b - 1 - i)
 
           i += 1
@@ -110,7 +108,9 @@ private[bobcats] trait JWKPublicKeySpecPlatform[+A <: AsymmetricKeyAlg]
 
         val y = new BigInteger(1, publicKeyBytesBE)
         // Load parameters from Ed25519
-        val pubSpec = new EdECPublicKeySpec(NamedParameterSpec.ED25519, new java.security.spec.EdECPoint(xBit, y))
+        val pubSpec = new EdECPublicKeySpec(
+          NamedParameterSpec.ED25519,
+          new java.security.spec.EdECPoint(xBit, y))
 
         // Generate an EdDSA Public Key from the point on Ed25519
         val kf = KeyFactory.getInstance("EdDSA")
@@ -132,13 +132,15 @@ private[bobcats] trait JWKPrivateKeySpecPlatform[+A <: AsymmetricKeyAlg]
     jwk.getKeyType.getValue match {
       case "EC" => jwk.toECKey.toPrivateKey
       case "RSA" => jwk.toRSAKey.toPrivateKey
-      case "OKP" => {//Ed25519
+      case "OKP" => { // Ed25519
         // jwk.toOctetKeyPair.toPrivateKey
         // that will throw an exception as nimbus have not yet provided an implementation
         // https://bitbucket.org/connect2id/nimbus-jose-jwt/issues/359/add-export-to-java-keypair-from
         // but we can use https://curity.io/resources/learn/jwt-signatures/ on jdk15+
-        //todo: map the other NamedParameterSpec types
-        val privSpec = new java.security.spec.EdECPrivateKeySpec(java.security.spec.NamedParameterSpec.ED25519, jwk.toOctetKeyPair.getDecodedD)
+        // todo: map the other NamedParameterSpec types
+        val privSpec = new java.security.spec.EdECPrivateKeySpec(
+          java.security.spec.NamedParameterSpec.ED25519,
+          jwk.toOctetKeyPair.getDecodedD)
         val kf = KeyFactory.getInstance("EdDSA")
         kf.generatePrivate(privSpec)
       }
