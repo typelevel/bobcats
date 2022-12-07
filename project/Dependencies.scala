@@ -9,8 +9,8 @@ import scala.language.implicitConversions
 object Dependencies {
 
   object Versions {
-    val cats = "2.8.0"
-    val catsEffect = "3.3.14"
+    val cats = "2.9.0"
+    val catsEffect = "3.4.2"
     val scodecBits = "1.1.34"
     val munit = "0.7.29"
     val munitCE = "1.0.7"
