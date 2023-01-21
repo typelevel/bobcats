@@ -36,6 +36,7 @@ object HttpMessageSignaturesV13 extends AsymmetricKeyExamples with SymmetricKeyE
   def sigExamples: Seq[SignatureExample] = Seq(
     `§2.4_Example`,
     `§2.5_Example`,
+    `§4.3_Multiple_Signatures`,
     `Appendix_B.2.2`,
     `Appendix_B.2.3`,
     `Appendix_B.2.4`,
@@ -91,6 +92,27 @@ object HttpMessageSignaturesV13 extends AsymmetricKeyExamples with SymmetricKeyE
         keypair = `test-key-rsa-pss`,
         signatureAlg = AsymmetricKeyAlg.`rsa-pss-sha512`
       )
+      
+  object `§4.3_Multiple_Signatures` extends SignatureExample(
+    description = "4.3 multiple signatures example",
+    sigtext = """\
+       |"signature";key="sig1": :hNojB+wWw4A7SYF3qK1S01Y4UP5i2JZFYa2WOlMB4N\
+       |  p5iWmJSO0bDe2hrYRbcIWqVAFjuuCBRsB7lYQJkzbb6g==:
+       |"@authority": origin.host.internal.example
+       |"forwarded": for=192.0.2.123
+       |"@signature-params": ("signature";key="sig1" "@authority" \
+       |  "forwarded");created=1618884480;keyid="test-key-rsa"\
+       |  ;alg="rsa-v1_5-sha256";expires=1618884540""".rfc8792single,
+    signature = """\
+       YvYVO11F+Q+N4WZNeBdjFKluswwE3vQ4cTXpBwEiMz2hwu0J+wSJLRhHlIZ1N83epfn\
+       KDxY9cbNaVlbtr2UOLkw5O5Q5M5yrjx3s1mgDOsV7fuItD6iDyNISCiKRuevl+M+TyY\
+       Bo10ubG83As5CeeoUdmrtI4G6QX7RqEeX0Xj/CYofHljr/dVzARxskjHEQbTztYVg4W\
+       D+LWo1zjx9w5fw26tsOMagfXLpDb4zb4/lgpgyNKoXFwG7c89KId5q+0BC+kryWuA35\
+       ZcQGaRPAz/NqzeKq/c7p7b/fmHS71fy1jOaFgWFmD+Z77bJLO8AVKuF0y2fpL3KUYHy\
+       ITQHOsA==""".rfc8792single,
+    keypair = `test-key-rsa`,
+    signatureAlg = AsymmetricKeyAlg.`rsa-v1_5-sha256`
+  )
 
   object `Appendix_B.2.2`
       extends SignatureExample(
