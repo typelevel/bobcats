@@ -137,6 +137,6 @@ private[bobcats] trait HmacCompanionPlatform {
 
       override def importKey[A <: HmacAlgorithm](
           key: ByteVector,
-          algorithm: A): F[SecretKey[A]] = ???
+          algorithm: A): F[SecretKey[A]] = F.pure(SecretKeySpec(key, algorithm))
     }
 }
