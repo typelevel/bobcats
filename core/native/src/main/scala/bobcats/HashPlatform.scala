@@ -16,6 +16,8 @@
 
 package bobcats
 
+import java.security.GeneralSecurityException
+
 import cats.effect.kernel.Async
 import scodec.bits.ByteVector
 import scalanative.unsafe._
@@ -25,27 +27,32 @@ import evp._
 private[bobcats] trait HashCompanionPlatform {
   implicit def forAsync[F[_]](implicit F: Async[F]): Hash[F] =
     new UnsealedHash[F] {
-      override def digest(algorithm: HashAlgorithm, data: ByteVector): F[ByteVector] =
+      override def digest(algorithm: HashAlgorithm, data: ByteVector): F[ByteVector] = {
+
+        import HashAlgorithm._
+
+        val digest = algorithm match {
+          case MD5 => EVP_md5()
+          case SHA1 => EVP_sha1()
+          case SHA256 => EVP_sha256()
+          case SHA512 => EVP_sha512()
+        }
+
         F.catchNonFatal {
           Zone { implicit z =>
-            val str = toCString(algorithm.toStringNative)
-            val digest = EVP_get_digestbyname(str)
-            if (digest == null) {
-              throw new EvpException("Unknown message digest")
-            }
             val ctx = EVP_MD_CTX_new()
+            val d = data.toPtr
             try {
-              val d = data.toPtr
-              if (EVP_DigestInit_ex(ctx, digest, null) != 1) {
-                throw new EvpException("Message digest initialization failed")
-              }
-              if (EVP_DigestUpdate(ctx, d, data.size.toULong) != 1) {
-                throw new EvpException("Message digest update failed")
-              }
               val md = stackalloc[CUnsignedChar](EVP_MAX_MD_SIZE)
               val s = stackalloc[CInt](1)
+              if (EVP_DigestInit_ex(ctx, digest, null) != 1) {
+                throw new GeneralSecurityException("EVP_DigestInit_ex")
+              }
+              if (EVP_DigestUpdate(ctx, d, data.size.toULong) != 1) {
+                throw new GeneralSecurityException("EVP_DigestUpdate")
+              }
               if (EVP_DigestFinal_ex(ctx, md, s) != 1) {
-                throw new EvpException("Message digest finalization failed")
+                throw new GeneralSecurityException("EVP_DigestFinal_ex")
               }
               val bytes = ByteVector.fromPtr(md.asInstanceOf[Ptr[Byte]], s(0).toLong)
               bytes
@@ -54,5 +61,6 @@ private[bobcats] trait HashCompanionPlatform {
             }
           }
         }
+      }
     }
 }

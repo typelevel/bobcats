@@ -56,6 +56,26 @@ private[bobcats] object evp {
   def EVP_cleanup(): Unit = extern
 
   /**
+   * See [[https://www.openssl.org/docs/man3.1/man3/EVP_md5.html]]
+   */
+  def EVP_md5(): Ptr[EVD_MD] = extern
+
+  /**
+   * See [[https://www.openssl.org/docs/man3.1/man3/EVP_sha1.html]]
+   */
+  def EVP_sha1(): Ptr[EVD_MD] = extern
+
+  /**
+   * See [[https://www.openssl.org/docs/man3.1/man3/EVP_sha256.html]]
+   */
+  def EVP_sha256(): Ptr[EVD_MD] = extern
+
+  /**
+   * See [[https://www.openssl.org/docs/man3.1/man3/EVP_sha512.html]]
+   */
+  def EVP_sha512(): Ptr[EVD_MD] = extern
+
+  /**
    * See [[https://www.openssl.org/docs/man3.1/man3/EVP_DigestInit_ex.html]]
    */
   def EVP_DigestInit_ex(ctx: Ptr[EVD_MD_CTX], `type`: Ptr[EVD_MD], engine: Ptr[ENGINE]): CInt =
