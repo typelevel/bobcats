@@ -20,6 +20,7 @@ sealed trait Algorithm {
   private[bobcats] def toStringJava: String
   private[bobcats] def toStringNodeJS: String
   private[bobcats] def toStringWebCrypto: String
+  private[bobcats] def toStringNative: String
 }
 
 sealed trait HashAlgorithm extends Algorithm
@@ -30,24 +31,28 @@ object HashAlgorithm {
     private[bobcats] override def toStringNodeJS: String = "md5"
     private[bobcats] override def toStringWebCrypto: String =
       throw new UnsupportedOperationException
+    private[bobcats] override def toStringNative: String = "MD5"
   }
 
   case object SHA1 extends HashAlgorithm {
     private[bobcats] override def toStringJava: String = "SHA-1"
     private[bobcats] override def toStringNodeJS: String = "sha1"
     private[bobcats] override def toStringWebCrypto: String = "SHA-1"
+    private[bobcats] override def toStringNative: String = "SHA1"
   }
 
   case object SHA256 extends HashAlgorithm {
     private[bobcats] override def toStringJava: String = "SHA-256"
     private[bobcats] override def toStringNodeJS: String = "sha256"
     private[bobcats] override def toStringWebCrypto: String = "SHA-256"
+    private[bobcats] override def toStringNative: String = "SHA256"
   }
 
   case object SHA512 extends HashAlgorithm {
     private[bobcats] override def toStringJava: String = "SHA-512"
     private[bobcats] override def toStringNodeJS: String = "sha512"
     private[bobcats] override def toStringWebCrypto: String = "SHA-512"
+    private[bobcats] override def toStringNative: String = "SHA512"
   }
 }
 
@@ -68,6 +73,7 @@ object HmacAlgorithm {
     private[bobcats] override def toStringJava: String = "HmacSHA1"
     private[bobcats] override def toStringNodeJS: String = "sha1"
     private[bobcats] override def toStringWebCrypto: String = "SHA-1"
+    private[bobcats] override def toStringNative: String = "SHA1"
     private[bobcats] override def minimumKeyLength: Int = 20
   }
 
@@ -75,6 +81,7 @@ object HmacAlgorithm {
     private[bobcats] override def toStringJava: String = "HmacSHA256"
     private[bobcats] override def toStringNodeJS: String = "sha256"
     private[bobcats] override def toStringWebCrypto: String = "SHA-256"
+    private[bobcats] override def toStringNative: String = "SHA256"
     private[bobcats] override def minimumKeyLength: Int = 32
   }
 
@@ -82,6 +89,7 @@ object HmacAlgorithm {
     private[bobcats] override def toStringJava: String = "HmacSHA512"
     private[bobcats] override def toStringNodeJS: String = "sha512"
     private[bobcats] override def toStringWebCrypto: String = "SHA-512"
+    private[bobcats] override def toStringNative: String = "SHA512"
     private[bobcats] override def minimumKeyLength: Int = 64
   }
 }
