@@ -96,7 +96,9 @@ private[bobcats] trait HmacCompanionPlatform {
         }
       }
 
-      /** See [[https://www.openssl.org/docs/man3.0/man7/EVP_RAND-CTR-DRBG.html]] */
+      /**
+       * See [[https://www.openssl.org/docs/man3.0/man7/EVP_RAND-CTR-DRBG.html]]
+       */
       override def generateKey[A <: HmacAlgorithm](algorithm: A): F[SecretKey[A]] = {
         F.defer {
           // See NIST SP 800-90A

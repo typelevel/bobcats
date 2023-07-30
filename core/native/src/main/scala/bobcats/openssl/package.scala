@@ -23,7 +23,9 @@ package object openssl {
 
   private[bobcats] type OSSL_LIB_CTX
 
-  /** See [[https://www.openssl.org/docs/man3.1/man3/OSSL_PARAM.html]] */
+  /**
+   * See [[https://www.openssl.org/docs/man3.1/man3/OSSL_PARAM.html]]
+   */
   private[bobcats] type OSSL_PARAM = CStruct5[CString, CUnsignedChar, Ptr[Byte], CSize, CSize]
   private[bobcats] object OSSL_PARAM {
 

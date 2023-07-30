@@ -36,13 +36,20 @@ private[bobcats] object params {
    */
   final val OSSL_PARAM_UNMODIFIED: CSize = -1.toULong
 
-  @alwaysinline def OSSL_PARAM_END(param: OSSL_PARAM): Unit = OSSL_PARAM.build(param, null, 0.toUByte, null, 0.toULong, 0.toULong)
+  @alwaysinline def OSSL_PARAM_END(param: OSSL_PARAM): Unit =
+    OSSL_PARAM.build(param, null, 0.toUByte, null, 0.toULong, 0.toULong)
   @alwaysinline def OSSL_PARAM_octet_string(
       param: OSSL_PARAM,
       key: CString,
       data: Ptr[Byte],
       data_size: CSize): Unit =
-    OSSL_PARAM.build(param, key, OSSL_PARAM_OCTET_STRING, data, data_size, OSSL_PARAM_UNMODIFIED)
+    OSSL_PARAM.build(
+      param,
+      key,
+      OSSL_PARAM_OCTET_STRING,
+      data,
+      data_size,
+      OSSL_PARAM_UNMODIFIED)
 
   @alwaysinline def OSSL_PARAM_utf8_string(
       param: OSSL_PARAM,
@@ -51,11 +58,16 @@ private[bobcats] object params {
       data_size: CSize): Unit =
     OSSL_PARAM.build(param, key, OSSL_PARAM_UTF8_STRING, data, data_size, OSSL_PARAM_UNMODIFIED)
 
-  @alwaysinline def OSSL_DBRG_PARAM_CIPHER(param: OSSL_PARAM, cipher: CString, cipher_len: CSize): Unit =
+  @alwaysinline def OSSL_DBRG_PARAM_CIPHER(
+      param: OSSL_PARAM,
+      cipher: CString,
+      cipher_len: CSize): Unit =
     OSSL_PARAM_utf8_string(param, c"cipher", cipher, cipher_len)
 
-  @alwaysinline def OSSL_MAC_PARAM_DIGEST(param: OSSL_PARAM, digest: CString, digest_len: CSize): Unit =
+  @alwaysinline def OSSL_MAC_PARAM_DIGEST(
+      param: OSSL_PARAM,
+      digest: CString,
+      digest_len: CSize): Unit =
     OSSL_PARAM_utf8_string(param, c"digest", digest, digest_len)
 
 }
-
