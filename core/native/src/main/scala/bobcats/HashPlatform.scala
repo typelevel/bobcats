@@ -16,13 +16,13 @@
 
 package bobcats
 
-import java.security.GeneralSecurityException
-
 import cats.effect.kernel.Async
 import scodec.bits.ByteVector
 import scalanative.unsafe._
 import scalanative.unsigned._
-import evp._
+import openssl._
+import openssl.err._
+import openssl.evp._
 
 private[bobcats] trait HashCompanionPlatform {
   implicit def forAsync[F[_]](implicit F: Async[F]): Hash[F] =
@@ -38,24 +38,26 @@ private[bobcats] trait HashCompanionPlatform {
           case SHA512 => EVP_sha512()
         }
 
-        F.catchNonFatal {
+        F.defer {
           Zone { implicit z =>
             val ctx = EVP_MD_CTX_new()
             val d = data.toPtr
             try {
               val md = stackalloc[CUnsignedChar](EVP_MAX_MD_SIZE)
-              val s = stackalloc[CInt](1)
+              val s = stackalloc[CInt]()
               if (EVP_DigestInit_ex(ctx, digest, null) != 1) {
-                throw new GeneralSecurityException("EVP_DigestInit_ex")
+                throw Error("EVP_DigestInit_ex", ERR_get_error())
               }
               if (EVP_DigestUpdate(ctx, d, data.size.toULong) != 1) {
-                throw new GeneralSecurityException("EVP_DigestUpdate")
+                throw Error("EVP_DigestUpdate", ERR_get_error())
               }
               if (EVP_DigestFinal_ex(ctx, md, s) != 1) {
-                throw new GeneralSecurityException("EVP_DigestFinal_ex")
+                throw Error("EVP_DigestFinal_ex", ERR_get_error())
               }
               val bytes = ByteVector.fromPtr(md.asInstanceOf[Ptr[Byte]], s(0).toLong)
-              bytes
+              F.pure(bytes)
+            } catch {
+              case e: Error => F.raiseError[ByteVector](e)
             } finally {
               EVP_MD_CTX_free(ctx)
             }
