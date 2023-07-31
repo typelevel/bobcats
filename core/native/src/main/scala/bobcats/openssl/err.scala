@@ -34,7 +34,7 @@ private[bobcats] object err {
 private[bobcats] final class Error(private[openssl] message: String)
     extends GeneralSecurityException(message, null)
 
-object Error {
+private[bobcats] object Error {
 
   import err._
 
