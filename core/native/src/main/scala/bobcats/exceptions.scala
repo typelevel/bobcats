@@ -16,5 +16,6 @@
 
 package bobcats
 
-class KeyException(msg: String) extends java.security.GeneralSecurityException(msg, null)
-final class InvalidKeyException extends KeyException(null)
+class KeyException private[bobcats] (msg: String)
+    extends java.security.GeneralSecurityException(msg, null)
+final class InvalidKeyException private[bobcats] () extends KeyException(null)
