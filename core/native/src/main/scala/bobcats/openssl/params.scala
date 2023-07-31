@@ -48,6 +48,15 @@ private[bobcats] object params {
       data_size,
       OSSL_PARAM_UNMODIFIED)
 
+  @alwaysinline def OSSL_PARAM_int(param: OSSL_PARAM, key: CString, data: Ptr[CInt]): Unit =
+    OSSL_PARAM.build(
+      param,
+      key,
+      OSSL_PARAM_INTEGER,
+      data.asInstanceOf[Ptr[Byte]],
+      sizeof[CInt],
+      OSSL_PARAM_UNMODIFIED)
+
   @alwaysinline def OSSL_PARAM_utf8_string(
       param: OSSL_PARAM,
       key: CString,
@@ -66,5 +75,8 @@ private[bobcats] object params {
       digest: CString,
       digest_len: CSize): Unit =
     OSSL_PARAM_utf8_string(param, c"digest", digest, digest_len)
+
+  @alwaysinline def OSSL_MAC_PARAM_DIGEST_ONESHOT(param: OSSL_PARAM, oneshot: Ptr[CInt]): Unit =
+    OSSL_PARAM_int(param, c"digest-oneshot", oneshot)
 
 }

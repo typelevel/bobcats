@@ -50,10 +50,12 @@ private[bobcats] trait HmacCompanionPlatform {
             val mdName = EVP_MD_get0_name(md)
             val mdLen = string.strlen(mdName)
             F.defer {
-              // TODO oneshot
-              val params = stackalloc[OSSL_PARAM](2)
+              val oneshot = stackalloc[CInt]()
+              oneshot(0) = 1
+              val params = stackalloc[OSSL_PARAM](3)
               OSSL_MAC_PARAM_DIGEST(params(0), mdName, mdLen)
-              OSSL_PARAM_END(params(1))
+              OSSL_MAC_PARAM_DIGEST_ONESHOT(params(1), oneshot)
+              OSSL_PARAM_END(params(2))
               val mac = EVP_MAC_fetch(null, c"HMAC", null)
 
               if (mac == null) {
