@@ -25,7 +25,9 @@ import scala.annotation.nowarn
 @nowarn("msg=never used")
 private[bobcats] object crypto {
 
-  /** See [[https://www.openssl.org/docs/man3.1/man3/CRYPTO_memcmp.html]] */
+  /**
+   * See [[https://www.openssl.org/docs/man3.1/man3/CRYPTO_memcmp.html]]
+   */
   def CRYPTO_memcmp(a: Ptr[Byte], b: Ptr[Byte], len: CSize): CInt = extern
 
 }
