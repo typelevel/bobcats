@@ -15,24 +15,17 @@
  */
 
 package bobcats
+package openssl
 
-import scodec.bits.ByteVector
+import scala.scalanative.unsafe._
+import scala.annotation.nowarn
 
-private[bobcats] trait SecureEqCompanionPlatform { this: SecureEq.type =>
+@extern
+@link("crypto")
+@nowarn("msg=never used")
+private[bobcats] object crypto {
 
-  implicit val secureEqForByteVector: SecureEq[ByteVector] =
-    new SecureEq[ByteVector] {
-
-      import scala.scalanative.unsafe._
-      import scala.scalanative.unsigned._
-      import openssl.crypto._
-
-      override def eqv(x: ByteVector, y: ByteVector): Boolean = {
-        Zone { implicit z =>
-          val len = x.length
-          len == y.length && CRYPTO_memcmp(x.toPtr, y.toPtr, len.toULong) == 0
-        }
-      }
-    }
+  /** See [[https://www.openssl.org/docs/man3.1/man3/CRYPTO_memcmp.html]] */
+  def CRYPTO_memcmp(a: Ptr[Byte], b: Ptr[Byte], len: CSize): CInt = extern
 
 }

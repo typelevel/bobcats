@@ -31,7 +31,7 @@ class SecureEqSuite extends DisciplineSuite {
   implicit val cogenByteVector: Cogen[ByteVector] =
     Cogen[Vector[Byte]].contramap(_.toIndexedSeq.toVector)
 
-  checkAll("SequreEq[ByteVector]", EqTests(SecureEq[ByteVector]).eqv)
+  checkAll("SecureEq[ByteVector]", EqTests(SecureEq[ByteVector]).eqv)
 
   property("non-trivial reflexivity") {
     forAll { (bytes: Vector[Byte]) =>
