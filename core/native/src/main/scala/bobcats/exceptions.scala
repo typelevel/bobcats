@@ -14,6 +14,5 @@
  * limitations under the License.
  */
 
-package object bobcats {
-  type GeneralSecurityException = java.security.GeneralSecurityException
-}
+class KeyException(msg: String) extends java.security.GeneralSecurityException(msg, null)
+final class InvalidKeyException extends KeyException(null)
