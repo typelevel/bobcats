@@ -21,9 +21,6 @@ import scala.scalanative.unsafe._
 import scala.scalanative.annotation.alwaysinline
 import scalanative.unsigned._
 
-// @extern
-// @link("crypto")
-// @nowarn("msg=never used")
 private[bobcats] object params {
   final val OSSL_PARAM_INTEGER = 1.toUByte
   final val OSSL_PARAM_UNSIGNED_INTEGER = 2.toUByte
