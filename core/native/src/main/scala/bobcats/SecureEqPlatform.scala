@@ -30,7 +30,10 @@ private[bobcats] trait SecureEqCompanionPlatform { this: SecureEq.type =>
       override def eqv(x: ByteVector, y: ByteVector): Boolean = {
         val xArr = x.toArrayUnsafe
         val len = xArr.length
-        len == y.length && CRYPTO_memcmp(xArr.at(0), y.toArrayUnsafe.at(0), len.toULong) == 0
+        len == y.length && (len == 0 || CRYPTO_memcmp(
+          xArr.at(0),
+          y.toArrayUnsafe.at(0),
+          len.toULong) == 0)
       }
     }
 
