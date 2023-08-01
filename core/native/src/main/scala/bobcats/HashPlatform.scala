@@ -38,29 +38,24 @@ private[bobcats] trait HashCompanionPlatform {
           case SHA512 => EVP_sha512()
         }
 
-        F.defer {
-          Zone { implicit z =>
-            val ctx = EVP_MD_CTX_new()
-            val d = data.toPtr
-            try {
-              val md = stackalloc[CUnsignedChar](EVP_MAX_MD_SIZE)
-              val s = stackalloc[CInt]()
-              if (EVP_DigestInit_ex(ctx, digest, null) != 1) {
-                throw Error("EVP_DigestInit_ex", ERR_get_error())
-              }
-              if (EVP_DigestUpdate(ctx, d, data.size.toULong) != 1) {
-                throw Error("EVP_DigestUpdate", ERR_get_error())
-              }
-              if (EVP_DigestFinal_ex(ctx, md, s) != 1) {
-                throw Error("EVP_DigestFinal_ex", ERR_get_error())
-              }
-              val bytes = ByteVector.fromPtr(md.asInstanceOf[Ptr[Byte]], s(0).toLong)
-              F.pure(bytes)
-            } catch {
-              case e: Error => F.raiseError[ByteVector](e)
-            } finally {
-              EVP_MD_CTX_free(ctx)
+        F.delay {
+          val ctx = EVP_MD_CTX_new()
+          val d = data.toArrayUnsafe
+          try {
+            val md = stackalloc[CUnsignedChar](EVP_MAX_MD_SIZE)
+            val s = stackalloc[CInt]()
+            if (EVP_DigestInit_ex(ctx, digest, null) != 1) {
+              throw Error("EVP_DigestInit_ex", ERR_get_error())
             }
+            if (EVP_DigestUpdate(ctx, d.at(0), d.length.toULong) != 1) {
+              throw Error("EVP_DigestUpdate", ERR_get_error())
+            }
+            if (EVP_DigestFinal_ex(ctx, md, s) != 1) {
+              throw Error("EVP_DigestFinal_ex", ERR_get_error())
+            }
+            ByteVector.fromPtr(md.asInstanceOf[Ptr[Byte]], s(0).toLong)
+          } finally {
+            EVP_MD_CTX_free(ctx)
           }
         }
       }

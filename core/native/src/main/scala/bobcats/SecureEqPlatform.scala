@@ -28,10 +28,9 @@ private[bobcats] trait SecureEqCompanionPlatform { this: SecureEq.type =>
       import openssl.crypto._
 
       override def eqv(x: ByteVector, y: ByteVector): Boolean = {
-        Zone { implicit z =>
-          val len = x.length
-          len == y.length && CRYPTO_memcmp(x.toPtr, y.toPtr, len.toULong) == 0
-        }
+        val xArr = x.toArrayUnsafe
+        val len = xArr.length
+        len == y.length && CRYPTO_memcmp(xArr.at(0), y.toArrayUnsafe.at(0), len.toULong) == 0
       }
     }
 

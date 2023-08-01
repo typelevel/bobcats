@@ -49,7 +49,7 @@ private[bobcats] trait HmacCompanionPlatform {
             }
             val mdName = EVP_MD_get0_name(md)
             val mdLen = string.strlen(mdName)
-            F.defer {
+            F.delay {
               val oneshot = stackalloc[CInt]()
               oneshot(0) = 1
               val params = stackalloc[OSSL_PARAM](3)
@@ -59,36 +59,34 @@ private[bobcats] trait HmacCompanionPlatform {
               val mac = EVP_MAC_fetch(null, c"HMAC", null)
 
               if (mac == null) {
-                F.raiseError[ByteVector](new Error("EVP_MAC_fetch"))
+                throw new Error("EVP_MAC_fetch")
               } else {
                 val ctx = EVP_MAC_CTX_new(mac)
                 try {
-                  Zone { implicit z =>
-                    if (EVP_MAC_init(
-                        ctx,
-                        key.toPtr.asInstanceOf[Ptr[CUnsignedChar]],
-                        key.size.toULong,
-                        params
-                      ) != 1) {
-                      throw Error("EVP_MAC_init", ERR_get_error())
-                    }
-                    val out = stackalloc[CUnsignedChar](EVP_MAX_MD_SIZE)
-                    val outl = stackalloc[CSize]()
-
-                    if (EVP_MAC_update(
-                        ctx,
-                        data.toPtr.asInstanceOf[Ptr[CUnsignedChar]],
-                        data.size.toULong) != 1) {
-                      throw Error("EVP_MAC_update", ERR_get_error())
-                    }
-
-                    if (EVP_MAC_final(ctx, out, outl, EVP_MAX_MD_SIZE.toULong) != 1) {
-                      throw Error("EVP_MAC_final", ERR_get_error())
-                    }
-                    F.pure(ByteVector.fromPtr(out.asInstanceOf[Ptr[Byte]], outl(0).toLong))
+                  val k = key.toArrayUnsafe
+                  val d = data.toArrayUnsafe
+                  if (EVP_MAC_init(
+                      ctx,
+                      k.at(0).asInstanceOf[Ptr[CUnsignedChar]],
+                      k.length.toULong,
+                      params
+                    ) != 1) {
+                    throw Error("EVP_MAC_init", ERR_get_error())
                   }
-                } catch {
-                  case e: Error => F.raiseError[ByteVector](e)
+                  val out = stackalloc[CUnsignedChar](EVP_MAX_MD_SIZE)
+                  val outl = stackalloc[CSize]()
+
+                  if (EVP_MAC_update(
+                      ctx,
+                      d.at(0).asInstanceOf[Ptr[CUnsignedChar]],
+                      d.length.toULong) != 1) {
+                    throw Error("EVP_MAC_update", ERR_get_error())
+                  }
+
+                  if (EVP_MAC_final(ctx, out, outl, EVP_MAX_MD_SIZE.toULong) != 1) {
+                    throw Error("EVP_MAC_final", ERR_get_error())
+                  }
+                  ByteVector.fromPtr(out.asInstanceOf[Ptr[Byte]], outl(0).toLong)
                 } finally {
                   EVP_MAC_CTX_free(ctx)
                 }
