@@ -28,8 +28,7 @@ package object openssl {
    */
   private[bobcats] type OSSL_PARAM = CStruct5[CString, CUnsignedChar, Ptr[Byte], CSize, CSize]
   private[bobcats] object OSSL_PARAM {
-
-    @alwaysinline private[bobcats] def build(
+    @alwaysinline private[bobcats] def init(
         param: OSSL_PARAM,
         key: CString,
         dataType: CUnsignedChar,

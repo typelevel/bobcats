@@ -32,11 +32,6 @@ private[bobcats] object evp {
   final val EVP_MAX_MD_SIZE = 64
 
   /**
-   * See [[https://www.openssl.org/docs/man3.1/man3/OpenSSL_add_all_algorithms.html]]
-   */
-  def OpenSSL_add_all_algorithms(): Unit = extern
-
-  /**
    * See [[https://www.openssl.org/docs/man3.1/man3/EVP_MD_CTX_new.html]]
    */
   def EVP_MD_CTX_new(): Ptr[EVP_MD_CTX] = extern
@@ -50,11 +45,6 @@ private[bobcats] object evp {
    * See [[https://www.openssl.org/docs/man3.1/man3/EVP_get_digestbyname.html]]
    */
   def EVP_get_digestbyname(s: CString): Ptr[EVP_MD] = extern
-
-  /**
-   * See [[https://www.openssl.org/docs/man3.1/man3/EVP_cleanup.html]]
-   */
-  def EVP_cleanup(): Unit = extern
 
   /**
    * See [[https://www.openssl.org/docs/man3.1/man3/EVP_MD_get0_name.html]]

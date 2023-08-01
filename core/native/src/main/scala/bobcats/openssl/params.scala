@@ -34,13 +34,13 @@ private[bobcats] object params {
   final val OSSL_PARAM_UNMODIFIED: CSize = -1.toULong
 
   @alwaysinline def OSSL_PARAM_END(param: OSSL_PARAM): Unit =
-    OSSL_PARAM.build(param, null, 0.toUByte, null, 0.toULong, 0.toULong)
+    OSSL_PARAM.init(param, null, 0.toUByte, null, 0.toULong, 0.toULong)
   @alwaysinline def OSSL_PARAM_octet_string(
       param: OSSL_PARAM,
       key: CString,
       data: Ptr[Byte],
       data_size: CSize): Unit =
-    OSSL_PARAM.build(
+    OSSL_PARAM.init(
       param,
       key,
       OSSL_PARAM_OCTET_STRING,
@@ -49,7 +49,7 @@ private[bobcats] object params {
       OSSL_PARAM_UNMODIFIED)
 
   @alwaysinline def OSSL_PARAM_int(param: OSSL_PARAM, key: CString, data: Ptr[CInt]): Unit =
-    OSSL_PARAM.build(
+    OSSL_PARAM.init(
       param,
       key,
       OSSL_PARAM_INTEGER,
@@ -62,7 +62,7 @@ private[bobcats] object params {
       key: CString,
       data: Ptr[Byte],
       data_size: CSize): Unit =
-    OSSL_PARAM.build(param, key, OSSL_PARAM_UTF8_STRING, data, data_size, OSSL_PARAM_UNMODIFIED)
+    OSSL_PARAM.init(param, key, OSSL_PARAM_UTF8_STRING, data, data_size, OSSL_PARAM_UNMODIFIED)
 
   @alwaysinline def OSSL_DBRG_PARAM_CIPHER(
       param: OSSL_PARAM,
