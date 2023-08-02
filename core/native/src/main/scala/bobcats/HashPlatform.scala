@@ -47,7 +47,8 @@ private[bobcats] trait HashCompanionPlatform {
             if (EVP_DigestInit_ex(ctx, digest, null) != 1) {
               throw Error("EVP_DigestInit_ex", ERR_get_error())
             }
-            if (EVP_DigestUpdate(ctx, d.at(0), d.length.toULong) != 1) {
+            val len = d.length
+            if (EVP_DigestUpdate(ctx, if (len == 0) null else d.at(0), len.toULong) != 1) {
               throw Error("EVP_DigestUpdate", ERR_get_error())
             }
             if (EVP_DigestFinal_ex(ctx, md, s) != 1) {
