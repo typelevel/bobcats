@@ -82,7 +82,7 @@ val catsEffectVersion = "3.3.14"
 val scodecBitsVersion = "1.1.35"
 val munitVersion = "1.0.0-M8"
 val munitCEVersion = "2.0.0-M3"
-val disciplineMUnitVersion = "2.0.0-M2"
+val disciplineMUnitVersion = "2.0.0-M3"
 
 lazy val root = tlCrossRootProject.aggregate(core, testRuntime)
 
