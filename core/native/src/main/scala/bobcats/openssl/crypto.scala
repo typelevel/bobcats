@@ -15,7 +15,19 @@
  */
 
 package bobcats
+package openssl
 
-package object unsafe {
-  type SecureRandom = java.security.SecureRandom
+import scala.scalanative.unsafe._
+import scala.annotation.nowarn
+
+@extern
+@link("crypto")
+@nowarn("msg=never used")
+private[bobcats] object crypto {
+
+  /**
+   * See [[https://www.openssl.org/docs/man3.1/man3/CRYPTO_memcmp.html]]
+   */
+  def CRYPTO_memcmp(a: Ptr[Byte], b: Ptr[Byte], len: CSize): CInt = extern
+
 }

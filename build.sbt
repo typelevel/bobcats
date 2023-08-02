@@ -21,7 +21,6 @@ import org.openqa.selenium.remote.server.{DriverFactory, DriverProvider}
 import org.scalajs.jsenv.selenium.SeleniumJSEnv
 
 import JSEnv._
-
 name := "bobcats"
 
 ThisBuild / tlBaseVersion := "0.1"
@@ -79,15 +78,15 @@ ThisBuild / Test / jsEnv := {
 }
 
 val catsVersion = "2.8.0"
-val catsEffectVersion = "3.3.14"
-val scodecBitsVersion = "1.1.34"
-val munitVersion = "0.7.29"
-val munitCEVersion = "1.0.7"
-val disciplineMUnitVersion = "1.0.9"
+val catsEffectVersion = "3.5.1"
+val scodecBitsVersion = "1.1.35"
+val munitVersion = "1.0.0-M8"
+val munitCEVersion = "2.0.0-M3"
+val disciplineMUnitVersion = "2.0.0-M2"
 
 lazy val root = tlCrossRootProject.aggregate(core, testRuntime)
 
-lazy val core = crossProject(JSPlatform, JVMPlatform)
+lazy val core = crossProject(JSPlatform, JVMPlatform, NativePlatform)
   .in(file("core"))
   .settings(
     name := "bobcats",
@@ -99,12 +98,12 @@ lazy val core = crossProject(JSPlatform, JVMPlatform)
       "org.typelevel" %%% "cats-laws" % catsVersion % Test,
       "org.typelevel" %%% "cats-effect" % catsEffectVersion % Test,
       "org.typelevel" %%% "discipline-munit" % disciplineMUnitVersion % Test,
-      "org.typelevel" %%% "munit-cats-effect-3" % munitCEVersion % Test
+      "org.typelevel" %%% "munit-cats-effect" % munitCEVersion % Test
     )
   )
   .dependsOn(testRuntime % Test)
 
-lazy val testRuntime = crossProject(JSPlatform, JVMPlatform)
+lazy val testRuntime = crossProject(JSPlatform, JVMPlatform, NativePlatform)
   .crossType(CrossType.Pure)
   .in(file("test-runtime"))
   .enablePlugins(BuildInfoPlugin, NoPublishPlugin)
@@ -119,5 +118,10 @@ lazy val testRuntime = crossProject(JSPlatform, JVMPlatform)
   .jsSettings(
     buildInfoKeys := Seq(
       BuildInfoKey("runtime" -> useJSEnv.value.toString)
+    )
+  )
+  .nativeSettings(
+    buildInfoKeys := Seq(
+      BuildInfoKey.sbtbuildinfoConstantEntry("runtime" -> "Native")
     )
   )
