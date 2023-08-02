@@ -40,13 +40,7 @@ private[bobcats] object params {
       key: CString,
       data: Ptr[Byte],
       data_size: CSize): Unit =
-    OSSL_PARAM.init(
-      param,
-      key,
-      OSSL_PARAM_OCTET_STRING,
-      data,
-      data_size,
-      OSSL_PARAM_UNMODIFIED)
+    OSSL_PARAM.init(param, key, OSSL_PARAM_OCTET_STRING, data, data_size, OSSL_PARAM_UNMODIFIED)
 
   @alwaysinline def OSSL_PARAM_int(param: OSSL_PARAM, key: CString, data: Ptr[CInt]): Unit =
     OSSL_PARAM.init(
