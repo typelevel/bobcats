@@ -34,7 +34,7 @@ private[bobcats] trait HashCompanionPlatform {
   private[bobcats] def forSync[F[_]](implicit F: Sync[F]): Hash[F] =
     new UnsealedHash[F] {
       override def digest(algorithm: HashAlgorithm, data: ByteVector): F[ByteVector] =
-        F.catchNonFatal {
+        F.delay {
           val hash = MessageDigest.getInstance(algorithm.toStringJava)
           hash.update(data.toByteBuffer)
           ByteVector.view(hash.digest())

@@ -93,7 +93,7 @@ private[bobcats] trait HashCompanionPlatform {
 
         val digest = evpAlgorithm(algorithm)
 
-        F.catchNonFatal {
+        F.delay {
           val ctx = EVP_MD_CTX_new()
           val d = data.toArrayUnsafe
           try {

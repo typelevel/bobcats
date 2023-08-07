@@ -42,7 +42,7 @@ private[bobcats] trait HashCompanionPlatform {
             new NodeCryptoDigest(hash, alg)
           })(_ => F.unit)
         override def digest(algorithm: HashAlgorithm, data: ByteVector): F[ByteVector] =
-          F.catchNonFatal {
+          F.delay {
             val hash = facade.node.crypto.createHash(algorithm.toStringNodeJS)
             hash.update(data.toUint8Array)
             ByteVector.view(hash.digest())
