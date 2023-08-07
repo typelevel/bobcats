@@ -80,7 +80,7 @@ private[bobcats] trait HashCompanionPlatform {
 
       override def incremental(algorithm: HashAlgorithm): Resource[F, Digest[F]] = {
         val digest = evpAlgorithm(algorithm)
-        Resource.make(F.catchNonFatal {
+        Resource.make(F.delay {
           val ctx = EVP_MD_CTX_new()
           if (EVP_DigestInit_ex(ctx, digest, null) != 1) {
             throw Error("EVP_DigestInit_ex", ERR_get_error())

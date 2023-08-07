@@ -36,7 +36,7 @@ private[bobcats] trait HashCompanionPlatform {
       new UnsealedHash[F] {
 
         override def incremental(algorithm: HashAlgorithm): Resource[F, Digest[F]] =
-          Resource.make(F.catchNonFatal {
+          Resource.make(F.delay {
             val alg = algorithm.toStringNodeJS
             val hash = facade.node.crypto.createHash(alg)
             new NodeCryptoDigest(hash, alg)

@@ -40,7 +40,7 @@ private[bobcats] trait HashCompanionPlatform {
           ByteVector.view(hash.digest())
         }
       override def incremental(algorithm: HashAlgorithm): Resource[F, Digest[F]] = {
-        Resource.make(F.catchNonFatal {
+        Resource.make(F.delay {
           val hash = MessageDigest.getInstance(algorithm.toStringJava)
           new JavaSecurityDigest[F](hash)(F)
         })(_.reset)
