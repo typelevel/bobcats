@@ -17,9 +17,38 @@
 package bobcats
 
 import scodec.bits.ByteVector
+import cats.effect.kernel.Resource
+
+/**
+ * Used for incremental hashing.
+ */
+sealed trait Digest[F[_]] {
+
+  /**
+   * Updates the digest context with the provided data.
+   */
+  def update(data: ByteVector): F[Unit]
+
+  /**
+   * Returns the final digest.
+   */
+  def get: F[ByteVector]
+
+  /**
+   * Resets the digest to be used again.
+   */
+  def reset: F[Unit]
+}
+
+private[bobcats] trait UnsealedDigest[F[_]] extends Digest[F]
 
 sealed trait Hash[F[_]] {
   def digest(algorithm: HashAlgorithm, data: ByteVector): F[ByteVector]
+
+  /**
+   * Create a digest with can be updated incrementally.
+   */
+  def incremental(algorithm: HashAlgorithm): Resource[F, Digest[F]]
 }
 
 private[bobcats] trait UnsealedHash[F[_]] extends Hash[F]

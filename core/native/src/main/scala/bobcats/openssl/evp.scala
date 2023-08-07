@@ -37,6 +37,11 @@ private[bobcats] object evp {
   def EVP_MD_CTX_new(): Ptr[EVP_MD_CTX] = extern
 
   /**
+   * See [[https://www.openssl.org/docs/man3.1/man3/EVP_MD_CTX_reset.html]]
+   */
+  def EVP_MD_CTX_reset(ctx: Ptr[EVP_MD_CTX]): CInt = extern
+
+  /**
    * See [[https://www.openssl.org/docs/man3.1/man3/EVP_MD_CTX_free.html]]
    */
   def EVP_MD_CTX_free(ctx: Ptr[EVP_MD_CTX]): Unit = extern

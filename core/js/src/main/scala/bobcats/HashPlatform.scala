@@ -16,14 +16,31 @@
 
 package bobcats
 
-import cats.effect.kernel.Async
+import cats.effect.kernel.{Async, Resource, Sync}
 import cats.syntax.all._
 import scodec.bits.ByteVector
+
+private final class NodeCryptoDigest[F[_]](var hash: facade.node.Hash, algorithm: String)(
+    implicit F: Sync[F])
+    extends UnsealedDigest[F] {
+  override def update(data: ByteVector): F[Unit] = F.delay(hash.update(data.toUint8Array))
+  override val reset = F.delay {
+    hash = facade.node.crypto.createHash(algorithm)
+  }
+  override def get: F[ByteVector] = F.delay(ByteVector.view(hash.digest()))
+}
 
 private[bobcats] trait HashCompanionPlatform {
   implicit def forAsync[F[_]](implicit F: Async[F]): Hash[F] =
     if (facade.isNodeJSRuntime)
       new UnsealedHash[F] {
+
+        override def incremental(algorithm: HashAlgorithm): Resource[F, Digest[F]] =
+          Resource.make(F.catchNonFatal {
+            val alg = algorithm.toStringNodeJS
+            val hash = facade.node.crypto.createHash(alg)
+            new NodeCryptoDigest(hash, alg)
+          })(_ => F.unit)
         override def digest(algorithm: HashAlgorithm, data: ByteVector): F[ByteVector] =
           F.catchNonFatal {
             val hash = facade.node.crypto.createHash(algorithm.toStringNodeJS)
@@ -34,6 +51,12 @@ private[bobcats] trait HashCompanionPlatform {
     else
       new UnsealedHash[F] {
         import facade.browser._
+        override def incremental(algorithm: HashAlgorithm): Resource[F, Digest[F]] = {
+          val err = F.raiseError[Digest[F]](
+            new UnsupportedOperationException("WebCrypto does not support incremental hashing"))
+          Resource.make(err)(_ => err.void)
+        }
+
         override def digest(algorithm: HashAlgorithm, data: ByteVector): F[ByteVector] =
           F.fromPromise(
             F.delay(
