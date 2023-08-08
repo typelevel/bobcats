@@ -17,59 +17,44 @@
 package bobcats
 
 import cats.syntax.all._
-import java.security.MessageDigest
+import java.security.{MessageDigest, NoSuchAlgorithmException, Provider, Security}
 import scodec.bits.ByteVector
-import cats.Functor
+import cats.Applicative
 import cats.effect.Sync
 import fs2.{Chunk, Pipe, Stream}
 
-private abstract class JavaSecurityDigest[F[_]](implicit F: Functor[F])
+private final class JavaSecurityDigest[F[_]](algorithm: String, provider: Provider)(
+    implicit F: Applicative[F])
     extends UnsealedHash1[F] {
 
-  def hash: F[MessageDigest]
-
-  override def digest(data: ByteVector): F[ByteVector] =
-    hash.map { h =>
-      h.update(data.toByteBuffer)
-      ByteVector.view(h.digest())
-    }
+  override def digest(data: ByteVector): F[ByteVector] = F.pure {
+    val h = MessageDigest.getInstance(algorithm, provider)
+    h.update(data.toByteBuffer)
+    ByteVector.view(h.digest())
+  }
 
   override val pipe: Pipe[F, Byte, Byte] =
     in =>
-      Stream
-        .eval(hash)
-        .flatMap { h =>
-          in.chunks.fold(h) { (h, data) =>
-            h.update(data.toByteBuffer)
-            h
-          }
+      in.chunks
+        .fold(MessageDigest.getInstance(algorithm, provider)) { (h, data) =>
+          h.update(data.toByteBuffer)
+          h
         }
         .flatMap { h => Stream.chunk(Chunk.array(h.digest())) }
 
-  override def toString = hash.toString
+  override def toString = s"JavaSecurityDigest(${algorithm}, ${provider.getName})"
 }
 
 private[bobcats] trait Hash1CompanionPlatform {
 
-  /**
-   * Wraps a `MessageDigest` which is assumed to be `Cloneable`.
-   */
-  private[bobcats] def fromMessageDigestCloneableUnsafe[F[_]](messageDigest: MessageDigest)(
-      implicit F: Sync[F]): Hash1[F] = new JavaSecurityDigest {
-    override val hash: F[MessageDigest] =
-      F.delay(messageDigest.clone().asInstanceOf[MessageDigest])
-  }
+  private[bobcats] def providerForName(ps: Array[Provider], name: String): Option[Provider] =
+    ps.find(provider => provider.getService("MessageDigest", name) != null)
 
   def fromName[F[_]](name: String)(implicit F: Sync[F]): F[Hash1[F]] = F.delay {
-    val hash = MessageDigest.getInstance(name)
-    try {
-      fromMessageDigestCloneableUnsafe(hash.clone().asInstanceOf[MessageDigest])
-    } catch {
-      case _: CloneNotSupportedException =>
-        new JavaSecurityDigest {
-          override val hash: F[MessageDigest] = F.delay(MessageDigest.getInstance(name))
-        }
-    }
+    // `Security#getProviders` is a mutable array, so cache the `Provider`
+    val p = providerForName(Security.getProviders(), name)
+      .getOrElse(throw new NoSuchAlgorithmException(s"${name} MessageDigest not available"))
+    new JavaSecurityDigest(name, p)
   }
 
   def apply[F[_]](algorithm: HashAlgorithm)(implicit F: Sync[F]): F[Hash1[F]] = fromName(

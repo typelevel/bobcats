@@ -16,20 +16,39 @@
 
 package bobcats
 
-import cats.syntax.all._
+import java.security.{NoSuchAlgorithmException, Security}
 import fs2.{Pipe, Stream}
 import cats.effect.kernel.{Async, Sync}
 import scodec.bits.ByteVector
 
 private[bobcats] trait HashCompanionPlatform {
 
-  private[bobcats] def forSync[F[_]](implicit F: Sync[F]): Hash[F] =
+  private[bobcats] def forSync[F[_]](implicit F: Sync[F]): Hash[F] = {
+    // TODO: What to do with this?
+    val providers = Security.getProviders().clone()
     new UnsealedHash[F] {
-      override def digest(algorithm: HashAlgorithm, data: ByteVector): F[ByteVector] =
-        Hash1[F](algorithm).flatMap(_.digest(data))
-      override def digestPipe(algorithm: HashAlgorithm): Pipe[F, Byte, Byte] =
-        in => Stream.eval(Hash1[F](algorithm)).flatMap(_.pipe(in))
+      override def digest(algorithm: HashAlgorithm, data: ByteVector): F[ByteVector] = {
+        val name = algorithm.toStringJava
+        Hash1.providerForName(providers, name) match {
+          case None =>
+            F.raiseError(new NoSuchAlgorithmException(s"${name} MessageDigest not available"))
+          case Some(p) => new JavaSecurityDigest(name, p).digest(data)
+        }
+      }
+
+      override def digestPipe(algorithm: HashAlgorithm): Pipe[F, Byte, Byte] = {
+        val name = algorithm.toStringJava
+        Hash1.providerForName(providers, name) match {
+          case None =>
+            _ =>
+              Stream.eval(
+                F.raiseError(
+                  new NoSuchAlgorithmException(s"${name} MessageDigest not available")))
+          case Some(p) => new JavaSecurityDigest(name, p).pipe
+        }
+      }
     }
+  }
 
   def forAsync[F[_]](implicit F: Async[F]): Hash[F] = forSync(F)
 }
