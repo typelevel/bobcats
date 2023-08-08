@@ -17,7 +17,7 @@
 package bobcats
 
 import cats.syntax.all._
-import fs2.Stream
+import fs2.{Pipe, Stream}
 import cats.effect.kernel.{Async, Sync}
 import scodec.bits.ByteVector
 
@@ -27,8 +27,8 @@ private[bobcats] trait HashCompanionPlatform {
     new UnsealedHash[F] {
       override def digest(algorithm: HashAlgorithm, data: ByteVector): F[ByteVector] =
         Hash1[F](algorithm).flatMap(_.digest(data))
-      override def digest(algorithm: HashAlgorithm)(data: Stream[F, Byte]): Stream[F, Byte] =
-        Stream.eval(Hash1[F](algorithm)).flatMap(_.digest(data))
+      override def digestPipe(algorithm: HashAlgorithm): Pipe[F, Byte, Byte] =
+        in => Stream.eval(Hash1[F](algorithm)).flatMap(_.pipe(in))
     }
 
   def forAsync[F[_]](implicit F: Async[F]): Hash[F] = forSync(F)

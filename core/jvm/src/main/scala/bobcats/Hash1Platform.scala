@@ -16,41 +16,60 @@
 
 package bobcats
 
+import cats.syntax.all._
 import java.security.MessageDigest
 import scodec.bits.ByteVector
-import cats.Applicative
+import cats.Functor
 import cats.effect.Sync
-import fs2.{Chunk, Stream}
+import fs2.{Chunk, Pipe, Stream}
 
-private final class JavaSecurityDigest[F[_]](val hash: MessageDigest)(
-    implicit F: Applicative[F])
+private abstract class JavaSecurityDigest[F[_]](implicit F: Functor[F])
     extends UnsealedHash1[F] {
 
-  override def digest(data: ByteVector): F[ByteVector] = F.pure {
-    val h = hash.clone().asInstanceOf[MessageDigest]
-    h.update(data.toByteBuffer)
-    ByteVector.view(h.digest())
-  }
-  override def digest(data: Stream[F, Byte]): Stream[F, Byte] =
-    data
-      .chunks
-      .fold(hash.clone().asInstanceOf[MessageDigest]) { (h, data) =>
-        h.update(data.toByteBuffer)
-        h
-      }
-      .flatMap { h => Stream.chunk(Chunk.array(h.digest())) }
+  def hash: F[MessageDigest]
+
+  override def digest(data: ByteVector): F[ByteVector] =
+    hash.map { h =>
+      h.update(data.toByteBuffer)
+      ByteVector.view(h.digest())
+    }
+
+  override val pipe: Pipe[F, Byte, Byte] =
+    in =>
+      Stream
+        .eval(hash)
+        .flatMap { h =>
+          in.chunks.fold(h) { (h, data) =>
+            h.update(data.toByteBuffer)
+            h
+          }
+        }
+        .flatMap { h => Stream.chunk(Chunk.array(h.digest())) }
 
   override def toString = hash.toString
 }
 
 private[bobcats] trait Hash1CompanionPlatform {
 
-  private[bobcats] def fromMessageDigestUnsafe[F[_]: Applicative](
-      digest: MessageDigest): Hash1[F] = new JavaSecurityDigest(digest)
+  /**
+   * Wraps a `MessageDigest` which is assumed to be `Cloneable`.
+   */
+  private[bobcats] def fromMessageDigestCloneableUnsafe[F[_]](messageDigest: MessageDigest)(
+      implicit F: Sync[F]): Hash1[F] = new JavaSecurityDigest {
+    override val hash: F[MessageDigest] =
+      F.delay(messageDigest.clone().asInstanceOf[MessageDigest])
+  }
 
   def fromName[F[_]](name: String)(implicit F: Sync[F]): F[Hash1[F]] = F.delay {
     val hash = MessageDigest.getInstance(name)
-    fromMessageDigestUnsafe(hash)
+    try {
+      fromMessageDigestCloneableUnsafe(hash.clone().asInstanceOf[MessageDigest])
+    } catch {
+      case _: CloneNotSupportedException =>
+        new JavaSecurityDigest {
+          override val hash: F[MessageDigest] = F.delay(MessageDigest.getInstance(name))
+        }
+    }
   }
 
   def apply[F[_]](algorithm: HashAlgorithm)(implicit F: Sync[F]): F[Hash1[F]] = fromName(

@@ -16,7 +16,7 @@
 
 package bobcats
 
-import fs2.Stream
+import fs2.Pipe
 import scodec.bits.ByteVector
 
 /**
@@ -27,7 +27,7 @@ import scodec.bits.ByteVector
  */
 sealed trait Hash1[F[_]] {
   def digest(data: ByteVector): F[ByteVector]
-  def digest(data: Stream[F, Byte]): Stream[F, Byte]
+  def pipe: Pipe[F, Byte, Byte]
 }
 
 private[bobcats] trait UnsealedHash1[F[_]] extends Hash1[F]
