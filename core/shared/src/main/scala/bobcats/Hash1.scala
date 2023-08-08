@@ -16,21 +16,20 @@
 
 package bobcats
 
-import cats.effect.IO
-import scodec.bits.ByteVector
 import fs2.Stream
+import scodec.bits.ByteVector
 
-sealed trait Hash[F[_]] {
-  def digest(algorithm: HashAlgorithm, data: ByteVector): F[ByteVector]
-  def digest(algorithm: HashAlgorithm)(stream: Stream[F, Byte]): Stream[F, Byte]
+/**
+ * Hash for a single algorithm.
+ *
+ * Use this class if you have a specific `HashAlgorithm` known in advance or you're using a
+ * customized algorithm not covered by the `HashAlgorithm` class.
+ */
+sealed trait Hash1[F[_]] {
+  def digest(data: ByteVector): F[ByteVector]
+  def digest(data: Stream[F, Byte]): Stream[F, Byte]
 }
 
-private[bobcats] trait UnsealedHash[F[_]] extends Hash[F]
+private[bobcats] trait UnsealedHash1[F[_]] extends Hash1[F]
 
-object Hash extends HashCompanionPlatform {
-
-  implicit def forIO: Hash[IO] = forAsync
-
-  def apply[F[_]](implicit hash: Hash[F]): hash.type = hash
-
-}
+object Hash1 extends Hash1CompanionPlatform

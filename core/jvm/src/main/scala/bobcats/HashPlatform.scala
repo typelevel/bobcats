@@ -16,36 +16,20 @@
 
 package bobcats
 
-import cats.effect.kernel.{Async, Resource, Sync}
+import cats.syntax.all._
+import fs2.Stream
+import cats.effect.kernel.{Async, Sync}
 import scodec.bits.ByteVector
-
-import java.security.MessageDigest
-
-private final class JavaSecurityDigest[F[_]](val hash: MessageDigest)(implicit F: Sync[F])
-    extends UnsealedDigest[F] {
-
-  override def update(data: ByteVector): F[Unit] = F.delay(hash.update(data.toByteBuffer))
-  override val reset = F.delay(hash.reset())
-  override def get: F[ByteVector] = F.delay(ByteVector.view(hash.digest()))
-}
 
 private[bobcats] trait HashCompanionPlatform {
 
   private[bobcats] def forSync[F[_]](implicit F: Sync[F]): Hash[F] =
     new UnsealedHash[F] {
       override def digest(algorithm: HashAlgorithm, data: ByteVector): F[ByteVector] =
-        F.delay {
-          val hash = MessageDigest.getInstance(algorithm.toStringJava)
-          hash.update(data.toByteBuffer)
-          ByteVector.view(hash.digest())
-        }
-      override def incremental(algorithm: HashAlgorithm): Resource[F, Digest[F]] = {
-        Resource.make(F.delay {
-          val hash = MessageDigest.getInstance(algorithm.toStringJava)
-          new JavaSecurityDigest[F](hash)(F)
-        })(_.reset)
-      }
+        Hash1[F](algorithm).flatMap(_.digest(data))
+      override def digest(algorithm: HashAlgorithm)(data: Stream[F, Byte]): Stream[F, Byte] =
+        Stream.eval(Hash1[F](algorithm)).flatMap(_.digest(data))
     }
 
-  implicit def forAsync[F[_]](implicit F: Async[F]): Hash[F] = forSync(F)
+  def forAsync[F[_]](implicit F: Async[F]): Hash[F] = forSync(F)
 }

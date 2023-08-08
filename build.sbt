@@ -78,6 +78,7 @@ ThisBuild / Test / jsEnv := {
 }
 
 val catsVersion = "2.8.0"
+val fs2Version = "3.7.0"
 val catsEffectVersion = "3.5.1"
 val scodecBitsVersion = "1.1.35"
 val munitVersion = "1.0.0-M8"
@@ -94,6 +95,7 @@ lazy val core = crossProject(JSPlatform, JVMPlatform, NativePlatform)
       "org.typelevel" %%% "cats-core" % catsVersion,
       "org.typelevel" %%% "cats-effect-kernel" % catsEffectVersion,
       "org.scodec" %%% "scodec-bits" % scodecBitsVersion,
+      "co.fs2" %%% "fs2-core" % fs2Version,
       "org.scalameta" %%% "munit" % munitVersion % Test,
       "org.typelevel" %%% "cats-laws" % catsVersion % Test,
       "org.typelevel" %%% "cats-effect" % catsEffectVersion % Test,
