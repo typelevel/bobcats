@@ -27,8 +27,6 @@ private[bobcats] final class Providers(val ps: Array[Provider]) extends AnyVal {
     provider("MessageDigest", name).toRight(
       new NoSuchAlgorithmException(s"${name} MessageDigest not available"))
 
-  def messageDigestThrow(name: String): Provider = ???
-
 }
 
 private[bobcats] object Providers {
