@@ -16,7 +16,7 @@
 
 package bobcats
 
-import cats.effect.kernel.{Sync, Resource}
+import cats.effect.kernel.{Resource, Sync}
 import scodec.bits.ByteVector
 import scalanative.unsafe._
 import scalanative.unsigned._
@@ -25,7 +25,8 @@ import openssl.err._
 import openssl.evp._
 import fs2.{Chunk, Pipe, Stream}
 
-private[bobcats] final class NativeEvpDigest[F[_]](digest: Ptr[EVP_MD])(implicit F: Sync[F]) extends UnsealedHash1[F] {
+private[bobcats] final class NativeEvpDigest[F[_]](digest: Ptr[EVP_MD])(implicit F: Sync[F])
+    extends UnsealedHash1[F] {
   def digest(data: ByteVector): F[ByteVector] = {
     val ctx = EVP_MD_CTX_new()
     val d = data.toArrayUnsafe
@@ -98,13 +99,13 @@ private[bobcats] trait Hash1CompanionPlatform {
   }
 
   def fromNameResource[F[_]](name: CString)(implicit F: Sync[F]): Resource[F, Hash1[F]] =
-    Resource.make(F.delay {
-      val md = EVP_MD_fetch(null, name, null)
-      md
-    })(md => F.delay(EVP_MD_free(md))).map { md =>
-      new NativeEvpDigest(md)
-    }
+    Resource
+      .make(F.delay {
+        val md = EVP_MD_fetch(null, name, null)
+        md
+      })(md => F.delay(EVP_MD_free(md)))
+      .map { md => new NativeEvpDigest(md) }
 
-  def forSyncResource[F[_] : Sync](algorithm: HashAlgorithm): Resource[F, Hash1[F]] =
+  def forSyncResource[F[_]: Sync](algorithm: HashAlgorithm): Resource[F, Hash1[F]] =
     fromNameResource(evpAlgorithm(algorithm))
 }
