@@ -19,7 +19,7 @@ package bobcats
 import java.security.{MessageDigest, Provider}
 import scodec.bits.ByteVector
 import cats.Applicative
-import cats.effect.Sync
+import cats.effect.{Resource, Sync}
 import fs2.{Chunk, Pipe, Stream}
 
 private final class JavaSecurityDigest[F[_]](algorithm: String, provider: Provider)(
@@ -59,7 +59,10 @@ private[bobcats] trait Hash1CompanionPlatform {
       new JavaSecurityDigest(name, p)(G)
     }
 
-  def apply[F[_]](algorithm: HashAlgorithm)(implicit F: Sync[F]): F[Hash1[F]] = fromName(
+  def forSync[F[_]](algorithm: HashAlgorithm)(implicit F: Sync[F]): F[Hash1[F]] = fromName(
     algorithm.toStringJava)
+
+  def forSyncResource[F[_]: Sync](algorithm: HashAlgorithm): Resource[F, Hash1[F]] =
+    Resource.eval(forSync[F](algorithm))
 
 }

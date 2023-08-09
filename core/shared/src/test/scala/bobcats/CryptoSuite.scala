@@ -16,15 +16,14 @@
 
 package bobcats
 
-import cats.effect.{IO, Resource}
+import cats.effect.IO
 import munit.CatsEffectSuite
 
 trait CryptoSuite extends CatsEffectSuite {
 
   private val cryptoFixture = ResourceSuiteLocalFixture(
     "crypto",
-    // TODO: If we want to pool, which would be quite nice. This _ought_ to return a resouce
-    Resource.make(Crypto.forAsync[IO])(_ => IO.unit)
+    Crypto.forAsyncResource[IO]
   )
 
   override def munitFixtures = List(cryptoFixture)
@@ -33,4 +32,3 @@ trait CryptoSuite extends CatsEffectSuite {
   implicit def hash: Hash[IO] = crypto.hash
 
 }
-

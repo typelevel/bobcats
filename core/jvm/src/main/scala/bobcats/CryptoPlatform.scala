@@ -16,7 +16,7 @@
 
 package bobcats
 
-import cats.effect.kernel.{Async, Sync}
+import cats.effect.kernel.{Async, Resource, Sync}
 
 private[bobcats] trait CryptoCompanionPlatform {
 
@@ -29,5 +29,9 @@ private[bobcats] trait CryptoCompanionPlatform {
   }
 
   def forAsync[F[_]: Async]: F[Crypto[F]] = forSync
+
+  def forSyncResource[F[_]: Sync]: Resource[F, Crypto[F]] = Resource.eval(forSync[F])
+
+  def forAsyncResource[F[_]: Async]: Resource[F, Crypto[F]] = Resource.eval(forSync[F])
 
 }

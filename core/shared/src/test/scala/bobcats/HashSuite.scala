@@ -42,6 +42,9 @@ class HashSuite extends CryptoSuite {
           .through(Hash[IO].digestPipe(algorithm))
           .compile
           .to(ByteVector)
+          .assertEquals(bytes) *> Hash1
+          .forSyncResource[IO](algorithm)
+          .use(_.digest(data))
           .assertEquals(bytes)
     }
 

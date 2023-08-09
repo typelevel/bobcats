@@ -32,6 +32,19 @@ private[bobcats] object evp {
   final val EVP_MAX_MD_SIZE = 64
 
   /**
+   * See [[https://www.openssl.org/docs/man3.1/man3/EVP_MD_fetch.html]]
+   */
+  def EVP_MD_fetch(
+      ctx: Ptr[OSSL_LIB_CTX],
+      algorithm: CString,
+      properties: CString): Ptr[EVP_MD] = extern
+
+  /**
+   * See [[https://www.openssl.org/docs/man3.1/man3/EVP_MD_free.html]]
+   */
+  def EVP_MD_free(ctx: Ptr[EVP_MD]): Unit = extern
+
+  /**
    * See [[https://www.openssl.org/docs/man3.1/man3/EVP_MD_CTX_new.html]]
    */
   def EVP_MD_CTX_new(): Ptr[EVP_MD_CTX] = extern

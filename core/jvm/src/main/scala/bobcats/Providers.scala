@@ -16,7 +16,7 @@
 
 package bobcats
 
-import java.security.{NoSuchAlgorithmException, Security, Provider}
+import java.security.{NoSuchAlgorithmException, Provider, Security}
 
 private[bobcats] final class Providers(val ps: Array[Provider]) extends AnyVal {
 
@@ -24,7 +24,8 @@ private[bobcats] final class Providers(val ps: Array[Provider]) extends AnyVal {
     ps.find(provider => provider.getService(service, name) != null)
 
   def messageDigest(name: String): Either[NoSuchAlgorithmException, Provider] =
-    provider("MessageDigest", name).toRight(new NoSuchAlgorithmException(s"${name} MessageDigest not available"))
+    provider("MessageDigest", name).toRight(
+      new NoSuchAlgorithmException(s"${name} MessageDigest not available"))
 
   def messageDigestThrow(name: String): Provider = ???
 
