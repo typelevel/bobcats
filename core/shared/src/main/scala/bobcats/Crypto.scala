@@ -16,8 +16,6 @@
 
 package bobcats
 
-import cats.effect.IO
-
 sealed trait Crypto[F[_]] {
   def hash: Hash[F]
   def hmac: Hmac[F]
@@ -26,9 +24,5 @@ sealed trait Crypto[F[_]] {
 private[bobcats] trait UnsealedCrypto[F[_]] extends Crypto[F]
 
 object Crypto extends CryptoCompanionPlatform {
-
-  implicit def forIO: Crypto[IO] = forAsync
-
   def apply[F[_]](implicit crypto: Crypto[F]): crypto.type = crypto
-
 }

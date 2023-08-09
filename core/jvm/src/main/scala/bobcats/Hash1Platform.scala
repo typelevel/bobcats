@@ -16,8 +16,7 @@
 
 package bobcats
 
-import cats.syntax.all._
-import java.security.{MessageDigest, NoSuchAlgorithmException, Provider, Security}
+import java.security.{MessageDigest, Provider}
 import scodec.bits.ByteVector
 import cats.Applicative
 import cats.effect.Sync
@@ -47,15 +46,18 @@ private final class JavaSecurityDigest[F[_]](algorithm: String, provider: Provid
 
 private[bobcats] trait Hash1CompanionPlatform {
 
-  private[bobcats] def providerForName(ps: Array[Provider], name: String): Option[Provider] =
-    ps.find(provider => provider.getService("MessageDigest", name) != null)
-
-  def fromName[F[_]](name: String)(implicit F: Sync[F]): F[Hash1[F]] = F.delay {
-    // `Security#getProviders` is a mutable array, so cache the `Provider`
-    val p = providerForName(Security.getProviders(), name)
-      .getOrElse(throw new NoSuchAlgorithmException(s"${name} MessageDigest not available"))
-    new JavaSecurityDigest(name, p)
-  }
+  /**
+   * Get a hash for a specific name.
+   */
+  def fromName[F[_], G[_]](name: String)(implicit F: Sync[F], G: Applicative[G]): F[Hash1[G]] =
+    F.delay {
+      // `Security#getProviders` is a mutable array, so cache the `Provider`
+      val p = Providers.get().messageDigest(name) match {
+        case Left(e) => throw e
+        case Right(p) => p
+      }
+      new JavaSecurityDigest(name, p)(G)
+    }
 
   def apply[F[_]](algorithm: HashAlgorithm)(implicit F: Sync[F]): F[Hash1[F]] = fromName(
     algorithm.toStringJava)

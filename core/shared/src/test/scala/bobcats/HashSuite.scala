@@ -16,90 +16,58 @@
 
 package bobcats
 
-import cats.effect.{IO, MonadCancelThrow}
-import cats.Functor
-import cats.syntax.all._
-import munit.CatsEffectSuite
+import cats.effect.IO
 import scodec.bits.ByteVector
+import fs2.{Chunk, Stream}
 
-import scala.reflect.ClassTag
-
-class HashSuite extends CatsEffectSuite {
+class HashSuite extends CryptoSuite {
 
   import HashAlgorithm._
 
   val data = ByteVector.encodeAscii("The quick brown fox jumps over the lazy dog").toOption.get
 
-  def testHash[F[_]: Hash: cats.Monad](algorithm: HashAlgorithm, expect: String)(
-      implicit ct: ClassTag[F[Nothing]]) =
-    test(s"$algorithm with ${ct.runtimeClass.getSimpleName()}") {
-      Hash[F].digest(algorithm, data).map { obtained =>
-        assertEquals(
-          obtained,
-          ByteVector.fromHex(expect).get
-        )
-      }
-
-      Hash1[cats.effect.IO](algorithm).flatMap { digest =>
-        digest.digest(data).map { obtained =>
-          assertEquals(
-            obtained,
-            ByteVector.fromHex(expect).get
-          )
-        }
-      }
+  def testHash(
+      algorithm: HashAlgorithm,
+      name: String,
+      data: ByteVector,
+      expect: String,
+      ignoredRuntimes: Set[String]) =
+    test(s"$algorithm for $name vector") {
+      val runtime = BuildInfo.runtime
+      assume(!ignoredRuntimes.contains(runtime), s"${runtime} does not support ${algorithm}")
+      val bytes = ByteVector.fromHex(expect).get
+      Hash[IO].digest(algorithm, data).assertEquals(bytes) *>
+        Stream
+          .chunk(Chunk.byteVector(data))
+          .through(Hash[IO].digestPipe(algorithm))
+          .compile
+          .to(ByteVector)
+          .assertEquals(bytes)
     }
 
-  // def testHashIncremental[F[_]: Hash: MonadCancelThrow](
-  //     algorithm: HashAlgorithm,
-  //     expect: String)(implicit ct: ClassTag[F[Nothing]]) =
-  //   test(s"incremental $algorithm with ${ct.runtimeClass.getSimpleName()}") {
-  //     Hash[F].incremental(algorithm).use { digest =>
-  //       (digest.update(data) *> digest.reset *> digest.update(data) *> digest.get)
-  //         .map { obtained =>
-  //           assertEquals(
-  //             obtained,
-  //             ByteVector.fromHex(expect).get
-  //           )
-  //         }
-  //     }
-  //   }
+  def testVector(
+      algorithm: HashAlgorithm,
+      expect: String,
+      ignoredRuntimes: Set[String] = Set()) =
+    testHash(algorithm, "example", data, expect, ignoredRuntimes)
 
-  def testEmpty[F[_]: Hash: Functor](algorithm: HashAlgorithm, expect: String)(
-      implicit ct: ClassTag[F[Nothing]]) =
-    test(s"empty $algorithm with ${ct.runtimeClass.getSimpleName()}") {
-      Hash[F].digest(algorithm, ByteVector.empty).map { obtained =>
-        assertEquals(
-          obtained,
-          ByteVector.fromHex(expect).get
-        )
-      }
-    }
+  def testEmpty(
+      algorithm: HashAlgorithm,
+      expect: String,
+      ignoredRuntimes: Set[String] = Set()) =
+    testHash(algorithm, "empty", ByteVector.empty, expect, ignoredRuntimes)
 
-  def tests[F[_]: Hash: MonadCancelThrow](implicit ct: ClassTag[F[Nothing]]) = {
-    if (Set("JVM", "NodeJS", "Native").contains(BuildInfo.runtime))
-      testHash[F](MD5, "9e107d9d372bb6826bd81d3542a419d6")
+  testVector(SHA1, "2fd4e1c67a2d28fced849ee1bb76e7391b93eb12")
+  testEmpty(SHA1, "da39a3ee5e6b4b0d3255bfef95601890afd80709")
+  testVector(SHA256, "d7a8fbb307d7809469ca9abcb0082e4f8d5651e46d3cdb762d02d0bf37c9e592")
+  testEmpty(SHA256, "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855")
+  testVector(
+    SHA512,
+    "07e547d9586f6a73f73fbac0435ed76951218fb7d0c8d788a309d785436bbb642e93a252a954f23912547d1e8a3b5ed6e1bfd7097821233fa0538f3db854fee6")
+  testEmpty(
+    SHA512,
+    "cf83e1357eefb8bdf1542850d66d8007d620e4050b5715dc83f4a921d36ce9ce47d0d13c5d85f2b0ff8318d2877eec2f63b931bd47417a81a538327af927da3e")
 
-    // if (Set("JVM", "NodeJS", "Native").contains(BuildInfo.runtime)) {
-    //   testHashIncremental[F](MD5, "9e107d9d372bb6826bd81d3542a419d6")
-    //   testHashIncremental[F](SHA1, "2fd4e1c67a2d28fced849ee1bb76e7391b93eb12")
-    // }
-
-    testHash[F](SHA1, "2fd4e1c67a2d28fced849ee1bb76e7391b93eb12")
-    testEmpty[F](SHA1, "da39a3ee5e6b4b0d3255bfef95601890afd80709")
-
-    testHash[F](SHA256, "d7a8fbb307d7809469ca9abcb0082e4f8d5651e46d3cdb762d02d0bf37c9e592")
-    testEmpty[F](SHA256, "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855")
-    testHash[F](
-      SHA512,
-      "07e547d9586f6a73f73fbac0435ed76951218fb7d0c8d788a309d785436bbb642e93a252a954f23912547d1e8a3b5ed6e1bfd7097821233fa0538f3db854fee6")
-
-    testEmpty[F](SHA256, "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855")
-    testEmpty[F](
-      SHA512,
-      "cf83e1357eefb8bdf1542850d66d8007d620e4050b5715dc83f4a921d36ce9ce47d0d13c5d85f2b0ff8318d2877eec2f63b931bd47417a81a538327af927da3e")
-  }
-
-  tests[IO]
+  testVector(MD5, "9e107d9d372bb6826bd81d3542a419d6", ignoredRuntimes = Set("Browser"))
 
 }

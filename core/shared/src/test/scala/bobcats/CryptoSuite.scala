@@ -16,18 +16,21 @@
 
 package bobcats
 
-import cats.effect.kernel.{Async, Sync}
+import cats.effect.{IO, Resource}
+import munit.CatsEffectSuite
 
-private[bobcats] trait CryptoCompanionPlatform {
+trait CryptoSuite extends CatsEffectSuite {
 
-  def forSync[F[_]](implicit F: Sync[F]): F[Crypto[F]] = F.delay {
-    val providers = Providers.get()
-    new UnsealedCrypto[F] {
-      override def hash: Hash[F] = Hash.forProviders(providers)
-      override def hmac: Hmac[F] = ???
-    }
-  }
+  private val cryptoFixture = ResourceSuiteLocalFixture(
+    "crypto",
+    // TODO: If we want to pool, which would be quite nice. This _ought_ to return a resouce
+    Resource.make(Crypto.forAsync[IO])(_ => IO.unit)
+  )
 
-  def forAsync[F[_]: Async]: F[Crypto[F]] = forSync
+  override def munitFixtures = List(cryptoFixture)
+
+  implicit def crypto: Crypto[IO] = cryptoFixture()
+  implicit def hash: Hash[IO] = crypto.hash
 
 }
+

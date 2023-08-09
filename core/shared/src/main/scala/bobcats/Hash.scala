@@ -16,7 +16,6 @@
 
 package bobcats
 
-import cats.effect.IO
 import scodec.bits.ByteVector
 import fs2.Pipe
 
@@ -28,9 +27,5 @@ sealed trait Hash[F[_]] {
 private[bobcats] trait UnsealedHash[F[_]] extends Hash[F]
 
 object Hash extends HashCompanionPlatform {
-
-  implicit def forIO: Hash[IO] = forAsync
-
   def apply[F[_]](implicit hash: Hash[F]): hash.type = hash
-
 }
