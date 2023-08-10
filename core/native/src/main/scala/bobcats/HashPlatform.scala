@@ -16,49 +16,36 @@
 
 package bobcats
 
-import cats.effect.kernel.Async
+import cats.effect.kernel.{Async, Resource, Sync}
 import scodec.bits.ByteVector
 import scalanative.unsafe._
-import scalanative.unsigned._
 import openssl._
-import openssl.err._
 import openssl.evp._
+import fs2.{Pipe, Stream}
 
 private[bobcats] trait HashCompanionPlatform {
-  implicit def forAsync[F[_]](implicit F: Async[F]): Hash[F] =
+
+  private[bobcats] def forContext[F[_]](ctx: Ptr[OSSL_LIB_CTX])(implicit F: Sync[F]): Hash[F] =
     new UnsealedHash[F] {
+
       override def digest(algorithm: HashAlgorithm, data: ByteVector): F[ByteVector] = {
-
-        import HashAlgorithm._
-
-        val digest = algorithm match {
-          case MD5 => EVP_md5()
-          case SHA1 => EVP_sha1()
-          case SHA256 => EVP_sha256()
-          case SHA512 => EVP_sha512()
-        }
-
-        F.delay {
-          val ctx = EVP_MD_CTX_new()
-          val d = data.toArrayUnsafe
-          try {
-            val md = stackalloc[CUnsignedChar](EVP_MAX_MD_SIZE)
-            val s = stackalloc[CInt]()
-            if (EVP_DigestInit_ex(ctx, digest, null) != 1) {
-              throw Error("EVP_DigestInit_ex", ERR_get_error())
-            }
-            val len = d.length
-            if (EVP_DigestUpdate(ctx, if (len == 0) null else d.at(0), len.toULong) != 1) {
-              throw Error("EVP_DigestUpdate", ERR_get_error())
-            }
-            if (EVP_DigestFinal_ex(ctx, md, s) != 1) {
-              throw Error("EVP_DigestFinal_ex", ERR_get_error())
-            }
-            ByteVector.fromPtr(md.asInstanceOf[Ptr[Byte]], s(0).toLong)
-          } finally {
-            EVP_MD_CTX_free(ctx)
-          }
-        }
+        val md = Hash1.evpFetch(ctx, Hash1.evpAlgorithm(algorithm))
+        // Note, this is eager currently which is why the cleanup is working
+        val digest = new NativeEvpDigest(md).digest(data)
+        EVP_MD_free(md)
+        digest
       }
+
+      override def digestPipe(algorithm: HashAlgorithm): Pipe[F, Byte, Byte] =
+        in => {
+          val alg = Hash1.evpAlgorithm(algorithm)
+          Stream
+            .bracket(F.delay(Hash1.evpFetch(ctx, alg)))(md => F.delay(EVP_MD_free(md)))
+            .flatMap { md => in.through(new NativeEvpDigest(md).pipe) }
+        }
     }
+
+  def forSync[F[_]: Sync]: Resource[F, Hash[F]] = Context[F].map(forContext[F])
+  def forAsync[F[_]: Async]: Resource[F, Hash[F]] = forSync
+
 }

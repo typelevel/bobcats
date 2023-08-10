@@ -16,12 +16,18 @@
 
 package bobcats
 
-import cats.effect.kernel.Async
+import cats.effect.kernel.{Async, Resource, Sync}
 
 private[bobcats] trait CryptoCompanionPlatform {
-  implicit def forAsync[F[_]: Async]: Crypto[F] =
-    new UnsealedCrypto[F] {
-      override def hash: Hash[F] = Hash[F]
-      override def hmac: Hmac[F] = Hmac[F]
-    }
+
+  def forSync[F[_]](implicit F: Sync[F]): Resource[F, Crypto[F]] =
+    Resource.eval(F.delay {
+      val providers = Providers.get()
+      new UnsealedCrypto[F] {
+        override def hash: Hash[F] = Hash.forProviders(providers)
+        override def hmac: Hmac[F] = Hmac.forProviders(providers)
+      }
+    })
+
+  def forAsync[F[_]: Async]: Resource[F, Crypto[F]] = forSync
 }

@@ -16,14 +16,20 @@
 
 package bobcats
 
-class GeneralSecurityException(message: String = null, cause: Throwable = null)
-    extends Exception(message, cause)
+import fs2.Pipe
+import scodec.bits.ByteVector
 
-class NoSuchAlgorithmException(message: String = null, cause: Throwable = null)
-    extends GeneralSecurityException(message, cause)
+/**
+ * Hash for a single algorithm.
+ *
+ * Use this class if you have a specific `HashAlgorithm` known in advance or you're using a
+ * customized algorithm not covered by the `HashAlgorithm` class.
+ */
+sealed trait Hash1[F[_]] {
+  def digest(data: ByteVector): F[ByteVector]
+  def pipe: Pipe[F, Byte, Byte]
+}
 
-class KeyException(message: String = null, cause: Throwable = null)
-    extends GeneralSecurityException(message, cause)
+private[bobcats] trait UnsealedHash1[F[_]] extends Hash1[F]
 
-class InvalidKeyException(message: String = null, cause: Throwable = null)
-    extends KeyException(message, cause)
+object Hash1 extends Hash1CompanionPlatform

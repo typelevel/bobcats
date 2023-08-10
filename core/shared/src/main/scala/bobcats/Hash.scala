@@ -17,15 +17,15 @@
 package bobcats
 
 import scodec.bits.ByteVector
+import fs2.Pipe
 
 sealed trait Hash[F[_]] {
   def digest(algorithm: HashAlgorithm, data: ByteVector): F[ByteVector]
+  def digestPipe(algorithm: HashAlgorithm): Pipe[F, Byte, Byte]
 }
 
 private[bobcats] trait UnsealedHash[F[_]] extends Hash[F]
 
 object Hash extends HashCompanionPlatform {
-
   def apply[F[_]](implicit hash: Hash[F]): hash.type = hash
-
 }

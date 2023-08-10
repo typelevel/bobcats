@@ -24,7 +24,5 @@ sealed trait Crypto[F[_]] {
 private[bobcats] trait UnsealedCrypto[F[_]] extends Crypto[F]
 
 object Crypto extends CryptoCompanionPlatform {
-
   def apply[F[_]](implicit crypto: Crypto[F]): crypto.type = crypto
-
 }

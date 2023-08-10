@@ -16,7 +16,7 @@
 
 package bobcats
 
-import cats.effect.kernel.Async
+import cats.effect.kernel.Sync
 import scodec.bits.ByteVector
 
 import javax.crypto
@@ -26,12 +26,18 @@ private[bobcats] trait HmacPlatform[F[_]] {
 }
 
 private[bobcats] trait HmacCompanionPlatform {
-  implicit def forAsync[F[_]](implicit F: Async[F]): Hmac[F] =
+
+  private[bobcats] def forProviders[F[_]](providers: Providers)(implicit F: Sync[F]): Hmac[F] =
     new UnsealedHmac[F] {
 
       override def digest(key: SecretKey[HmacAlgorithm], data: ByteVector): F[ByteVector] =
         F.catchNonFatal {
-          val mac = crypto.Mac.getInstance(key.algorithm.toStringJava)
+          val alg = key.algorithm.toStringJava
+          val provider = providers.mac(alg) match {
+            case Left(e) => throw e
+            case Right(p) => p
+          }
+          val mac = crypto.Mac.getInstance(key.algorithm.toStringJava, provider)
           val sk = key.toJava
           mac.init(sk)
           mac.update(data.toByteBuffer)

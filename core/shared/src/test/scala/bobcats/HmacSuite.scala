@@ -16,15 +16,10 @@
 
 package bobcats
 
-import cats.Functor
 import cats.effect.IO
-import cats.syntax.all._
-import munit.CatsEffectSuite
 import scodec.bits._
 
-import scala.reflect.ClassTag
-
-class HmacSuite extends CatsEffectSuite {
+class HmacSuite extends CryptoSuite {
 
   import HmacAlgorithm._
 
@@ -79,48 +74,34 @@ class HmacSuite extends CatsEffectSuite {
   val key = ByteVector.encodeAscii("key").toOption.get
   val data = ByteVector.encodeAscii("The quick brown fox jumps over the lazy dog").toOption.get
 
-  def testHmac[F[_]: Hmac: Functor](algorithm: HmacAlgorithm, expected: ByteVector)(
-      implicit ct: ClassTag[F[Nothing]]) =
-    test(s"$algorithm with ${ct.runtimeClass.getSimpleName()}") {
-      Hmac[F].digest(SecretKeySpec(key, algorithm), data).map { obtained =>
-        assertEquals(
-          obtained,
-          expected
-        )
-      }
+  def testHmac(algorithm: HmacAlgorithm, expected: ByteVector) =
+    test(s"$algorithm") {
+      Hmac[IO].digest(SecretKeySpec(key, algorithm), data).assertEquals(expected)
     }
 
-  def testHmacSha1[F[_]: Hmac: Functor](testCases: List[TestCase])(
-      implicit ct: ClassTag[F[Nothing]]) =
+  def testHmacSha1(testCases: List[TestCase]) =
     testCases.zipWithIndex.foreach {
       case (TestCase(key, data, expected), idx) =>
-        test(s"SHA1 RFC2022 test case ${idx + 1} with ${ct.runtimeClass.getSimpleName()}") {
-          Hmac[F].digest(SecretKeySpec(key, SHA1), data).map { obtained =>
-            assertEquals(obtained, expected)
-          }
+        test(s"SHA1 RFC2022 test case ${idx + 1}") {
+          Hmac[IO].digest(SecretKeySpec(key, SHA1), data).assertEquals(expected)
         }
     }
 
-  def tests[F[_]: Hmac: Functor](implicit ct: ClassTag[F[Nothing]]) = {
-    testHmacSha1[F](sha1TestCases)
-    testHmac[F](SHA1, hex"de7c9b85b8b78aa6bc8a7a36f70a90701c9db4d9")
-    testHmac[F](SHA256, hex"f7bc83f430538424b13298e6aa6fb143ef4d59a14946175997479dbc2d1a3cd8")
-    testHmac[F](
-      SHA512,
-      hex"b42af09057bac1e2d41708e48a902e09b5ff7f12ab428a4fe86653c73dd248fb82f948a549f7b791a5b41915ee4d1ec3935357e4e2317250d0372afa2ebeeb3a")
-  }
+  testHmacSha1(sha1TestCases)
+  testHmac(SHA1, hex"de7c9b85b8b78aa6bc8a7a36f70a90701c9db4d9")
+  testHmac(SHA256, hex"f7bc83f430538424b13298e6aa6fb143ef4d59a14946175997479dbc2d1a3cd8")
+  testHmac(
+    SHA512,
+    hex"b42af09057bac1e2d41708e48a902e09b5ff7f12ab428a4fe86653c73dd248fb82f948a549f7b791a5b41915ee4d1ec3935357e4e2317250d0372afa2ebeeb3a")
 
-  def testGenerateKey[F[_]: Functor: Hmac](algorithm: HmacAlgorithm)(
-      implicit ct: ClassTag[F[Nothing]]) =
-    test(s"generate key for ${algorithm} with ${ct.runtimeClass.getSimpleName()}") {
-      Hmac[F].generateKey(algorithm).map {
+  def testGenerateKey(algorithm: HmacAlgorithm) =
+    test(s"generate key for ${algorithm}") {
+      Hmac[IO].generateKey(algorithm).map {
         case SecretKeySpec(key, keyAlgorithm) =>
           assertEquals(algorithm, keyAlgorithm)
           assert(key.size >= algorithm.minimumKeyLength)
       }
     }
 
-  tests[IO]
-
-  List(SHA1, SHA256, SHA512).foreach(testGenerateKey[IO])
+  List(SHA1, SHA256, SHA512).foreach(testGenerateKey)
 }

@@ -16,14 +16,20 @@
 
 package bobcats
 
-class GeneralSecurityException(message: String = null, cause: Throwable = null)
-    extends Exception(message, cause)
+import cats.effect.IO
+import munit.CatsEffectSuite
 
-class NoSuchAlgorithmException(message: String = null, cause: Throwable = null)
-    extends GeneralSecurityException(message, cause)
+abstract class CryptoSuite extends CatsEffectSuite {
 
-class KeyException(message: String = null, cause: Throwable = null)
-    extends GeneralSecurityException(message, cause)
+  private val cryptoFixture = ResourceSuiteLocalFixture(
+    "crypto",
+    Crypto.forAsync[IO]
+  )
 
-class InvalidKeyException(message: String = null, cause: Throwable = null)
-    extends KeyException(message, cause)
+  override def munitFixtures = List(cryptoFixture)
+
+  implicit protected def crypto: Crypto[IO] = cryptoFixture()
+  implicit protected def hash: Hash[IO] = crypto.hash
+  implicit protected def hmac: Hmac[IO] = crypto.hmac
+
+}
