@@ -16,7 +16,7 @@
 
 package bobcats
 
-import cats.effect.kernel.Sync
+import cats.effect.kernel.{Async, Resource, Sync}
 import scodec.bits.ByteVector
 import scalanative.unsafe._
 import openssl._
@@ -29,7 +29,7 @@ private[bobcats] trait HashCompanionPlatform {
     new UnsealedHash[F] {
 
       override def digest(algorithm: HashAlgorithm, data: ByteVector): F[ByteVector] = {
-        val md = EVP_MD_fetch(ctx, Hash1.evpAlgorithm(algorithm), null)
+        val md = Hash1.evpFetch(ctx, Hash1.evpAlgorithm(algorithm))
         // Note, this is eager currently which is why the cleanup is working
         val digest = new NativeEvpDigest(md).digest(data)
         EVP_MD_free(md)
@@ -38,11 +38,14 @@ private[bobcats] trait HashCompanionPlatform {
 
       override def digestPipe(algorithm: HashAlgorithm): Pipe[F, Byte, Byte] =
         in => {
+          val alg = Hash1.evpAlgorithm(algorithm)
           Stream
-            .bracket(F.delay {
-              EVP_MD_fetch(null, Hash1.evpAlgorithm(algorithm), null)
-            })(md => F.delay(EVP_MD_free(md)))
+            .bracket(F.delay(Hash1.evpFetch(ctx, alg)))(md => F.delay(EVP_MD_free(md)))
             .flatMap { md => in.through(new NativeEvpDigest(md).pipe) }
         }
     }
+
+  def forSync[F[_]: Sync]: Resource[F, Hash[F]] = Context[F].map(forContext[F])
+  def forAsync[F[_]: Async]: Resource[F, Hash[F]] = forSync
+
 }

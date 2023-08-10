@@ -28,22 +28,12 @@ import fs2.{Chunk, Pipe, Stream}
 private[bobcats] final class NativeEvpDigest[F[_]](digest: Ptr[EVP_MD])(implicit F: Sync[F])
     extends UnsealedHash1[F] {
   def digest(data: ByteVector): F[ByteVector] = {
-    val ctx = EVP_MD_CTX_new()
     val d = data.toArrayUnsafe
+    val ctx = EVP_MD_CTX_new()
     try {
-      val md = stackalloc[CUnsignedChar](EVP_MAX_MD_SIZE)
-      val s = stackalloc[CInt]()
-      if (EVP_DigestInit_ex(ctx, digest, null) != 1) {
-        throw Error("EVP_DigestInit_ex", ERR_get_error())
-      }
-      val len = d.length
-      if (EVP_DigestUpdate(ctx, if (len == 0) null else d.at(0), len.toULong) != 1) {
-        throw Error("EVP_DigestUpdate", ERR_get_error())
-      }
-      if (EVP_DigestFinal_ex(ctx, md, s) != 1) {
-        throw Error("EVP_DigestFinal_ex", ERR_get_error())
-      }
-      F.pure(ByteVector.fromPtr(md.asInstanceOf[Ptr[Byte]], s(0).toLong))
+      init(ctx, digest)
+      update(ctx, d)
+      F.pure(`final`(ctx))
     } catch {
       case e: Error => F.raiseError(e)
     } finally {
@@ -51,40 +41,45 @@ private[bobcats] final class NativeEvpDigest[F[_]](digest: Ptr[EVP_MD])(implicit
     }
   }
 
-  def pipe: Pipe[F, Byte, Byte] = { in =>
-    Stream
-      .bracket(F.delay {
-        val ctx = EVP_MD_CTX_new()
-        if (EVP_DigestInit_ex(ctx, digest, null) != 1) {
-          throw Error("EVP_DigestInit_ex", ERR_get_error())
-        }
-        ctx
-      })(ctx => F.delay(EVP_MD_CTX_free(ctx)))
-      .flatMap { ctx =>
-        in.chunks
-          .evalMap { chunk =>
-            F.delay {
-              val d = chunk.toByteVector.toArrayUnsafe
-              val len = d.length
-              if (EVP_DigestUpdate(ctx, if (len == 0) null else d.at(0), len.toULong) != 1) {
-                throw Error("EVP_DigestUpdate", ERR_get_error())
-              }
-            }
-          }
-          .drain ++ Stream.eval {
-          F.delay {
-            val md = stackalloc[CUnsignedChar](EVP_MAX_MD_SIZE)
-            val s = stackalloc[CInt]()
+  private def update(ctx: Ptr[EVP_MD_CTX], data: Array[Byte]): Unit = {
+    val len = data.length
+    if (EVP_DigestUpdate(ctx, if (len == 0) null else data.at(0), len.toULong) != 1) {
+      throw Error("EVP_DigestUpdate", ERR_get_error())
+    }
+  }
 
-            if (EVP_DigestFinal_ex(ctx, md, s) != 1) {
-              throw Error("EVP_DigestFinal_ex", ERR_get_error())
-            }
-            Chunk.byteVector(ByteVector.fromPtr(md.asInstanceOf[Ptr[Byte]], s(0).toLong))
-          }
-        }.unchunks
-      }
+  private def init(ctx: Ptr[EVP_MD_CTX], digest: Ptr[EVP_MD]): Unit =
+    if (EVP_DigestInit_ex(ctx, digest, null) != 1) {
+      throw Error("EVP_DigestInit_ex", ERR_get_error())
+    }
+
+  private def `final`(ctx: Ptr[EVP_MD_CTX]): ByteVector = {
+    val md = stackalloc[CUnsignedChar](EVP_MAX_MD_SIZE)
+    val s = stackalloc[CInt]()
+    if (EVP_DigestFinal_ex(ctx, md, s) != 1) {
+      throw Error("EVP_DigestFinal_ex", ERR_get_error())
+    }
+    ByteVector.fromPtr(md.asInstanceOf[Ptr[Byte]], s(0).toLong)
+  }
+
+  private val context: Stream[F, Ptr[EVP_MD_CTX]] =
+    Stream.bracket(F.delay {
+      val ctx = EVP_MD_CTX_new()
+      init(ctx, digest)
+      ctx
+    })(ctx => F.delay(EVP_MD_CTX_free(ctx)))
+
+  def pipe: Pipe[F, Byte, Byte] = { in =>
+    context.flatMap { ctx =>
+      // Most of the calls throw, so wrap in a `delay`
+      in.chunks
+        .evalMap { chunk => F.delay(update(ctx, chunk.toByteVector.toArrayUnsafe)) }
+        .drain ++ Stream.eval(F.delay(Chunk.byteVector(`final`(ctx))))
+    }.unchunks
   }
 }
+
+import java.security.NoSuchAlgorithmException
 
 private[bobcats] trait Hash1CompanionPlatform {
 
@@ -98,14 +93,25 @@ private[bobcats] trait Hash1CompanionPlatform {
     }
   }
 
-  def fromNameResource[F[_]](name: CString)(implicit F: Sync[F]): Resource[F, Hash1[F]] =
-    Resource
-      .make(F.delay {
-        val md = EVP_MD_fetch(null, name, null)
-        md
-      })(md => F.delay(EVP_MD_free(md)))
-      .map { md => new NativeEvpDigest(md) }
+  private[bobcats] def evpFetch(ctx: Ptr[OSSL_LIB_CTX], name: CString): Ptr[EVP_MD] = {
+    val md = EVP_MD_fetch(ctx, name, null)
+    if (md == null) {
+      throw new NoSuchAlgorithmException(
+        s"${fromCString(name)} Message Digest not available",
+        Error("EVP_MD_fetch", ERR_get_error())
+      )
+    }
+    md
+  }
 
-  def forSyncResource[F[_]: Sync](algorithm: HashAlgorithm): Resource[F, Hash1[F]] =
-    fromNameResource(evpAlgorithm(algorithm))
+  /**
+   * Create a hash for a particular name used by `libcrypto`.
+   */
+  def fromCryptoName[F[_]](name: CString)(implicit F: Sync[F]): Resource[F, Hash1[F]] =
+    Resource
+      .make(F.delay(evpFetch(null, name)))(md => F.delay(EVP_MD_free(md)))
+      .map(new NativeEvpDigest(_))
+
+  def forSync[F[_]: Sync](algorithm: HashAlgorithm): Resource[F, Hash1[F]] =
+    fromCryptoName(evpAlgorithm(algorithm))
 }

@@ -18,12 +18,11 @@ package bobcats
 
 import java.security.{MessageDigest, Provider}
 import scodec.bits.ByteVector
-import cats.Applicative
 import cats.effect.{Resource, Sync}
 import fs2.{Chunk, Pipe, Stream}
 
 private final class JavaSecurityDigest[F[_]](algorithm: String, provider: Provider)(
-    implicit F: Applicative[F])
+    implicit F: Sync[F])
     extends UnsealedHash1[F] {
 
   override def digest(data: ByteVector): F[ByteVector] = F.pure {
@@ -34,10 +33,13 @@ private final class JavaSecurityDigest[F[_]](algorithm: String, provider: Provid
 
   override val pipe: Pipe[F, Byte, Byte] =
     in =>
-      in.chunks
-        .fold(MessageDigest.getInstance(algorithm, provider)) { (h, data) =>
-          h.update(data.toByteBuffer)
-          h
+      Stream
+        .eval(F.delay(MessageDigest.getInstance(algorithm, provider)))
+        .flatMap { digest =>
+          in.chunks.fold(digest) { (h, data) =>
+            h.update(data.toByteBuffer)
+            h
+          }
         }
         .flatMap { h => Stream.chunk(Chunk.array(h.digest())) }
 
@@ -47,22 +49,19 @@ private final class JavaSecurityDigest[F[_]](algorithm: String, provider: Provid
 private[bobcats] trait Hash1CompanionPlatform {
 
   /**
-   * Get a hash for a specific name.
+   * Get a hash for a specific name used by the Java security providers.
    */
-  def fromName[F[_], G[_]](name: String)(implicit F: Sync[F], G: Applicative[G]): F[Hash1[G]] =
+  def fromJavaName[F[_]](name: String)(implicit F: Sync[F]): F[Hash1[F]] =
     F.delay {
       // `Security#getProviders` is a mutable array, so cache the `Provider`
       val p = Providers.get().messageDigest(name) match {
         case Left(e) => throw e
         case Right(p) => p
       }
-      new JavaSecurityDigest(name, p)(G)
+      new JavaSecurityDigest(name, p)(F)
     }
 
-  def forSync[F[_]](algorithm: HashAlgorithm)(implicit F: Sync[F]): F[Hash1[F]] = fromName(
-    algorithm.toStringJava)
-
-  def forSyncResource[F[_]: Sync](algorithm: HashAlgorithm): Resource[F, Hash1[F]] =
-    Resource.eval(forSync[F](algorithm))
+  def forSync[F[_]: Sync](algorithm: HashAlgorithm): Resource[F, Hash1[F]] =
+    Resource.eval(fromJavaName[F](algorithm.toStringJava))
 
 }

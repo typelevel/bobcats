@@ -16,7 +16,7 @@
 
 package bobcats
 
-import cats.effect.kernel.Async
+import cats.effect.kernel.{Async, Resource, Sync}
 import scodec.bits.ByteVector
 
 private[bobcats] trait HmacPlatform[F[_]] {}
@@ -31,7 +31,11 @@ import scala.scalanative.libc._
 import scala.scalanative.unsigned._
 
 private[bobcats] trait HmacCompanionPlatform {
-  implicit def forAsync[F[_]](implicit F: Async[F]): Hmac[F] =
+
+  def forAsync[F[_]: Async]: Resource[F, Hmac[F]] = forSync
+  def forSync[F[_]: Sync]: Resource[F, Hmac[F]] = Context[F].map(forContext[F])
+
+  private[bobcats] def forContext[F[_]](ctx: Ptr[OSSL_LIB_CTX])(implicit F: Sync[F]): Hmac[F] =
     new UnsealedHmac[F] {
 
       /**
@@ -40,26 +44,19 @@ private[bobcats] trait HmacCompanionPlatform {
       override def digest(key: SecretKey[HmacAlgorithm], data: ByteVector): F[ByteVector] = {
         key match {
           case SecretKeySpec(key, algorithm) =>
-            import HmacAlgorithm._
-
-            val md = algorithm match {
-              case SHA1 => EVP_sha1()
-              case SHA256 => EVP_sha256()
-              case SHA512 => EVP_sha512()
-            }
-            val mdName = EVP_MD_get0_name(md)
+            val mdName = Hash1.evpAlgorithm(algorithm.hashAlgorithm)
             val mdLen = string.strlen(mdName)
-            F.delay {
+            F.catchNonFatal {
               val oneshot = stackalloc[CInt]()
               oneshot(0) = 1
               val params = stackalloc[OSSL_PARAM](3)
               OSSL_MAC_PARAM_DIGEST(params(0), mdName, mdLen)
               OSSL_MAC_PARAM_DIGEST_ONESHOT(params(1), oneshot)
               OSSL_PARAM_END(params(2))
-              val mac = EVP_MAC_fetch(null, c"HMAC", null)
+              val mac = EVP_MAC_fetch(ctx, c"HMAC", null)
 
               if (mac == null) {
-                throw new Error("EVP_MAC_fetch")
+                throw Error("EVP_MAC_fetch", ERR_get_error())
               } else {
                 val ctx = EVP_MAC_CTX_new(mac)
                 try {
@@ -100,11 +97,11 @@ private[bobcats] trait HmacCompanionPlatform {
        * See [[https://www.openssl.org/docs/man3.0/man7/EVP_RAND-CTR-DRBG.html]]
        */
       override def generateKey[A <: HmacAlgorithm](algorithm: A): F[SecretKey[A]] = {
-        F.defer {
+        F.delay {
           // See NIST SP 800-90A
           val rand = EVP_RAND_fetch(null, c"CTR-DRBG", null)
           if (rand == null) {
-            F.raiseError[SecretKey[A]](new Error("EVP_RAND_fetch"))
+            throw Error("EVP_RAND_fetch", ERR_get_error())
           } else {
             val ctx = EVP_RAND_CTX_new(rand, null)
             val params = stackalloc[OSSL_PARAM](2)
@@ -125,9 +122,7 @@ private[bobcats] trait HmacCompanionPlatform {
                 throw Error("EVP_RAND_generate", ERR_get_error())
               }
               val key = ByteVector.fromPtr(out.asInstanceOf[Ptr[Byte]], len.toLong)
-              F.pure(SecretKeySpec(key, algorithm))
-            } catch {
-              case e: Error => F.raiseError[SecretKey[A]](e)
+              SecretKeySpec(key, algorithm)
             } finally {
               EVP_RAND_CTX_free(ctx)
             }

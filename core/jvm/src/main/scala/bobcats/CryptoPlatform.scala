@@ -20,18 +20,14 @@ import cats.effect.kernel.{Async, Resource, Sync}
 
 private[bobcats] trait CryptoCompanionPlatform {
 
-  def forSync[F[_]](implicit F: Sync[F]): F[Crypto[F]] = F.delay {
-    val providers = Providers.get()
-    new UnsealedCrypto[F] {
-      override def hash: Hash[F] = Hash.forProviders(providers)
-      override def hmac: Hmac[F] = ???
-    }
-  }
+  def forSync[F[_]](implicit F: Sync[F]): Resource[F, Crypto[F]] =
+    Resource.eval(F.delay {
+      val providers = Providers.get()
+      new UnsealedCrypto[F] {
+        override def hash: Hash[F] = Hash.forProviders(providers)
+        override def hmac: Hmac[F] = Hmac.forProviders(providers)
+      }
+    })
 
-  def forAsync[F[_]: Async]: F[Crypto[F]] = forSync
-
-  def forSyncResource[F[_]: Sync]: Resource[F, Crypto[F]] = Resource.eval(forSync[F])
-
-  def forAsyncResource[F[_]: Async]: Resource[F, Crypto[F]] = Resource.eval(forSync[F])
-
+  def forAsync[F[_]: Async]: Resource[F, Crypto[F]] = forSync
 }

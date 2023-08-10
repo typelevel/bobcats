@@ -16,20 +16,15 @@
 
 package bobcats
 
-import cats.effect.IO
-import munit.CatsEffectSuite
+import openssl._
+import openssl.crypto._
+import scala.scalanative.unsafe._
 
-abstract class CryptoSuite extends CatsEffectSuite {
+import cats.effect.kernel.{Resource, Sync}
 
-  private val cryptoFixture = ResourceSuiteLocalFixture(
-    "crypto",
-    Crypto.forAsync[IO]
-  )
-
-  override def munitFixtures = List(cryptoFixture)
-
-  implicit protected def crypto: Crypto[IO] = cryptoFixture()
-  implicit protected def hash: Hash[IO] = crypto.hash
-  implicit protected def hmac: Hmac[IO] = crypto.hmac
-
+private[bobcats] object Context {
+  def apply[F[_]](implicit F: Sync[F]): Resource[F, Ptr[OSSL_LIB_CTX]] =
+    Resource.make(F.delay(OSSL_LIB_CTX_new()))(ctx => F.delay(OSSL_LIB_CTX_free(ctx)))
 }
+
+

@@ -18,17 +18,15 @@ package bobcats
 
 import cats.effect.kernel.{Async, Resource, Sync}
 
-import openssl.crypto._
-
 private[bobcats] trait CryptoCompanionPlatform {
-  def forSyncResource[F[_]](implicit F: Sync[F]): Resource[F, Crypto[F]] =
-    Resource.make(F.delay(OSSL_LIB_CTX_new()))(ctx => F.delay(OSSL_LIB_CTX_free(ctx))).map {
-      ctx =>
-        new UnsealedCrypto[F] {
-          override def hash: Hash[F] = Hash.forContext(ctx)
-          override def hmac: Hmac[F] = ???
-        }
+
+  def forSync[F[_]](implicit F: Sync[F]): Resource[F, Crypto[F]] =
+    Context[F].map { ctx =>
+      new UnsealedCrypto[F] {
+        override def hash: Hash[F] = Hash.forContext(ctx)
+        override def hmac: Hmac[F] = Hmac.forContext(ctx)
+      }
     }
 
-  def forAsyncResource[F[_]: Async]: Resource[F, Crypto[F]] = forSyncResource[F]
+  def forAsync[F[_]: Async]: Resource[F, Crypto[F]] = forSync[F]
 }

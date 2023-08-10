@@ -17,14 +17,13 @@
 package bobcats
 
 import fs2.{Pipe, Stream}
-import cats.effect.kernel.{Async, Sync}
+import cats.effect.kernel.{Async, Resource, Sync}
 import scodec.bits.ByteVector
-import cats.ApplicativeThrow
 
 private[bobcats] trait HashCompanionPlatform {
 
   private[bobcats] def forProviders[F[_]](providers: Providers)(
-      implicit F: ApplicativeThrow[F]): Hash[F] = {
+      implicit F: Sync[F]): Hash[F] = {
     new UnsealedHash[F] {
       override def digest(algorithm: HashAlgorithm, data: ByteVector): F[ByteVector] = {
         val name = algorithm.toStringJava
@@ -45,6 +44,7 @@ private[bobcats] trait HashCompanionPlatform {
     }
   }
 
-  def forSync[F[_]](implicit F: Sync[F]): F[Hash[F]] = F.delay(forProviders(Providers.get())(F))
-  def forAsync[F[_]: Async]: F[Hash[F]] = forSync
+  def forSync[F[_]](implicit F: Sync[F]): Resource[F, Hash[F]] =
+    Resource.eval(F.delay(forProviders(Providers.get())(F)))
+  def forAsync[F[_]: Async]: Resource[F, Hash[F]] = forSync
 }
