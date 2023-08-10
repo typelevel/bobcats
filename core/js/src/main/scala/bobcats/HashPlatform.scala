@@ -19,48 +19,30 @@ package bobcats
 import cats.effect.kernel.{Async, Resource, Sync}
 import cats.syntax.all._
 import scodec.bits.ByteVector
-
-private final class NodeCryptoDigest[F[_]](var hash: facade.node.Hash, algorithm: String)(
-    implicit F: Sync[F])
-    extends UnsealedDigest[F] {
-  override def update(data: ByteVector): F[Unit] = F.delay(hash.update(data.toUint8Array))
-  override val reset = F.delay {
-    hash = facade.node.crypto.createHash(algorithm)
-  }
-  override def get: F[ByteVector] = F.delay(ByteVector.view(hash.digest()))
-}
+import fs2.{Pipe, Stream}
 
 private[bobcats] trait HashCompanionPlatform {
-  implicit def forAsync[F[_]](implicit F: Async[F]): Hash[F] =
-    if (facade.isNodeJSRuntime)
-      new UnsealedHash[F] {
-
-        override def incremental(algorithm: HashAlgorithm): Resource[F, Digest[F]] =
-          Resource.make(F.delay {
-            val alg = algorithm.toStringNodeJS
-            val hash = facade.node.crypto.createHash(alg)
-            new NodeCryptoDigest(hash, alg)
-          })(_ => F.unit)
-        override def digest(algorithm: HashAlgorithm, data: ByteVector): F[ByteVector] =
-          F.delay {
-            val hash = facade.node.crypto.createHash(algorithm.toStringNodeJS)
-            hash.update(data.toUint8Array)
-            ByteVector.view(hash.digest())
+  private[bobcats] def forSyncNodeJS[F[_]: Sync]: Hash[F] =
+    new UnsealedHash[F] {
+      override def digestPipe(algorithm: HashAlgorithm): Pipe[F, Byte, Byte] =
+        in =>
+          Stream.eval(Hash1.fromJSCryptoName(algorithm.toStringNodeJS)).flatMap { hash =>
+            in.through(hash.pipe)
           }
-      }
-    else
-      new UnsealedHash[F] {
-        import facade.browser._
-        override def incremental(algorithm: HashAlgorithm): Resource[F, Digest[F]] = {
-          val err = F.raiseError[Digest[F]](
-            new UnsupportedOperationException("WebCrypto does not support incremental hashing"))
-          Resource.make(err)(_ => err.void)
-        }
 
-        override def digest(algorithm: HashAlgorithm, data: ByteVector): F[ByteVector] =
-          F.fromPromise(
-            F.delay(
-              crypto.subtle.digest(algorithm.toStringWebCrypto, data.toUint8Array.buffer)))
-            .map(ByteVector.view)
-      }
+      override def digest(algorithm: HashAlgorithm, data: ByteVector): F[ByteVector] =
+        Hash1.fromJSCryptoName(algorithm.toStringNodeJS).flatMap(_.digest(data))
+    }
+
+  private[bobcats] def forAsyncSubtleCrypto[F[_]: Async]: Hash[F] =
+    new UnsealedHash[F] {
+      override def digestPipe(algorithm: HashAlgorithm): Pipe[F, Byte, Byte] =
+        new SubtleCryptoDigest(algorithm.toStringWebCrypto).pipe
+
+      override def digest(algorithm: HashAlgorithm, data: ByteVector): F[ByteVector] =
+        new SubtleCryptoDigest(algorithm.toStringWebCrypto).digest(data)
+    }
+
+  def forAsync[F[_]: Async]: Resource[F, Hash[F]] =
+    Resource.pure(if (facade.isNodeJSRuntime) forSyncNodeJS else forAsyncSubtleCrypto)
 }

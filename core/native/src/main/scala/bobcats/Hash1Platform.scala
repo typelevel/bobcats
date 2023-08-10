@@ -16,7 +16,8 @@
 
 package bobcats
 
-import cats.effect.kernel.{Resource, Sync}
+import scala.scalanative.annotation.alwaysinline
+import cats.effect.kernel.{Async, Resource, Sync}
 import scodec.bits.ByteVector
 import scalanative.unsafe._
 import scalanative.unsigned._
@@ -33,7 +34,7 @@ private[bobcats] final class NativeEvpDigest[F[_]](digest: Ptr[EVP_MD])(implicit
     try {
       init(ctx, digest)
       update(ctx, d)
-      F.pure(`final`(ctx))
+      F.pure(`final`(ctx, (ptr, len) => ByteVector.fromPtr(ptr, len.toLong)))
     } catch {
       case e: Error => F.raiseError(e)
     } finally {
@@ -53,13 +54,13 @@ private[bobcats] final class NativeEvpDigest[F[_]](digest: Ptr[EVP_MD])(implicit
       throw Error("EVP_DigestInit_ex", ERR_get_error())
     }
 
-  private def `final`(ctx: Ptr[EVP_MD_CTX]): ByteVector = {
+  @alwaysinline private def `final`[A](ctx: Ptr[EVP_MD_CTX], f: (Ptr[Byte], Int) => A): A = {
     val md = stackalloc[CUnsignedChar](EVP_MAX_MD_SIZE)
     val s = stackalloc[CInt]()
     if (EVP_DigestFinal_ex(ctx, md, s) != 1) {
       throw Error("EVP_DigestFinal_ex", ERR_get_error())
     }
-    ByteVector.fromPtr(md.asInstanceOf[Ptr[Byte]], s(0).toLong)
+    f(md.asInstanceOf[Ptr[Byte]], s(0))
   }
 
   private val context: Stream[F, Ptr[EVP_MD_CTX]] =
@@ -74,7 +75,7 @@ private[bobcats] final class NativeEvpDigest[F[_]](digest: Ptr[EVP_MD])(implicit
       // Most of the calls throw, so wrap in a `delay`
       in.chunks
         .evalMap { chunk => F.delay(update(ctx, chunk.toByteVector.toArrayUnsafe)) }
-        .drain ++ Stream.eval(F.delay(Chunk.byteVector(`final`(ctx))))
+        .drain ++ Stream.eval(F.delay(`final`(ctx, Chunk.fromBytePtr)))
     }.unchunks
   }
 }
@@ -114,4 +115,7 @@ private[bobcats] trait Hash1CompanionPlatform {
 
   def forSync[F[_]: Sync](algorithm: HashAlgorithm): Resource[F, Hash1[F]] =
     fromCryptoName(evpAlgorithm(algorithm))
+
+  def forAsync[F[_]: Async](algorithm: HashAlgorithm): Resource[F, Hash1[F]] = forSync(
+    algorithm)
 }

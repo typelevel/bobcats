@@ -24,6 +24,8 @@ import scala.scalajs.js
 @nowarn("msg=never used")
 private[bobcats] trait crypto extends js.Any {
 
+  def getHashes(): js.Array[String] = js.native
+
   def createHash(algorithm: String): Hash = js.native
 
   def createHmac(algorithm: String, key: js.typedarray.Uint8Array): Hmac = js.native

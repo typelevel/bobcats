@@ -18,7 +18,7 @@ package bobcats
 
 import java.security.{MessageDigest, Provider}
 import scodec.bits.ByteVector
-import cats.effect.{Resource, Sync}
+import cats.effect.{Async, Resource, Sync}
 import fs2.{Chunk, Pipe, Stream}
 
 private final class JavaSecurityDigest[F[_]](algorithm: String, provider: Provider)(
@@ -51,7 +51,7 @@ private[bobcats] trait Hash1CompanionPlatform {
   /**
    * Get a hash for a specific name used by the Java security providers.
    */
-  def fromJavaName[F[_]](name: String)(implicit F: Sync[F]): F[Hash1[F]] =
+  def fromJavaSecurityName[F[_]](name: String)(implicit F: Sync[F]): F[Hash1[F]] =
     F.delay {
       // `Security#getProviders` is a mutable array, so cache the `Provider`
       val p = Providers.get().messageDigest(name) match {
@@ -62,6 +62,9 @@ private[bobcats] trait Hash1CompanionPlatform {
     }
 
   def forSync[F[_]: Sync](algorithm: HashAlgorithm): Resource[F, Hash1[F]] =
-    Resource.eval(fromJavaName[F](algorithm.toStringJava))
+    Resource.eval(fromJavaSecurityName[F](algorithm.toStringJava))
+
+  def forAsync[F[_]: Async](algorithm: HashAlgorithm): Resource[F, Hash1[F]] = forSync(
+    algorithm)
 
 }

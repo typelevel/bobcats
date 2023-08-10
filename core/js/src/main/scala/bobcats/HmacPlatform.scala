@@ -26,79 +26,78 @@ import java.lang
 private[bobcats] trait HmacPlatform[F[_]]
 
 private[bobcats] trait HmacCompanionPlatform {
-  implicit def forAsync[F[_]](implicit F: Async[F]): Hmac[F] =
-    if (facade.isNodeJSRuntime)
-      new UnsealedHmac[F] {
-        import facade.node._
-        override def digest(key: SecretKey[HmacAlgorithm], data: ByteVector): F[ByteVector] =
-          key match {
-            case SecretKeySpec(key, algorithm) =>
-              F.catchNonFatal {
-                val hmac = crypto.createHmac(algorithm.toStringNodeJS, key.toUint8Array)
-                hmac.update(data.toUint8Array)
-                ByteVector.view(hmac.digest())
-              }
-            case _ => F.raiseError(new InvalidKeyException)
-          }
+  private[bobcats] def forAsyncNodeJS[F[_]](implicit F: Async[F]): Hmac[F] =
+    new UnsealedHmac[F] {
+      import facade.node._
+      override def digest(key: SecretKey[HmacAlgorithm], data: ByteVector): F[ByteVector] =
+        key match {
+          case SecretKeySpec(key, algorithm) =>
+            F.catchNonFatal {
+              val hmac = crypto.createHmac(algorithm.toStringNodeJS, key.toUint8Array)
+              hmac.update(data.toUint8Array)
+              ByteVector.view(hmac.digest())
+            }
+          case _ => F.raiseError(new InvalidKeyException)
+        }
 
-        override def generateKey[A <: HmacAlgorithm](algorithm: A): F[SecretKey[A]] =
-          F.async_[SecretKey[A]] { cb =>
-            crypto.generateKey(
-              "hmac",
-              GenerateKeyOptions(algorithm.minimumKeyLength * lang.Byte.SIZE),
-              (err, key) =>
-                cb(
-                  Option(err)
-                    .map(js.JavaScriptException)
-                    .toLeft(SecretKeySpec(ByteVector.view(key.`export`()), algorithm)))
-            )
-          }
+      override def generateKey[A <: HmacAlgorithm](algorithm: A): F[SecretKey[A]] =
+        F.async_[SecretKey[A]] { cb =>
+          crypto.generateKey(
+            "hmac",
+            GenerateKeyOptions(algorithm.minimumKeyLength * lang.Byte.SIZE),
+            (err, key) =>
+              cb(
+                Option(err)
+                  .map(js.JavaScriptException)
+                  .toLeft(SecretKeySpec(ByteVector.view(key.`export`()), algorithm)))
+          )
+        }
 
-        override def importKey[A <: HmacAlgorithm](
-            key: ByteVector,
-            algorithm: A): F[SecretKey[A]] =
-          F.pure(SecretKeySpec(key, algorithm))
+      override def importKey[A <: HmacAlgorithm](
+          key: ByteVector,
+          algorithm: A): F[SecretKey[A]] =
+        F.pure(SecretKeySpec(key, algorithm))
+    }
 
-      }
-    else
-      new UnsealedHmac[F] {
-        import bobcats.facade.browser._
-        override def digest(key: SecretKey[HmacAlgorithm], data: ByteVector): F[ByteVector] =
-          key match {
-            case SecretKeySpec(key, algorithm) =>
-              for {
-                key <- F.fromPromise(
-                  F.delay(
-                    crypto
-                      .subtle
-                      .importKey(
-                        "raw",
-                        key.toUint8Array,
-                        HmacImportParams(algorithm.toStringWebCrypto),
-                        false,
-                        js.Array("sign"))))
-                signature <- F.fromPromise(
-                  F.delay(crypto.subtle.sign("HMAC", key, data.toUint8Array.buffer)))
-              } yield ByteVector.view(signature)
-            case _ => F.raiseError(new InvalidKeyException)
-          }
+  private[bobcats] def forAsyncSubtleCrypto[F[_]](implicit F: Async[F]): Hmac[F] =
+    new UnsealedHmac[F] {
+      import bobcats.facade.browser._
+      override def digest(key: SecretKey[HmacAlgorithm], data: ByteVector): F[ByteVector] =
+        key match {
+          case SecretKeySpec(key, algorithm) =>
+            for {
+              key <- F.fromPromise(
+                F.delay(
+                  crypto
+                    .subtle
+                    .importKey(
+                      "raw",
+                      key.toUint8Array,
+                      HmacImportParams(algorithm.toStringWebCrypto),
+                      false,
+                      js.Array("sign"))))
+              signature <- F.fromPromise(
+                F.delay(crypto.subtle.sign("HMAC", key, data.toUint8Array.buffer)))
+            } yield ByteVector.view(signature)
+          case _ => F.raiseError(new InvalidKeyException)
+        }
 
-        override def generateKey[A <: HmacAlgorithm](algorithm: A): F[SecretKey[A]] =
-          for {
-            key <- F.fromPromise(
-              F.delay(
-                crypto
-                  .subtle
-                  .generateKey(
-                    HmacKeyGenParams(algorithm.toStringWebCrypto),
-                    true,
-                    js.Array("sign"))))
-            exported <- F.fromPromise(F.delay(crypto.subtle.exportKey("raw", key)))
-          } yield SecretKeySpec(ByteVector.view(exported), algorithm)
+      override def generateKey[A <: HmacAlgorithm](algorithm: A): F[SecretKey[A]] =
+        for {
+          key <- F.fromPromise(
+            F.delay(
+              crypto
+                .subtle
+                .generateKey(
+                  HmacKeyGenParams(algorithm.toStringWebCrypto),
+                  true,
+                  js.Array("sign"))))
+          exported <- F.fromPromise(F.delay(crypto.subtle.exportKey("raw", key)))
+        } yield SecretKeySpec(ByteVector.view(exported), algorithm)
 
-        override def importKey[A <: HmacAlgorithm](
-            key: ByteVector,
-            algorithm: A): F[SecretKey[A]] =
-          F.pure(SecretKeySpec(key, algorithm))
-      }
+      override def importKey[A <: HmacAlgorithm](
+          key: ByteVector,
+          algorithm: A): F[SecretKey[A]] =
+        F.pure(SecretKeySpec(key, algorithm))
+    }
 }

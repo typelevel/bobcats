@@ -16,12 +16,22 @@
 
 package bobcats
 
-import cats.effect.kernel.Async
+import cats.effect.kernel.{Async, Resource}
 
 private[bobcats] trait CryptoCompanionPlatform {
-  def forAsync[F[_]](implicit F: Async[F]): Crypto[F] =
-    new UnsealedCrypto[F] {
-      override def hash: Hash[F] = Hash[F]
-      override def hmac: Hmac[F] = Hmac[F]
-    }
+  def forAsync[F[_]](implicit F: Async[F]): Resource[F, Crypto[F]] = {
+    Resource.pure(
+      if (facade.isNodeJSRuntime) {
+        new UnsealedCrypto[F] {
+          override def hash: Hash[F] = Hash.forSyncNodeJS
+          override def hmac: Hmac[F] = Hmac.forAsyncNodeJS
+        }
+      } else {
+        new UnsealedCrypto[F] {
+          override def hash: Hash[F] = Hash.forAsyncSubtleCrypto
+          override def hmac: Hmac[F] = Hmac.forAsyncSubtleCrypto
+        }
+      }
+    )
+  }
 }

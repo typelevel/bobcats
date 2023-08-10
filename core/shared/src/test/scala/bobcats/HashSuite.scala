@@ -42,7 +42,7 @@ class HashSuite extends CryptoSuite {
           .compile
           .to(ByteVector)
           .assertEquals(expect) *> Hash1
-          .forSync[IO](algorithm)
+          .forAsync[IO](algorithm)
           .use(_.digest(data))
           .assertEquals(expect)
     }

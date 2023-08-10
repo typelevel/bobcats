@@ -26,5 +26,3 @@ private[bobcats] object Context {
   def apply[F[_]](implicit F: Sync[F]): Resource[F, Ptr[OSSL_LIB_CTX]] =
     Resource.make(F.delay(OSSL_LIB_CTX_new()))(ctx => F.delay(OSSL_LIB_CTX_free(ctx)))
 }
-
-

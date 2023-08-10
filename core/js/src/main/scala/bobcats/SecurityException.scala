@@ -19,6 +19,9 @@ package bobcats
 class GeneralSecurityException(message: String = null, cause: Throwable = null)
     extends Exception(message, cause)
 
+class NoSuchAlgorithmException(message: String = null, cause: Throwable = null)
+    extends GeneralSecurityException(message, cause)
+
 class KeyException(message: String = null, cause: Throwable = null)
     extends GeneralSecurityException(message, cause)
 
