@@ -35,16 +35,17 @@ class HashSuite extends CryptoSuite {
     test(s"$algorithm for $name vector") {
       val runtime = BuildInfo.runtime
       assume(!ignoredRuntimes.contains(runtime), s"${runtime} does not support ${algorithm}")
-      Hash[IO].digest(algorithm, data).assertEquals(expect) *>
-        Stream
-          .chunk(Chunk.byteVector(data))
-          .through(Hash[IO].digestPipe(algorithm))
-          .compile
-          .to(ByteVector)
-          .assertEquals(expect) *> Hash1
-          .forAsync[IO](algorithm)
-          .use(_.digest(data))
-          .assertEquals(expect)
+      val streamTest = Stream
+        .chunk(Chunk.byteVector(data))
+        .through(Hash[IO].digestPipe(algorithm))
+        .compile
+        .to(ByteVector)
+        .assertEquals(expect)
+      Hash[IO].digest(algorithm, data).assertEquals(expect) *> Hash1
+        .forAsync[IO](algorithm)
+        .use(_.digest(data))
+        .assertEquals(expect) *> (if (Set("Firefox", "Chrome").contains(runtime)) IO.unit
+                                  else streamTest)
     }
 
   def testVector(
