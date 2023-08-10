@@ -70,26 +70,6 @@ private[bobcats] object evp {
   def EVP_MD_get0_name(md: Ptr[EVP_MD]): CString = extern
 
   /**
-   * See [[https://www.openssl.org/docs/man3.1/man3/EVP_md5.html]]
-   */
-  def EVP_md5(): Ptr[EVP_MD] = extern
-
-  /**
-   * See [[https://www.openssl.org/docs/man3.1/man3/EVP_sha1.html]]
-   */
-  def EVP_sha1(): Ptr[EVP_MD] = extern
-
-  /**
-   * See [[https://www.openssl.org/docs/man3.1/man3/EVP_sha256.html]]
-   */
-  def EVP_sha256(): Ptr[EVP_MD] = extern
-
-  /**
-   * See [[https://www.openssl.org/docs/man3.1/man3/EVP_sha512.html]]
-   */
-  def EVP_sha512(): Ptr[EVP_MD] = extern
-
-  /**
    * See [[https://www.openssl.org/docs/man3.1/man3/EVP_DigestInit_ex.html]]
    */
   def EVP_DigestInit_ex(ctx: Ptr[EVP_MD_CTX], `type`: Ptr[EVP_MD], engine: Ptr[ENGINE]): CInt =
