@@ -108,7 +108,8 @@ private[bobcats] trait Hash1CompanionPlatform {
   /**
    * Create a hash for a particular name used by `libcrypto`.
    */
-  def fromCryptoName[F[_]](name: CString)(implicit F: Sync[F]): Resource[F, Hash1[F]] =
+  private[bobcats] def fromCryptoName[F[_]](name: CString)(
+      implicit F: Sync[F]): Resource[F, Hash1[F]] =
     Resource
       .make(F.delay(evpFetch(null, name)))(md => F.delay(EVP_MD_free(md)))
       .map(new NativeEvpDigest(_))
