@@ -59,7 +59,7 @@ private final class NodeCryptoDigest[F[_]](algorithm: String)(implicit F: Sync[F
 }
 
 private[bobcats] trait Hash1CompanionPlatform {
-  def fromJSCryptoName[F[_]](alg: String)(implicit F: Sync[F]): F[Hash1[F]] =
+  private def fromJSCryptoName[F[_]](alg: String)(implicit F: Sync[F]): F[Hash1[F]] =
     if (facade.node.crypto.getHashes().contains(alg)) {
       F.pure(new NodeCryptoDigest(alg)(F))
     } else {
