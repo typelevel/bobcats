@@ -30,5 +30,5 @@ private[bobcats] trait CryptoCompanionPlatform {
       }
     })
 
-  def forAsync[F[_] : Async]: Resource[F, Crypto[F]] = forSync
+  def forAsync[F[_]: Async]: Resource[F, Crypto[F]] = forSync
 }

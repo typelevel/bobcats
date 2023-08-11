@@ -14,7 +14,7 @@ object AESCBCTestVectorGenerator {
       List(Lit.String(data.toHex(Alphabets.HexLowercase))),
       List.empty)
 
-  def generate(testDataFiles: Set[File], targetDir: File, scalafmtConfig: File): Set[File] = {
+  def generate(testDataFiles: Seq[File], targetDir: File, scalafmtConfig: File): Seq[File] = {
     val testFileNameMatcher = """CBC(\w+)256.rsp""".r
 
     val resultFile = testDataFiles
@@ -49,7 +49,7 @@ object AESCBCTestVectorGenerator {
             Character.toLowerCase(dataType.charAt(0)) + dataType.substring(1) + "TestVectors"
 
           q"""
-          lazy val ${Pat.Var(Term.Name(variableName))} = TestVectors(
+          def ${Term.Name(variableName)}: TestVectors = TestVectors(
               dataType = ${Lit.String(dataType)},
               encrypt = NonEmptyList.of(..${encryptVectors.toList}),
               decrypt = NonEmptyList.of(..${decryptVectors.toList})
@@ -59,10 +59,10 @@ object AESCBCTestVectorGenerator {
       }
       .map { testVectorDeclarations =>
         val testVectorDeclarationNames =
-          testVectorDeclarations.collect { case Defn.Val(_, List(Pat.Var(name)), _, _) => name }
+          testVectorDeclarations.collect { case defn: Defn.Def => defn.name }
 
         val allTestVectors =
-          q"lazy val allTestVectors = List(..${testVectorDeclarationNames})"
+          q"def allTestVectors: List[TestVectors] = List(..${testVectorDeclarationNames})"
 
         val result = source"""
         package bobcats
@@ -103,7 +103,7 @@ object AESCBCTestVectorGenerator {
 
     resultFile.fold(
       err => throw new IllegalStateException(cats.Show[Parser.Error].show(err)),
-      file => Set(file)
+      file => Seq(file)
     )
   }
 }

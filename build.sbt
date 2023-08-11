@@ -88,6 +88,8 @@ val disciplineMUnitVersion = "2.0.0-M2"
 
 lazy val root = tlCrossRootProject.aggregate(core, testRuntime)
 
+lazy val cbcTestsGenerate = taskKey[Seq[File]]("Generate CBC test cases")
+
 lazy val core = crossProject(JSPlatform, JVMPlatform, NativePlatform)
   .in(file("core"))
   .settings(
@@ -104,30 +106,17 @@ lazy val core = crossProject(JSPlatform, JVMPlatform, NativePlatform)
       "org.typelevel" %%% "discipline-munit" % disciplineMUnitVersion % Test,
       "org.typelevel" %%% "munit-cats-effect" % munitCEVersion % Test
     ),
-    Test / sourceGenerators += Def.task {
-      val scalafmtConfigFile = scalafmtConfig.value
-      val sharedTestResourceDir =
-        (ThisBuild / baseDirectory).value / "core/shared/src/test/resources"
-      val inputs = FileTreeView
-        .default
-        .list(Glob(sharedTestResourceDir / "CBC*256.rsp"))
-        .map(_._1.toFile)
-        .toSet
-
-      val generator = FileFunction.cached(
-        streams.value.cacheDirectory / "cbcTestVectors",
-        inStyle = FileInfo.hash,
-        outStyle = FileInfo.exists) { inputs =>
-        AESCBCTestVectorGenerator.generate(
-          inputs,
-          (Test / sourceManaged).value,
-          scalafmtConfigFile
-        )
-      }
-
-      generator(inputs).toSeq.sorted
-
-    }.taskValue
+    cbcTestsGenerate := {
+      val a = crossProjectBaseDirectory.value / "shared" / "src" / "test" / "resources"
+      val files = (Test / cbcTestsGenerate).inputFiles
+      AESCBCTestVectorGenerator.generate(
+        files.map(_.toFile),
+        (Test / sourceManaged).value,
+        scalafmtConfig.value
+      )
+    },
+    Test / cbcTestsGenerate / fileInputs += (crossProjectBaseDirectory.value / "shared" / "src" / "test" / "resources").toGlob / "CBC*256.rsp",
+    Test / sourceGenerators += cbcTestsGenerate.taskValue
   )
   .dependsOn(testRuntime % Test)
 
