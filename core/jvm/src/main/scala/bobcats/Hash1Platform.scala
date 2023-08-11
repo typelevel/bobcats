@@ -51,7 +51,8 @@ private[bobcats] trait Hash1CompanionPlatform {
   /**
    * Get a hash for a specific name used by the Java security providers.
    */
-  private def fromJavaSecurityName[F[_]](name: String)(implicit F: Sync[F]): F[Hash1[F]] =
+  private[bobcats] def fromJavaSecurityName[F[_]](name: String)(
+      implicit F: Sync[F]): F[Hash1[F]] =
     F.delay {
       // `Security#getProviders` is a mutable array, so cache the `Provider`
       val p = Providers.get().messageDigest(name) match {
