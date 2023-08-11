@@ -26,8 +26,9 @@ private[bobcats] trait CryptoCompanionPlatform {
       new UnsealedCrypto[F] {
         override def hash: Hash[F] = Hash.forProviders(providers)
         override def hmac: Hmac[F] = Hmac.forProviders(providers)
-        override def cipher: Cipher[F] = Cipher[F]
-
+        override def cipher: Cipher[F] = Cipher.forSync[F]
       }
     })
+
+  def forAsync[F[_] : Async]: Resource[F, Crypto[F]] = forSync
 }

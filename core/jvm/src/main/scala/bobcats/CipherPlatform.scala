@@ -16,7 +16,7 @@
 
 package bobcats
 
-import cats.effect.kernel.Async
+import cats.effect.kernel.{Sync, Async}
 import scodec.bits.ByteVector
 import javax.crypto
 import cats.effect.std.Random
@@ -26,7 +26,9 @@ private[bobcats] trait CipherPlatform[F[_]] {
 }
 
 private[bobcats] trait CipherCompanionPlatform {
-  implicit def forAsync[F[_]](implicit F: Async[F]): Cipher[F] =
+  def forAsync[F[_] : Async]: Cipher[F] = forSync
+
+  def forSync[F[_]](implicit F: Sync[F]): Cipher[F] =
     new UnsealedCipher[F] {
 
       def generateIv[A <: CipherAlgorithm](algorithm: A): F[IvParameterSpec[A]] =

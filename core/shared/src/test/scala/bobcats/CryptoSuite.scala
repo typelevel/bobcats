@@ -34,5 +34,6 @@ abstract class CryptoSuite extends CatsEffectSuite {
   implicit protected def crypto: Crypto[IO] = cryptoFixture()
   implicit protected def hash: Hash[IO] = crypto.hash
   implicit protected def hmac: Hmac[IO] = crypto.hmac
+  implicit protected def cipher: Cipher[IO] = crypto.cipher
 
 }

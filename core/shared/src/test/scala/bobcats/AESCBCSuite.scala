@@ -26,7 +26,7 @@ class AESCBCSuite extends CatsEffectSuite {
   import CipherAlgorithm._
 
   def cbcTestVectorsNoPadding[F[_]: Async] = {
-    val cipher = Cipher[F]
+    val cipher = Cipher.forAsync[F]
 
     for {
       testDataType <- AESCBCTestVectors.allTestVectors
@@ -60,7 +60,7 @@ class AESCBCSuite extends CatsEffectSuite {
   }
 
   def cbcTestVectorsPKCS7Padding[F[_]: Async] = {
-    val cipher = Cipher[F]
+    val cipher = Cipher.forAsync[F]
 
     // There's no point in trying the decrypt cases - they're not padded so they won't work.
     // Instead we round-trip the encryption test cases.

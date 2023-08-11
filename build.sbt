@@ -102,7 +102,7 @@ lazy val core = crossProject(JSPlatform, JVMPlatform, NativePlatform)
       "org.typelevel" %%% "cats-laws" % catsVersion % Test,
       "org.typelevel" %%% "cats-effect" % catsEffectVersion % Test,
       "org.typelevel" %%% "discipline-munit" % disciplineMUnitVersion % Test,
-      "org.typelevel" %%% "munit-cats-effect-3" % munitCEVersion % Test
+      "org.typelevel" %%% "munit-cats-effect" % munitCEVersion % Test
     ),
     Test / sourceGenerators += Def.task {
       val scalafmtConfigFile = scalafmtConfig.value
