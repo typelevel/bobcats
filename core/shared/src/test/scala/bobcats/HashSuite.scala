@@ -51,34 +51,49 @@ class HashSuite extends CryptoSuite {
     TestCase(MD5, data, hex"9e107d9d372bb6826bd81d3542a419d6")
   )
 
-  testCases
-    .filter { case TestCase(alg, _, _) => !isBrowser || (alg != MD5) }
-    .zipWithIndex
-    .foreach {
-      case (TestCase(alg, data, digest), counter) =>
-        test(s"Hash[IO].digest for ${alg} test case ${counter}") {
-          Hash[IO].digest(alg, data).assertEquals(digest)
-        }
-        test(s"Hash1[IO].digest for ${alg} test case ${counter}") {
-          Hash1.forAsync[IO](alg).use(_.digest(data)).assertEquals(digest)
-        }
-        test(s"Hash[IO].digestPipe for ${alg} test case ${counter}") {
-          assume(!isBrowser, s"${runtime} does not support streaming")
-          Stream
-            .chunk(Chunk.byteVector(data))
-            .through(Hash[IO].digestPipe(alg))
-            .compile
-            .to(ByteVector)
-            .assertEquals(digest)
-        }
-        test(s"Hash1[IO].pipe for ${alg} test case ${counter}") {
-          assume(!isBrowser, s"${runtime} does not support streaming")
-          Hash1
-            .forAsync[IO](alg)
-            .use { hash1 =>
-              Stream.chunk(Chunk.byteVector(data)).through(hash1.pipe).compile.to(ByteVector)
-            }
-            .assertEquals(digest)
-        }
-    }
+  val supportedAlgorithms = {
+    val all = Set[HashAlgorithm](MD5, SHA1, SHA256, SHA512)
+    val browser = Set[HashAlgorithm](SHA1, SHA256, SHA512)
+    Map(
+      "JVM" -> all,
+      "NodeJS" -> all,
+      "Native" -> all,
+      "Chrome" -> browser,
+      "Firefox" -> browser
+    )
+  }
+
+  testCases.zipWithIndex.foreach {
+    case (TestCase(alg, data, digest), counter) =>
+      test(s"Hash[IO].digest for ${alg} test case ${counter}") {
+        assume(
+          supportedAlgorithms(runtime).contains(alg),
+          s"${runtime} does not support ${alg}")
+        Hash[IO].digest(alg, data).assertEquals(digest)
+      }
+      test(s"Hash1[IO].digest for ${alg} test case ${counter}") {
+        assume(
+          supportedAlgorithms(runtime).contains(alg),
+          s"${runtime} does not support ${alg}")
+        Hash1.forAsync[IO](alg).use(_.digest(data)).assertEquals(digest)
+      }
+      test(s"Hash[IO].digestPipe for ${alg} test case ${counter}") {
+        assume(!isBrowser, s"${runtime} does not support streaming")
+        Stream
+          .chunk(Chunk.byteVector(data))
+          .through(Hash[IO].digestPipe(alg))
+          .compile
+          .to(ByteVector)
+          .assertEquals(digest)
+      }
+      test(s"Hash1[IO].pipe for ${alg} test case ${counter}") {
+        assume(!isBrowser, s"${runtime} does not support streaming")
+        Hash1
+          .forAsync[IO](alg)
+          .use { hash1 =>
+            Stream.chunk(Chunk.byteVector(data)).through(hash1.pipe).compile.to(ByteVector)
+          }
+          .assertEquals(digest)
+      }
+  }
 }
