@@ -52,7 +52,15 @@ object HashAlgorithm {
 }
 
 sealed trait HmacAlgorithm extends Algorithm {
+
+  import HmacAlgorithm._
+
   private[bobcats] def minimumKeyLength: Int
+  private[bobcats] def hashAlgorithm: HashAlgorithm = this match {
+    case SHA1 => HashAlgorithm.SHA1
+    case SHA256 => HashAlgorithm.SHA256
+    case SHA512 => HashAlgorithm.SHA512
+  }
 }
 object HmacAlgorithm {
 

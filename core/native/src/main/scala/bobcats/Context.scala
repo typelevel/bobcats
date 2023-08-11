@@ -16,14 +16,13 @@
 
 package bobcats
 
-class GeneralSecurityException(message: String = null, cause: Throwable = null)
-    extends Exception(message, cause)
+import openssl._
+import openssl.crypto._
+import scala.scalanative.unsafe._
 
-class NoSuchAlgorithmException(message: String = null, cause: Throwable = null)
-    extends GeneralSecurityException(message, cause)
+import cats.effect.kernel.{Resource, Sync}
 
-class KeyException(message: String = null, cause: Throwable = null)
-    extends GeneralSecurityException(message, cause)
-
-class InvalidKeyException(message: String = null, cause: Throwable = null)
-    extends KeyException(message, cause)
+private[bobcats] object Context {
+  def apply[F[_]](implicit F: Sync[F]): Resource[F, Ptr[OSSL_LIB_CTX]] =
+    Resource.make(F.delay(OSSL_LIB_CTX_new()))(ctx => F.delay(OSSL_LIB_CTX_free(ctx)))
+}

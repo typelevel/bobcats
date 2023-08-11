@@ -26,6 +26,16 @@ import scala.annotation.nowarn
 private[bobcats] object crypto {
 
   /**
+   * See [[https://www.openssl.org/docs/man3.1/man3/OSSL_LIB_CTX_new.html]]
+   */
+  def OSSL_LIB_CTX_new(): Ptr[OSSL_LIB_CTX] = extern
+
+  /**
+   * See [[https://www.openssl.org/docs/man3.1/man3/OSSL_LIB_CTX_free.html]]
+   */
+  def OSSL_LIB_CTX_free(ctx: Ptr[OSSL_LIB_CTX]): Unit = extern
+
+  /**
    * See [[https://www.openssl.org/docs/man3.1/man3/CRYPTO_memcmp.html]]
    */
   def CRYPTO_memcmp(a: Ptr[Byte], b: Ptr[Byte], len: CSize): CInt = extern
