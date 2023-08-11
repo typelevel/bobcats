@@ -26,6 +26,9 @@ abstract class CryptoSuite extends CatsEffectSuite {
     Crypto.forAsync[IO]
   )
 
+  protected def runtime = BuildInfo.runtime
+  protected def isBrowser = Set("Firefox", "Chrome").contains(runtime)
+
   override def munitFixtures = List(cryptoFixture)
 
   implicit protected def crypto: Crypto[IO] = cryptoFixture()
