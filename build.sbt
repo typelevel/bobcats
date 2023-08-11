@@ -106,8 +106,9 @@ lazy val core = crossProject(JSPlatform, JVMPlatform, NativePlatform)
       "org.typelevel" %%% "discipline-munit" % disciplineMUnitVersion % Test,
       "org.typelevel" %%% "munit-cats-effect" % munitCEVersion % Test
     ),
+    // Generate the sources /outside/ of the cross
+    (Test / sourceManaged) := crossProjectBaseDirectory.value / "shared" / "src_managed" / "test",
     cbcTestsGenerate := {
-      val a = crossProjectBaseDirectory.value / "shared" / "src" / "test" / "resources"
       val files = (Test / cbcTestsGenerate).inputFiles
       AESCBCTestVectorGenerator.generate(
         files.map(_.toFile),

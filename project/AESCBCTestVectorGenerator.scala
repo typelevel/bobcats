@@ -5,7 +5,7 @@ import scala.meta._
 import scodec.bits._
 import scodec.bits.Bases.Alphabets
 import cats.parse.Parser
-import org.scalafmt.interfaces.Scalafmt
+import org.scalafmt.sbt.ScalafmtPlugin
 
 object AESCBCTestVectorGenerator {
   def hexInterpolate(data: ByteVector): Term =
@@ -92,8 +92,8 @@ object AESCBCTestVectorGenerator {
 
         val targetFile = targetDir / "bobcats" / "AESCBCTestVectors.scala"
 
-        val formattedSyntax = Scalafmt
-          .create(getClass.getClassLoader)
+        val formattedSyntax = ScalafmtPlugin
+          .globalInstance
           .format(scalafmtConfig.toPath, targetFile.toPath, result.syntax)
 
         IO.write(targetFile, formattedSyntax)
