@@ -30,10 +30,10 @@ private final class JavaSecurityCipher[F[_]](providers: Providers)(implicit F: S
 
   import BlockCipherAlgorithm._
 
-  private def aesCipherName(mode: BlockCipherMode, padding: Boolean): String =
-    s"AES_256/${mode.toStringUppercase}/" + (if (padding) "PKCS5Padding" else "NoPadding")
+  private def aesCipherName(keyLength: AES.KeyLength, mode: BlockCipherMode, padding: Boolean): String =
+    s"AES_${keyLength.toInt.toString}/${mode.toStringUppercase}/" + (if (padding) "PKCS5Padding" else "NoPadding")
 
-  def importKey[P <: CipherParams, A <: CipherAlgorithm[P]](
+  def importKey[A <: Algorithm](
       key: ByteVector,
       algorithm: A): F[SecretKey[A]] =
     F.pure(SecretKeySpec(key, algorithm))
@@ -46,7 +46,7 @@ private final class JavaSecurityCipher[F[_]](providers: Providers)(implicit F: S
     F.catchNonFatal {
       val (cipher, out) = (key.algorithm, params) match {
         case (cbc: AES.CBC, AES.CBC.Params(iv)) =>
-          val name = aesCipherName(BlockCipherMode.CBC, false)
+          val name = aesCipherName(cbc.keyLength, BlockCipherMode.CBC, false)
           val provider = providers.cipher(name) match {
             case Left(e) => throw e
             case Right(p) => p
@@ -60,7 +60,7 @@ private final class JavaSecurityCipher[F[_]](providers: Providers)(implicit F: S
           val len = data.length.toInt
           (cipher, ByteBuffer.allocate(len))
         case (gcm: AES.GCM, AES.GCM.Params(iv, tagLength, ad)) =>
-          val name = aesCipherName(BlockCipherMode.GCM, false)
+          val name = aesCipherName(gcm.keyLength, BlockCipherMode.GCM, false)
           val provider = providers.cipher(name) match {
             case Left(e) => throw e
             case Right(p) => p

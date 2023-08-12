@@ -20,7 +20,7 @@ import scodec.bits.ByteVector
 
 sealed trait Cipher[F[_]] extends CipherPlatform[F] {
 
-  def importKey[P <: CipherParams, A <: CipherAlgorithm[P]](
+  def importKey[A <: Algorithm](
       key: ByteVector,
       algorithm: A): F[SecretKey[A]]
 
