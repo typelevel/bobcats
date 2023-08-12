@@ -30,18 +30,22 @@ private final class JavaSecurityCipher[F[_]](providers: Providers)(implicit F: S
 
   import BlockCipherAlgorithm._
 
-  private def aesCipherName(keyLength: AES.KeyLength, mode: BlockCipherMode, padding: Boolean): String =
-    s"AES_${keyLength.toInt.toString}/${mode.toStringUppercase}/" + (if (padding) "PKCS5Padding" else "NoPadding")
+  // TODO: What to do...
+  private def aesCipherName(
+      keyLength: AES.KeyLength,
+      mode: BlockCipherMode,
+      padding: Boolean): String =
+    s"AES_${keyLength.toInt.toString}/${mode.toStringUppercase}/" + (if (padding) "PKCS5Padding"
+                                                                     else "NoPadding")
 
-  def importKey[A <: Algorithm](
-      key: ByteVector,
-      algorithm: A): F[SecretKey[A]] =
+  def importKey[A <: Algorithm](key: ByteVector, algorithm: A): F[SecretKey[A]] =
     F.pure(SecretKeySpec(key, algorithm))
 
-  def encrypt[P <: CipherParams, A <: CipherAlgorithm[P]](
-      key: SecretKey[A],
-      params: P,
-      data: ByteVector): F[ByteVector] = {
+  private def oneshot[P <: CipherParams, A <: CipherAlgorithm[P]](
+    mode: Int,
+    key: SecretKey[A],
+    params: P,
+    data: ByteVector): F[ByteVector] = {
 
     F.catchNonFatal {
       val (cipher, out) = (key.algorithm, params) match {
@@ -53,7 +57,7 @@ private final class JavaSecurityCipher[F[_]](providers: Providers)(implicit F: S
           }
           val cipher = crypto.Cipher.getInstance(name, provider)
           cipher.init(
-            crypto.Cipher.ENCRYPT_MODE,
+            mode,
             key.toJava,
             new IvParameterSpec(iv.data.toArray))
           // TODO: Calculate length properly
@@ -67,7 +71,7 @@ private final class JavaSecurityCipher[F[_]](providers: Providers)(implicit F: S
           }
           val cipher = crypto.Cipher.getInstance(name, provider)
           cipher.init(
-            crypto.Cipher.ENCRYPT_MODE,
+            mode,
             key.toJava,
             new GCMParameterSpec(tagLength.value, iv.data.toArray))
 
@@ -82,7 +86,18 @@ private final class JavaSecurityCipher[F[_]](providers: Providers)(implicit F: S
     }
   }
 
-  // def decrypt[A <: CipherAlgorithm](params: CipherParams[A], data: ByteVector): F[ByteVector] = ???
+
+  override def encrypt[P <: CipherParams, A <: CipherAlgorithm[P]](
+    key: SecretKey[A],
+    params: P,
+    data: ByteVector): F[ByteVector] = 
+    oneshot(crypto.Cipher.ENCRYPT_MODE, key, params, data)
+
+  override def decrypt[P <: CipherParams, A <: CipherAlgorithm[P]](
+    key: SecretKey[A],
+    params: P,
+    data: ByteVector): F[ByteVector] = 
+    oneshot(crypto.Cipher.DECRYPT_MODE, key, params, data)
 }
 
 private[bobcats] trait CipherPlatform[F[_]] {
@@ -95,66 +110,4 @@ private[bobcats] trait CipherCompanionPlatform {
       implicit F: Sync[F]): Cipher[F] = {
     new JavaSecurityCipher(providers)
   }
-
 }
-
-// private[bobcats] trait CipherCompanionPlatform {
-//   def forAsync[F[_]: Async]: Cipher[F] = forSync
-
-//   def forSync[F[_]](implicit F: Sync[F]): Cipher[F] =
-//     new UnsealedCipher[F] {
-
-//       def generateIv[A <: CipherAlgorithm](algorithm: A): F[IvParameterSpec[A]] =
-//         // TODO: We should keep the `SecureRandom` around
-//         SecureRandom.javaSecuritySecureRandom[F].flatMap { random =>
-//           F.map(random.nextBytes(algorithm.recommendedIvLength)) { ivBytes =>
-//             IvParameterSpec(ByteVector.view(ivBytes), algorithm)
-//           }
-//         }
-
-//       def generateKey[A <: CipherAlgorithm](algorithm: A): F[SecretKey[A]] =
-//         F.delay {
-//           val keyGen = crypto.KeyGenerator.getInstance(algorithm.toStringJava)
-//           keyGen.init(algorithm.keyLength)
-//           val key = keyGen.generateKey()
-//           SecretKeySpec(ByteVector.view(key.getEncoded()), algorithm)
-//         }
-
-//       def importKey[A <: CipherAlgorithm](key: ByteVector, algorithm: A): F[SecretKey[A]] =
-//         F.pure(SecretKeySpec(key, algorithm))
-
-//       def importIv[A <: CipherAlgorithm](iv: ByteVector, algorithm: A): F[IvParameterSpec[A]] =
-//         F.pure(IvParameterSpec(iv, algorithm))
-
-//       def importJavaKey(key: crypto.SecretKey): F[SecretKey[CipherAlgorithm]] =
-//         F.fromOption(
-//           for {
-//             algorithm <- CipherAlgorithm.fromStringJava(key.getAlgorithm())
-//             key <- Option(key.getEncoded())
-//           } yield SecretKeySpec(ByteVector.view(key), algorithm),
-//           new InvalidKeyException
-//         )
-
-//       def encrypt[A <: CipherAlgorithm](
-//           key: SecretKey[A],
-//           iv: IvParameterSpec[A],
-//           data: ByteVector): F[ByteVector] =
-//         F.catchNonFatal {
-//           val cipher = crypto.Cipher.getInstance(key.algorithm.toModeStringJava)
-//           val sk = key.toJava
-//           cipher.init(crypto.Cipher.ENCRYPT_MODE, sk, iv.toJava)
-//           ByteVector.view(cipher.doFinal(data.toArray))
-//         }
-
-//       def decrypt[A <: CipherAlgorithm](
-//           key: SecretKey[A],
-//           iv: IvParameterSpec[A],
-//           data: ByteVector): F[ByteVector] =
-//         F.catchNonFatal {
-//           val cipher = crypto.Cipher.getInstance(key.algorithm.toModeStringJava)
-//           val sk = key.toJava
-//           cipher.init(crypto.Cipher.DECRYPT_MODE, sk, iv.toJava)
-//           ByteVector.view(cipher.doFinal(data.toArray))
-//         }
-//     }
-// }

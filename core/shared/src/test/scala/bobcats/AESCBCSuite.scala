@@ -41,20 +41,19 @@ class AESCBCSuite extends CryptoSuite {
       }
     }
 
-    // for {
-    //   testDataType <- AESCBCTestVectors.allTestVectors
-    //   testCase <- testDataType.encrypt.toList
-    // } yield {
-    //   test(
-    //     s"AESVS ${testDataType.dataType} test data for CBC - decrypt test case ${testCase.index} - No Padding") {
-    //     for {
-    //       key <- cipher.importKey(testCase.key, AESCBC256(PaddingMode.None))
-    //       iv <- cipher.importIv(testCase.iv, AESCBC256(PaddingMode.None))
-    //       obtained <- cipher.decrypt(key, iv, testCase.cipherText)
-    //       expected = testCase.plainText
-    //     } yield assertEquals(obtained, expected)
-    //   }
-    // }
+    for {
+      testDataType <- AESCBCTestVectors.allTestVectors
+      testCase <- testDataType.encrypt.toList
+    } yield {
+      test(
+        s"AESVS ${testDataType.dataType} test data for CBC - decrypt test case ${testCase.index} - No Padding") {
+        for {
+          key <- Cipher[IO].importKey(testCase.key, AESCBC256)
+          obtained <- Cipher[IO].decrypt(key, AES.CBC.Params(new IV(testCase.iv)), testCase.cipherText)
+          expected = testCase.plainText
+        } yield assertEquals(obtained, expected)
+      }
+    }
   }
 
   // def cbcTestVectorsPKCS7Padding[F[_]: Async] = {
