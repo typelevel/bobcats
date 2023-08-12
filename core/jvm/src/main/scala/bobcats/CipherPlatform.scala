@@ -38,7 +38,7 @@ private final class JavaSecurityCipher[F[_]](providers: Providers)(implicit F: S
     s"AES_${keyLength.toInt.toString}/${mode.toStringUppercase}/" + (if (padding) "PKCS5Padding"
                                                                      else "NoPadding")
 
-  def importKey[A <: Algorithm](key: ByteVector, algorithm: A): F[SecretKey[A]] =
+  def importKey[A <: CipherAlgorithm[_]](key: ByteVector, algorithm: A): F[SecretKey[A]] =
     F.pure(SecretKeySpec(key, algorithm))
 
   private def oneshot[P <: CipherParams, A <: CipherAlgorithm[P]](
