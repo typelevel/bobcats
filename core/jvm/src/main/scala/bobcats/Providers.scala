@@ -30,6 +30,11 @@ private[bobcats] final class Providers(val ps: Array[Provider]) extends AnyVal {
   def mac(name: String): Either[NoSuchAlgorithmException, Provider] =
     provider("Mac", name).toRight(new NoSuchAlgorithmException(s"${name} Mac not available"))
 
+  def cipher(name: String): Either[NoSuchAlgorithmException, Provider] = {
+    provider("Cipher", name).toRight(
+      new NoSuchAlgorithmException(s"${name} Cipher not available"))
+  }
+
 }
 
 private[bobcats] object Providers {

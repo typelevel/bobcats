@@ -25,6 +25,7 @@ sealed trait Algorithm extends AlgorithmPlatform {
 }
 
 sealed trait HashAlgorithm extends Algorithm with HashAlgorithmPlatform
+
 object HashAlgorithm {
 
   case object MD5 extends HashAlgorithm {
@@ -64,6 +65,7 @@ sealed trait HmacAlgorithm extends Algorithm with HmacAlgorithmPlatform {
     case SHA512 => HashAlgorithm.SHA512
   }
 }
+
 object HmacAlgorithm {
 
   private[bobcats] def fromStringJava(algorithm: String): Option[HmacAlgorithm] =
@@ -96,56 +98,188 @@ object HmacAlgorithm {
   }
 }
 
-sealed trait CipherAlgorithm extends Algorithm with CipherAlgorithmPlatform {
-  private[bobcats] def paddingMode: PaddingMode
-  private[bobcats] def toModeStringJava: String
-  private[bobcats] def recommendedIvLength: Int
-  private[bobcats] def keyLength: Int
+sealed trait CipherParams
+sealed trait CipherAlgorithm[P <: CipherParams] extends Algorithm
+
+sealed trait BlockCipherAlgorithm[P <: CipherParams] extends CipherAlgorithm[P] {
+  private[bobcats] def blockSize: Int
 }
 
-object CipherAlgorithm {
-  private[bobcats] def fromStringJava(algorithm: String): Option[CipherAlgorithm] =
-    algorithm match {
-      case "AES/CBC/NoPadding" => Some(AESCBC256(PaddingMode.None))
-      case "AES/CBC/PKCS5Padding" => Some(AESCBC256(PaddingMode.PKCS7))
-      case "AES/GCM/NoPadding" => Some(AESGCM256(PaddingMode.None))
-      case "AES/GCM/PKCS5Padding" => Some(AESGCM256(PaddingMode.PKCS7))
-      case _ => None
+sealed trait BlockCipherMode {
+
+  import BlockCipherMode._
+
+  private[bobcats] def toStringUppercase = this match {
+    case CBC => "CBC"
+    case GCM => "GCM"
+    case CTR => "CTR"
+  }
+
+}
+
+object BlockCipherMode {
+
+  case object CBC extends BlockCipherMode
+  case object GCM extends BlockCipherMode
+  case object CTR extends BlockCipherMode
+
+  private[bobcats] def fromStringUppercase(s: String): Option[BlockCipherMode] = s match {
+    case "CBC" => Some(CBC)
+    case "GCM" => Some(GCM)
+    case "CTR" => Some(CTR)
+    case _ => None
+  }
+}
+
+final class IV private[bobcats] (val data: ByteVector) extends AnyVal
+
+object BlockCipherAlgorithm {
+
+  sealed trait AES[P <: CipherParams] extends CipherAlgorithm[P] {
+    def keyLength: AES.KeyLength
+
+    private[bobcats] def toStringJava: String = "AES"
+
+    def toStringNodeJS: String = ???
+    def toStringWebCrypto: String = ???
+
+  }
+
+  object AES {
+
+    final class KeyLength private[AES] (val value: Int) extends AnyVal {
+      private[bobcats] def toInt: Int = value
     }
 
-  sealed trait AESAlgorithm extends CipherAlgorithm {
-    private[bobcats] def toStringJava: String = "AES"
+    object KeyLength {
+      val `128` = new KeyLength(128)
+      val `256` = new KeyLength(256)
+    }
+
+    final class TagLength private[bobcats] (val value: Int) extends AnyVal
+
+    object TagLength {
+      val `96` = new TagLength(96)
+    }
+
+    sealed trait CBC extends AES[CBC.Params]
+
+    object CBC {
+      final case class Params(iv: IV) extends CipherParams
+    }
+
+    sealed trait GCM extends AES[GCM.Params]
+
+    object GCM {
+      final case class Params(
+          iv: IV,
+          tagLength: TagLength = TagLength.`96`,
+          ad: Option[ByteVector] = None)
+          extends CipherParams
+    }
+
   }
 
-  sealed trait AESCBCAlgorithm extends AESAlgorithm {
-    private[bobcats] override def recommendedIvLength: Int = 16
-    private[bobcats] override def toStringWebCrypto: String = "AES-CBC"
+  object AESCBC128 extends AES.CBC {
+    val keyLength = AES.KeyLength.`128`
   }
 
-  case class AESCBC256(paddingMode: PaddingMode) extends AESCBCAlgorithm {
-    private[bobcats] override def toModeStringJava: String =
-      s"AES/CBC/${paddingMode.toStringJava}"
-    private[bobcats] override def toStringNodeJS: String = "aes-256-cbc"
-    private[bobcats] override def keyLength: Int = 256
+  object AESCBC256 extends AES.CBC {
+    val keyLength = AES.KeyLength.`256`
   }
 
-  sealed trait AESGCMAlgorithm extends AESAlgorithm {
-    private[bobcats] override def recommendedIvLength: Int = 12
-    private[bobcats] override def toStringWebCrypto: String = "AES-GCM"
-  }
-
-  case class AESGCM256(paddingMode: PaddingMode) extends AESGCMAlgorithm {
-    private[bobcats] override def toModeStringJava: String =
-      s"AES/GCM/${paddingMode.toStringJava}"
-    private[bobcats] override def toStringNodeJS: String = "aes-256-gcm"
-    private[bobcats] override def keyLength: Int = 256
+  object AESGCM128 extends AES.GCM {
+    val keyLength = AES.KeyLength.`128`
   }
 }
 
-sealed trait AlgorithmParameterSpec[+A <: Algorithm] extends AlgorithmParameterSpecPlatform[A]
+// case class AES[K <: Singleton, M <: BlockCipher.Mode] private(keyLength: K, mode: M, padding: Boolean) extends CipherAlgorithm
 
-case class IvParameterSpec[+A <: CipherAlgorithm](
-    initializationVector: ByteVector,
-    algorithm: A)
-    extends AlgorithmParameterSpec[A]
-    with IvParameterSpecPlatform[A]
+// sealed trait CipherParam[A]
+
+// object AES {
+
+//   import BlockCipher.Mode._
+
+//   object CBC {
+//     case class Param[A](iv: ByteVector) extends CipherParam[AES[_, CBC.type]]
+//   }
+
+//   object CBC128 {
+//     def apply(padded: Boolean): AES[128, CBC.type] = new AES[128, CBC.type](128, CBC, padded)
+//   }
+
+// }
+
+// // sealed trait CipherParams[A <: CipherAlgorithm]
+
+// // sealed trait AESGCM128
+
+// // // TODO: Should I differentiate between the two?
+// // sealed trait CipherAlgorithm extends Algorithm with CipherAlgorithmPlatform {
+// //   private[bobcats] def paddingMode: PaddingMode
+// //   private[bobcats] def toModeStringJava: String
+//   private[bobcats] def recommendedIvLength: Int
+//   private[bobcats] def keyLength: Int
+// }
+
+// final class IV[+A <: CipherAlgorithm](data: ByteVector)
+
+// object CipherAlgorithm {
+
+//   private[bobcats] def fromStringJava(algorithm: String): Option[CipherAlgorithm] =
+//     algorithm match {
+//       case "AES/CBC/NoPadding" => Some(AESCBC256(PaddingMode.None))
+//       case "AES/CBC/PKCS5Padding" => Some(AESCBC256(PaddingMode.PKCS7))
+//       case "AES/GCM/NoPadding" => Some(AESGCM256(PaddingMode.None))
+//       case "AES/GCM/PKCS5Padding" => Some(AESGCM256(PaddingMode.PKCS7))
+//       case _ => None
+//     }
+
+//   sealed trait AESAlgorithm extends CipherAlgorithm {
+//     private[bobcats] def toStringJava: String = "AES"
+//   }
+
+//   sealed trait AESCBC extends AESAlgorithm {
+//     private[bobcats] override def recommendedIvLength: Int = 16
+//     private[bobcats] override def toStringWebCrypto: String = "AES-CBC"
+//   }
+
+//   object AESCBC {
+//     case class Parameters[A <: AESCBC](iv: Iv[A]) extends CipherParameters[A]
+//   }
+
+//   case class AESCBC256(paddingMode: PaddingMode) extends AESCBC {
+//     private[bobcats] override def toModeStringJava: String =
+//       s"AES/CBC/${paddingMode.toStringJava}"
+//     private[bobcats] override def toStringNodeJS: String = "aes-256-cbc"
+//     private[bobcats] override def keyLength: Int = 256
+//   }
+
+//   sealed trait AESGCM extends AESAlgorithm {
+//     private[bobcats] override def recommendedIvLength: Int = 12
+//     private[bobcats] override def toStringWebCrypto: String = "AES-GCM"
+//   }
+
+//   object AESGCM {
+//     case class Parameters[A <: AESGCM](iv: Iv[A], tagLength: Option[Int]) extends CipherParameters[A]
+//   }
+
+//   case class AESGCM256(paddingMode: PaddingMode) extends AESGCM {
+//     private[bobcats] override def toModeStringJava: String =
+//       s"AES/GCM/${paddingMode.toStringJava}"
+//     private[bobcats] override def toStringNodeJS: String = "aes-256-gcm"
+//     private[bobcats] override def keyLength: Int = 256
+//   }
+// }
+
+// sealed trait AlgorithmParameterSpec[+A <: Algorithm] extends AlgorithmParameterSpecPlatform[A]
+
+// // Iv must be random
+
+// // TODO:
+// case class IvParameterSpec[+A <: CipherAlgorithm](
+//     initializationVector: ByteVector,
+//     algorithm: A)
+//     extends AlgorithmParameterSpec[A]
+//     with IvParameterSpecPlatform[A]
