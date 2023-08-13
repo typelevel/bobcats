@@ -3,13 +3,6 @@ import cats.parse.{Numbers, Parser => P, Parser0 => P0}
 import scodec.bits.ByteVector
 import cats.data.NonEmptyList
 
-// [Keylen = 256]
-// [IVlen = 96]
-// [PTlen = 0]
-// [AADlen = 0]
-// [Taglen = 128]
-
-
 object ResponseFileParser {
 
   val whitespace0 = P.charIn(" \t\r").void

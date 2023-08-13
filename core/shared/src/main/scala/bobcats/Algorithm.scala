@@ -153,6 +153,7 @@ object BlockCipherAlgorithm {
 
     object KeyLength {
       val `128` = new KeyLength(128)
+      val `192` = new KeyLength(192)
       val `256` = new KeyLength(256)
     }
 
@@ -174,7 +175,9 @@ object BlockCipherAlgorithm {
       final case class Params(iv: IV) extends CipherParams
     }
 
-    sealed trait GCM extends AES[GCM.Params]
+    sealed trait GCM extends AES[GCM.Params] {
+      override def toString: String = s"AESGCM${keyLength.toInt}"
+    }
 
     object GCM {
       final case class Params(
@@ -194,15 +197,19 @@ object BlockCipherAlgorithm {
     val keyLength = AES.KeyLength.`256`
   }
 
-  object AesGcm128 extends AES.GCM {
+  object AESGCM128 extends AES.GCM {
     val keyLength = AES.KeyLength.`128`
-    override def toString: String = "AesGcm128"
   }
 
-  object AesGcm256 extends AES.GCM {
-    val keyLength = AES.KeyLength.`256`
-    override def toString: String = "AesGcm256"
+  object AESGCM192 extends AES.GCM {
+    val keyLength = AES.KeyLength.`192`
   }
+
+  object AESGCM256 extends AES.GCM {
+    val keyLength = AES.KeyLength.`256`
+  }
+
+
 
 }
 

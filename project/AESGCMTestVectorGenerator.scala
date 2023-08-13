@@ -15,16 +15,7 @@ object AESGCMEncryptTestVectorGenerator extends TestVectorGenerator {
 
   def generate(testDataFiles: Seq[File], targetDir: File): Source = {
     val result = testDataFiles.toList.flatTraverse { file =>
-      val a = parser.parseAll(IO.read(file)).map(_.toList)
-      // a match {
-      //   case Right(sections) =>
-      //     val content = sections.toList.take(50).map(s =>
-      //       Section(cats.data.NonEmptyList(s.testVectors.head, Nil)).show
-      //     ).mkString("\n")
-      //     IO.write(new File("test.rsp"), content)
-      // }
-      // ???
-      a
+      parser.parseAll(IO.read(file)).map(_.toList)
     }.map { sections =>
       val testVectors = for {
         Section(testVectors) <- sections
@@ -38,7 +29,7 @@ object AESGCMEncryptTestVectorGenerator extends TestVectorGenerator {
         q"""
             TestVector(
                 $count,
-                ${Term.Name("AesGcm" + key.length * 8L)},
+                ${Term.Name("AESGCM" + key.length * 8L)},
                 ${hexInterpolate(key)},
                 ${hexInterpolate(iv)},
                 ${hexInterpolate(plainText)},
