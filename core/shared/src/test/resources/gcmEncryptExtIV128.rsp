@@ -1,0 +1,802 @@
+# CAVS 14.0
+# GCM Encrypt with keysize 256 test information
+
+[Keylen = 128]
+[IVlen = 96]
+[PTlen = 0]
+[AADlen = 0]
+[Taglen = 128]
+
+Count = 0
+Key = 11754cd72aec309bf52f7687212e8957
+IV = 3c819d9a9bed087615030b65
+PT = 
+AAD = 
+CT = 
+Tag = 250327c674aaf477aef2675748cf6971
+      
+      
+
+[Keylen = 128]
+[IVlen = 96]
+[PTlen = 0]
+[AADlen = 0]
+[Taglen = 120]
+
+Count = 0
+Key = 272f16edb81a7abbea887357a58c1917
+IV = 794ec588176c703d3d2a7a07
+PT = 
+AAD = 
+CT = 
+Tag = b6e6f197168f5049aeda32dafbdaeb
+      
+      
+
+[Keylen = 128]
+[IVlen = 96]
+[PTlen = 0]
+[AADlen = 0]
+[Taglen = 112]
+
+Count = 0
+Key = 81b6844aab6a568c4556a2eb7eae752f
+IV = ce600f59618315a6829bef4d
+PT = 
+AAD = 
+CT = 
+Tag = 89b43e9dbc1b4f597dbbc7655bb5
+      
+      
+
+[Keylen = 128]
+[IVlen = 96]
+[PTlen = 0]
+[AADlen = 0]
+[Taglen = 104]
+
+Count = 0
+Key = cde2f9a9b1a004165ef9dc981f18651b
+IV = 29512c29566c7322e1e33e8e
+PT = 
+AAD = 
+CT = 
+Tag = 2e58ce7dabd107c82759c66a75
+      
+      
+
+[Keylen = 128]
+[IVlen = 96]
+[PTlen = 0]
+[AADlen = 0]
+[Taglen = 96]
+
+Count = 0
+Key = b01e45cc3088aaba9fa43d81d481823f
+IV = 5a2c4a66468713456a4bd5e1
+PT = 
+AAD = 
+CT = 
+Tag = 014280f944f53c681164b2ff
+      
+      
+
+[Keylen = 128]
+[IVlen = 96]
+[PTlen = 0]
+[AADlen = 0]
+[Taglen = 64]
+
+Count = 0
+Key = 37537a1046d71481796f25f407d5bbf1
+IV = 7471c076847d67cc16e9b0f6
+PT = 
+AAD = 
+CT = 
+Tag = b5c76f188b101250
+      
+      
+
+[Keylen = 128]
+[IVlen = 96]
+[PTlen = 0]
+[AADlen = 0]
+[Taglen = 32]
+
+Count = 0
+Key = 884eb636a277ecc4c34a43cc59075ca9
+IV = 44e8019f4026ff0c1f8b3e2f
+PT = 
+AAD = 
+CT = 
+Tag = 054d063f
+      
+      
+
+[Keylen = 128]
+[IVlen = 96]
+[PTlen = 128]
+[AADlen = 0]
+[Taglen = 128]
+
+Count = 0
+Key = 77be63708971c4e240d1cb79e8d77feb
+IV = e0e00f19fed7ba0136a797f3
+PT = 7a43ec1d9c0a5a78a0b16533a6213cab
+AAD = 
+CT = 
+Tag = 209fcc8d3675ed938e9c7166709dd946
+      
+      
+
+[Keylen = 128]
+[IVlen = 96]
+[PTlen = 128]
+[AADlen = 0]
+[Taglen = 120]
+
+Count = 0
+Key = da0b615656135194ba6d3c851099bc48
+IV = d39d4b4d3cc927885090e6c3
+PT = e7e5e6f8dac913036cb2ff29e8625e0e
+AAD = 
+CT = 
+Tag = ab967711a5770461724460b07237e2
+      
+      
+
+[Keylen = 128]
+[IVlen = 96]
+[PTlen = 128]
+[AADlen = 0]
+[Taglen = 112]
+
+Count = 0
+Key = 7e0986937a88eef894235aba4a2f43b2
+IV = 92c4a631695907166b422d60
+PT = 85c185f8518f9f2cd597a8f9208fc76b
+AAD = 
+CT = 
+Tag = 3bb916b728df94fe9d1916736be1
+      
+      
+
+[Keylen = 128]
+[IVlen = 96]
+[PTlen = 128]
+[AADlen = 0]
+[Taglen = 104]
+
+Count = 0
+Key = c3db570d7f0c21e86b028f11465d1dc9
+IV = f86970f58ceef89fc7cb679e
+PT = c095240708c0f57c288d86090ae34ee1
+AAD = 
+CT = 
+Tag = e043c52160d652e82c7262fcf4
+      
+      
+
+[Keylen = 128]
+[IVlen = 96]
+[PTlen = 128]
+[AADlen = 0]
+[Taglen = 96]
+
+Count = 0
+Key = bea48ae4980d27f357611014d4486625
+IV = 32bddb5c3aa998a08556454c
+PT = 8a50b0b8c7654bced884f7f3afda2ead
+AAD = 
+CT = 
+Tag = 8e0f6d8bf05ffebe6f500eb1
+      
+      
+
+[Keylen = 128]
+[IVlen = 96]
+[PTlen = 128]
+[AADlen = 0]
+[Taglen = 64]
+
+Count = 0
+Key = f106707b6feaf55ff3716682babb153c
+IV = a8fe0334b48d9315d900e7c9
+PT = c37b8f27d53ac3df1b8e6f705d0a24f4
+AAD = 
+CT = 
+Tag = 6da65b0b5be02142
+      
+      
+
+[Keylen = 128]
+[IVlen = 96]
+[PTlen = 128]
+[AADlen = 0]
+[Taglen = 32]
+
+Count = 0
+Key = 13dcd21d1c1430de6774067f6ad5f473
+IV = fd71056931d8d4ef3c2613a7
+PT = 40582c192ee0c3256cf0c12ec8abe39a
+AAD = 
+CT = 
+Tag = b20e0bf6
+      
+      
+
+[Keylen = 128]
+[IVlen = 96]
+[PTlen = 160]
+[AADlen = 0]
+[Taglen = 128]
+
+Count = 0
+Key = 2fb45e5b8f993a2bfebc4b15b533e0b4
+IV = 5b05755f984d2b90f94b8027
+PT = e85491b2202caf1d7dce03b97e09331c32473941
+AAD = 
+CT = 
+Tag = c75b7832b2a2d9bd827412b6ef5769db
+      
+      
+
+[Keylen = 128]
+[IVlen = 96]
+[PTlen = 160]
+[AADlen = 0]
+[Taglen = 120]
+
+Count = 0
+Key = 9bf406339fcef9675bbcf156aa1a0661
+IV = 8be4a9543d40f542abacac95
+PT = 7167cbf56971793186333a6685bbd58d47d379b3
+AAD = 
+CT = 
+Tag = 5e7968d7bbd5ba58cfcc750e2ef8f1
+      
+      
+
+[Keylen = 128]
+[IVlen = 96]
+[PTlen = 160]
+[AADlen = 0]
+[Taglen = 112]
+
+Count = 0
+Key = a2e962fff70fd0f4d63be728b80556fc
+IV = 1fa7103483de43d09bc23db4
+PT = 2a58edf1d53f46e4e7ee5e77ee7aeb60fc360658
+AAD = 
+CT = 
+Tag = fa37f2dbbefab1451eae1d0d74ca
+      
+      
+
+[Keylen = 128]
+[IVlen = 96]
+[PTlen = 160]
+[AADlen = 0]
+[Taglen = 104]
+
+Count = 0
+Key = 6bf4fdce82926dcdfc52616ed5f23695
+IV = cc0f5899a10615567e1193ed
+PT = 3340655592374c1da2f05aac3ee111014986107f
+AAD = 
+CT = 
+Tag = 8ad3385cce3b5e7c985908192c
+      
+      
+
+[Keylen = 128]
+[IVlen = 96]
+[PTlen = 160]
+[AADlen = 0]
+[Taglen = 96]
+
+Count = 0
+Key = 4df7a13e43c3d7b66b1a72fac5ba398e
+IV = 97179a3a2d417908dcf0fb28
+PT = cbb7fc0010c255661e23b07dbd804b1e06ae70ac
+AAD = 
+CT = 
+Tag = 37791edae6c137ea946cfb40
+      
+      
+
+[Keylen = 128]
+[IVlen = 96]
+[PTlen = 160]
+[AADlen = 0]
+[Taglen = 64]
+
+Count = 0
+Key = 3f8777b7c6a4d0962da25da68363f84d
+IV = 73f30f2b5aa317f9fcff5482
+PT = e12756b90bac548fb300756668dbd0e395ecd5ca
+AAD = 
+CT = 
+Tag = cb8e9900c2dfe6a6
+      
+      
+
+[Keylen = 128]
+[IVlen = 96]
+[PTlen = 160]
+[AADlen = 0]
+[Taglen = 32]
+
+Count = 0
+Key = 1ea8bc7bc395877342e911d476ae32e2
+IV = 3333c4f484aa2f906a8e7c28
+PT = 30a5a9270a017047eab5bf10effc5055532b874b
+AAD = 
+CT = 
+Tag = bd514ad3
+      
+      
+
+[Keylen = 128]
+[IVlen = 96]
+[PTlen = 384]
+[AADlen = 0]
+[Taglen = 128]
+
+Count = 0
+Key = 99e3e8793e686e571d8285c564f75e2b
+IV = c2dd0ab868da6aa8ad9c0d23
+PT = b668e42d4e444ca8b23cfdd95a9fedd5178aa521144890b093733cf5cf22526c5917ee476541809ac6867a8c399309fc
+AAD = 
+CT = 
+Tag = 3f4fba100eaf1f34b0baadaae9995d85
+      
+      
+
+[Keylen = 128]
+[IVlen = 96]
+[PTlen = 384]
+[AADlen = 0]
+[Taglen = 120]
+
+Count = 0
+Key = e9f33caaf7deacf43be45407c0784554
+IV = f66aaec224fcb05c5c5f891e
+PT = 32971e5f1daa18803f2ed2fd37c459d77395623e1b348aadfffad908e862c8baf87673fef5d616e9a427b285d3d4cbc5
+AAD = 
+CT = 
+Tag = ed41a470a31b549c38fb87cbfe9dd8
+      
+      
+
+[Keylen = 128]
+[IVlen = 96]
+[PTlen = 384]
+[AADlen = 0]
+[Taglen = 112]
+
+Count = 0
+Key = 1e6c5c5f0f383b3d5c25886646bfa4c2
+IV = a9ccce95354c3987337453f9
+PT = 66cd9ddfce6905dc4bb8948ededeedbc30a190ce5ee26440708982335cc408da66453368570cb53d7c6e82c918f45e61
+AAD = 
+CT = 
+Tag = 38432ddb259e0ab9ee702fcedd11
+      
+      
+
+[Keylen = 128]
+[IVlen = 96]
+[PTlen = 384]
+[AADlen = 0]
+[Taglen = 104]
+
+Count = 0
+Key = 6aae9dd3d7543531cc6ca35bbe89dccc
+IV = 695eddc2d843c8081f94794f
+PT = 4de3c5b86642bbb35e584b5c3bd802e7d28d58a919be232b72ebdd4cecee982d7053247fda1b1433ee37325b725327f3
+AAD = 
+CT = 
+Tag = 29a4aadc562c6879ac2b6d314b
+      
+      
+
+[Keylen = 128]
+[IVlen = 96]
+[PTlen = 384]
+[AADlen = 0]
+[Taglen = 96]
+
+Count = 0
+Key = c77acd1b0918e87053cb3e51651e7013
+IV = 39ff857a81745d10f718ac00
+PT = 407992f82ea23b56875d9a3cb843ceb83fd27cb954f7c5534d58539fe96fb534502a1b38ea4fac134db0a42de4be1137
+AAD = 
+CT = 
+Tag = 2a5dc173285375dc82835876
+      
+      
+
+[Keylen = 128]
+[IVlen = 96]
+[PTlen = 384]
+[AADlen = 0]
+[Taglen = 64]
+
+Count = 0
+Key = a05943f605470563043528153c07c4ee
+IV = 0c4ac1e4df5437ff40a7417e
+PT = cdb7eaed8ee623767b42011c4e4d4cd62b348a8ab68ce7c7f848f3b6b828f92ccfb6e27bd4fdcb892ed1fe701f91f0ec
+AAD = 
+CT = 
+Tag = d024e82511880474
+      
+      
+
+[Keylen = 128]
+[IVlen = 96]
+[PTlen = 384]
+[AADlen = 0]
+[Taglen = 32]
+
+Count = 0
+Key = 31f3db349138c53719a04269153dbbbd
+IV = 857918200b71b95353336161
+PT = 7080c306e1563b2be2d767bc00d7b4b89f7a23ac5b94d2a45c9551b8a5539f2028b256f2e4073c6c894b220ce0034ba2
+AAD = 
+CT = 
+Tag = 59ece7bb
+      
+      
+
+[Keylen = 128]
+[IVlen = 96]
+[PTlen = 720]
+[AADlen = 0]
+[Taglen = 128]
+
+Count = 0
+Key = 20b5b6b854e187b058a84d57bc1538b6
+IV = 94c1935afc061cbf254b936f
+PT = ca418e71dbf810038174eaa3719b3fcb80531c7110ad9192d105eeaafa15b819ac005668752b344ed1b22faf77048baf03dbddb3b47d6b00e95c4f005e0cc9b7627ccafd3f21b3312aa8d91d3fa0893fe5bff7d44ca46f23afe0
+AAD = 
+CT = 
+Tag = b37286ebaf4a54e0ffc2a1deafc9f6db
+      
+      
+
+[Keylen = 128]
+[IVlen = 96]
+[PTlen = 720]
+[AADlen = 0]
+[Taglen = 120]
+
+Count = 0
+Key = c34b23cff0d158d64042b104acd03753
+IV = c05f0a54a224a652b82efd29
+PT = 94a009421c6889deb233b727cfd333bcda46bd2c9fb5ed60e2807a24c9a5146ba024d8d8525221583d02924bfca32213694169a121091c7c2ee0c3427a5c16a8210ea70c6b8ee0bcc7d782f0607a75e40a8d788a9ec469e05eee
+AAD = 
+CT = 
+Tag = 1f8da8c6e25ff2f2116dad939428dd
+      
+      
+
+[Keylen = 128]
+[IVlen = 96]
+[PTlen = 720]
+[AADlen = 0]
+[Taglen = 112]
+
+Count = 0
+Key = 21474dc6523587a077ea361bece2e9bc
+IV = cae71485a5bc18f0c59cf35f
+PT = 327c02ac3cc55f29a91198938eb8fa2656246bf04d79783d34243db36991bcdbf8ed863fed4293bccddf577a0f81b130b96dc02ed51181ec89a052e58c60c1d68c28efc1dbb51e2613c5864af85402f18ac1b1d5cf4d3070afd0
+AAD = 
+CT = 
+Tag = 78b0309b6595e0beb8b877a0cf51
+      
+      
+
+[Keylen = 128]
+[IVlen = 96]
+[PTlen = 720]
+[AADlen = 0]
+[Taglen = 104]
+
+Count = 0
+Key = 7674e09a02011df80cb66abf646c4448
+IV = c9191abd553ca614e09b3784
+PT = 3911e9620a863cb435a74305be2d104d569a6e4ef796de23e8ec3b79b013244713dd4a2b1d3310de6ca74ecf51c44a2c3de573c8dfb6cf8c3c2763aa0add823b4426374591869ab5a5c08252d81dad73384d8965eb4a810be4e1
+AAD = 
+CT = 
+Tag = 92cf1e6b89d22b456bd8e1d63d
+      
+      
+
+[Keylen = 128]
+[IVlen = 96]
+[PTlen = 720]
+[AADlen = 0]
+[Taglen = 96]
+
+Count = 0
+Key = d3da4c1b8a0da47207ee9384ce85d123
+IV = 02e07988f6e899465e64413a
+PT = 5ac3c5f477a5486ade9619937c0b94b4567a6810f37481f08070cc7f6c6b83887b3f3b67511ecb01e94833648f9afcc7be1d30e75733f158e34611c95fa735678e3e20ddbef118375d25ac8f5abcf14329289ca5b8be04e051e7
+AAD = 
+CT = 
+Tag = 0463ea5b69c9029fa48de21a
+      
+      
+
+[Keylen = 128]
+[IVlen = 96]
+[PTlen = 720]
+[AADlen = 0]
+[Taglen = 64]
+
+Count = 0
+Key = 338c8bc1b1bdc40b58f26024b1370d3a
+IV = 3b1856853f945c3301af1891
+PT = 69f72d74c4877db4a7da6137a24f8fed5c2c72f800b5dc01ebaef34ce3a4367412506bd33a4177a355d875aba6ed1134104512976a9580e4f86863054d03c47a0b82f55f8ed73bfef83f565422db63e086b30926cde208f83141
+AAD = 
+CT = 
+Tag = 742efac14fcb01f3
+      
+      
+
+[Keylen = 128]
+[IVlen = 96]
+[PTlen = 720]
+[AADlen = 0]
+[Taglen = 32]
+
+Count = 0
+Key = fec14f1c775ec5dc2976be559d4fb689
+IV = 3b23453a96c86f192042b60c
+PT = 6deddbe4c4caf59abcd3058b63b86798b89542afd586e4bccdec8f8c57d174385d9a6072cbde979bedb90f7052140f09e25b3a5052531488e4bb20c543a74112ba4c524e04fcb1d43dcf05731b41fd38a06cf4835d69e08f482c
+AAD = 
+CT = 
+Tag = 4fdff79e
+      
+      
+
+[Keylen = 128]
+[IVlen = 96]
+[PTlen = 0]
+[AADlen = 128]
+[Taglen = 128]
+
+Count = 0
+Key = 7fddb57453c241d03efbed3ac44e371c
+IV = ee283a3fc75575e33efd4887
+PT = 
+AAD = d5de42b461646c255c87bd2962d3b9a2
+CT = 2ccda4a5415cb91e135c2a0f78c9b2fd
+Tag = b36d1df9b9d5e596f83e8b7f52971cb3
+      
+      
+
+[Keylen = 128]
+[IVlen = 96]
+[PTlen = 0]
+[AADlen = 128]
+[Taglen = 120]
+
+Count = 0
+Key = a10c0047bc237c96caf74c9676d6ff1f
+IV = c81820692baad8837f0112e7
+PT = 
+AAD = b65c3e50f9852b745f66b13e8d4f66cf
+CT = f2f03455ec73027b27042be0e66e4b8e
+Tag = 368be4de43c27e8466cf2da86e3215
+      
+      
+
+[Keylen = 128]
+[IVlen = 96]
+[PTlen = 0]
+[AADlen = 128]
+[Taglen = 112]
+
+Count = 0
+Key = 4a93d060e5840ea1a316a93833a3d7ae
+IV = c1e53efb263be5a3991aa67f
+PT = 
+AAD = 9b50e6860424b1991d4e2096e054e650
+CT = 9bd752f9e2a66a084bcae54ca49fe379
+Tag = 172793bee6cfefd22542a20ad246
+      
+      
+
+[Keylen = 128]
+[IVlen = 96]
+[PTlen = 0]
+[AADlen = 128]
+[Taglen = 104]
+
+Count = 0
+Key = 0cecc3a1ccc9f703c1fc494f18fb19c9
+IV = 54bff4beb52b953987ddd632
+PT = 
+AAD = 086d474358211f0ff5bc289e0a897c15
+CT = 3d9989937f68818a67804b29099ba1f6
+Tag = 2b38ad12cafc1ce95283e633a6
+      
+      
+
+[Keylen = 128]
+[IVlen = 96]
+[PTlen = 0]
+[AADlen = 128]
+[Taglen = 96]
+
+Count = 0
+Key = f00fdd018c02e03576008b516ea971ad
+IV = 3b3e276f9e98b1ecb7ce6d28
+PT = 
+AAD = 2853e66b7b1b3e1fa3d1f37279ac82be
+CT = 55d2da7a3fb773b8a073db499e24bf62
+Tag = cba06bb4f6e097199250b0d1
+      
+      
+
+[Keylen = 128]
+[IVlen = 96]
+[PTlen = 0]
+[AADlen = 128]
+[Taglen = 64]
+
+Count = 0
+Key = 9d6380d680247607ab2ab360d5b755dc
+IV = f9b1df61d9f40419e93835b1
+PT = 
+AAD = 56a65181f0bc6eb8139898ee5c8dba43
+CT = be80cd6d41fec4d891e0bbd34232d85e
+Tag = 33e5ed3a94b45de1
+      
+      
+
+[Keylen = 128]
+[IVlen = 96]
+[PTlen = 0]
+[AADlen = 128]
+[Taglen = 32]
+
+Count = 0
+Key = 69a6bff9f9eccb3a0ed6260e67785df6
+IV = 1cf93bab893917f844f62653
+PT = 
+AAD = ad5265f5feb4e437ff6556394ae768fe
+CT = 8f25ab02e2a20be2e5a90901f21baac8
+Tag = 32d17b9f
+      
+      
+
+[Keylen = 128]
+[IVlen = 96]
+[PTlen = 128]
+[AADlen = 128]
+[Taglen = 128]
+
+Count = 0
+Key = c939cc13397c1d37de6ae0e1cb7c423c
+IV = b3d8cc017cbb89b39e0f67e2
+PT = 24825602bd12a984e0092d3e448eda5f
+AAD = c3b3c41f113a31b73d9a5cd432103069
+CT = 93fe7d9e9bfd10348a5606e5cafa7354
+Tag = 0032a1dc85f1c9786925a2e71d8272dd
+      
+      
+
+[Keylen = 128]
+[IVlen = 96]
+[PTlen = 128]
+[AADlen = 128]
+[Taglen = 120]
+
+Count = 0
+Key = 89c54b0d3bc3c397d5039058c220685f
+IV = bc7f45c00868758d62d4bb4d
+PT = 48d16cda0337105a50e2ed76fd18e114
+AAD = 582670b0baf5540a3775b6615605bd05
+CT = fc2d4c4eee2209ddbba6663c02765e69
+Tag = 55e783b00156f5da0446e2970b877f
+      
+      
+
+[Keylen = 128]
+[IVlen = 96]
+[PTlen = 128]
+[AADlen = 128]
+[Taglen = 112]
+
+Count = 0
+Key = bad6049678bf75c9087b3e3ae7e72c13
+IV = a0a017b83a67d8f1b883e561
+PT = f7c27b51d5367161dc2ff1e9e3edc6f2
+AAD = a1be93012f05a1958440f74a5311f4a1
+CT = 36f032f7e3dc3275ca22aedcdc68436b
+Tag = 99a2227f8bb69d45ea5d8842cd08
+      
+      
+
+[Keylen = 128]
+[IVlen = 96]
+[PTlen = 128]
+[AADlen = 128]
+[Taglen = 104]
+
+Count = 0
+Key = 66a3c722ccf9709525650973ecc100a9
+IV = 1621d42d3a6d42a2d2bf9494
+PT = d7a9b6523b8827068a6354a6d166c6b9
+AAD = 61fa9dbbed2190fbc2ffabf5d2ea4ff8
+CT = fef3b20f40e08a49637cc82f4c89b860
+Tag = 3fd5c0132acfab97b5fff651c4
+      
+      
+
+[Keylen = 128]
+[IVlen = 96]
+[PTlen = 128]
+[AADlen = 128]
+[Taglen = 96]
+
+Count = 0
+Key = 562ae8aadb8d23e0f271a99a7d1bd4d1
+IV = f7a5e2399413b89b6ad31aff
+PT = 2b9680b886b3efb7c6354b38c63b5373
+AAD = bbdc3504d803682aa08a773cde5f231a
+CT = e2b7e5ed5ff27fc8664148f5a628a46d
+Tag = cbf2015184fffb82f2651c36
+      
+      
+
+[Keylen = 128]
+[IVlen = 96]
+[PTlen = 128]
+[AADlen = 128]
+[Taglen = 64]
+
+Count = 0
+Key = af2904e234458af8ce0d616866c981fc
+IV = ef6381fdeb7877845f46edcd
+PT = 41946f4a8304875ab3db0dec08d6c990
+AAD = 13836338abcfc03b89dd93f1dd691b01
+CT = b13b49e06b9e615a86d4c17ac10da212
+Tag = ac8af4dc584da9a6
+      
+      
+
+[Keylen = 128]
+[IVlen = 96]
+[PTlen = 128]
+[AADlen = 128]
+[Taglen = 32]
+
+Count = 0
+Key = 6dfb5dc68af6ae2f3242e9184f100918
+IV = 37d36f5c54d53479d4745dd1
+PT = dd0fa6e494031139d71ee45f00d56fa4
+AAD = 47809d16c2c6ec685962c90e53fe1bba
+CT = 418d6c132a4f5bbe245133936ada9c73
+Tag = 9ae38ddb
+      
+      
+
+[Keylen = 128]
+[IVlen = 96]
+[PTlen = 160]
+[AADlen = 128]
+[Taglen = 128]
+
+Count = 0
+Key = d4a22488f8dd1d5c6c19a7d6ca17964c
+IV = f3d5837f22ac1a0425e0d1d5
+PT = f1c5d424b83f96c6ad8cb28ca0d20e475e023b5a
+AAD = 7b43016a16896497fb457be6d2a54122
+CT = c2bd67eef5e95cac27e3b06e3031d0a8
+Tag = f23eacf9d1cdf8737726c58648826e9c
+      
+      

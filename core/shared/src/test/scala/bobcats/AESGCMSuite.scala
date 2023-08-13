@@ -39,7 +39,7 @@ class AESGCMSuite extends CryptoSuite {
       val tagLen = new AES.TagLength(tag.length.toInt * 8)
       val ivLen = iv.length * 8
       val adLen = ad.map(_.length * 8).getOrElse(0)
-      test(s"${alg} [count=${count}, ptLen=${ptLen} tagLen=${tagLen.value}, ivLen=${ivLen}, adLen=${adLen}]") {
+      test(s"${alg}.encrypt [count=${count}, ptLen=${ptLen} tagLen=${tagLen.value}, ivLen=${ivLen}, adLen=${adLen}]") {
         assume(supportedTagLengths(runtime).contains(tagLen))
         for {
           key <- Cipher[IO].importKey(key, alg)

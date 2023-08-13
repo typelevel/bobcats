@@ -194,13 +194,14 @@ object BlockCipherAlgorithm {
     val keyLength = AES.KeyLength.`256`
   }
 
-  object AESGCM128 extends AES.GCM {
+  object AesGcm128 extends AES.GCM {
     val keyLength = AES.KeyLength.`128`
+    override def toString: String = "AesGcm128"
   }
 
-  object AESGCM256 extends AES.GCM {
+  object AesGcm256 extends AES.GCM {
     val keyLength = AES.KeyLength.`256`
-    override def toString: String = "AESGCM256"
+    override def toString: String = "AesGcm256"
   }
 
 }

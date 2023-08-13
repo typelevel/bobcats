@@ -35,10 +35,10 @@ object AESGCMEncryptTestVectorGenerator extends TestVectorGenerator {
         } else {
           q"Some(${hexInterpolate(ad)})"
         }
-          q"""
+        q"""
             TestVector(
                 $count,
-                AESGCM256,
+                ${Term.Name("AesGcm" + key.length * 8L)},
                 ${hexInterpolate(key)},
                 ${hexInterpolate(iv)},
                 ${hexInterpolate(plainText)},

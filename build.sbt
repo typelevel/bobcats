@@ -118,15 +118,18 @@ lazy val core = crossProject(JSPlatform, JVMPlatform, NativePlatform)
     Test / sourceGenerators += aesGcmEncryptTestsGenerate.taskValue,
     aesGcmEncryptTestsGenerate / fileInputs +=
       (crossProjectBaseDirectory.value / "shared" / "src" / "test" / "resources").toGlob / "gcmEncryptExtIV*.rsp",
-    cbcTestsGenerate := {
-      val files = (Test / cbcTestsGenerate).inputFiles
-      AESCBCTestVectorGenerator.generate(
-        files.map(_.toFile),
-        (Test / sourceManaged).value,
-        scalafmtConfig.value
-      )
-    },
-    Test / cbcTestsGenerate / fileInputs += (crossProjectBaseDirectory.value / "shared" / "src" / "test" / "resources").toGlob / "CBC*256.rsp"
+
+    // aesGcmEncryptTestsGenerate / fileInputs +=
+    //   (crossProjectBaseDirectory.value / "shared" / "src" / "test" / "resources").toGlob / "gcmEncryptExtIV*.rsp",
+    // cbctestsgenerate := {
+    //   val files = (Test / cbcTestsGenerate).inputFiles
+    //   AESCBCTestVectorGenerator.generate(
+    //     files.map(_.toFile),
+    //     (Test / sourceManaged).value,
+    //     scalafmtConfig.value
+    //   )
+    // },
+    // Test / cbcTestsGenerate / fileInputs += (crossProjectBaseDirectory.value / "shared" / "src" / "test" / "resources").toGlob / "CBC*256.rsp"
     // Test / sourceGenerators += cbcTestsGenerate.taskValue
   )
   .dependsOn(testRuntime % Test)

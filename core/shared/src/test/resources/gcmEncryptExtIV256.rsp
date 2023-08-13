@@ -1,6 +1,5 @@
 # CAVS 14.0
 # GCM Encrypt with keysize 256 test information
-# Generated on Fri Aug 31 11:26:26 2012
 
 [Keylen = 256]
 [IVlen = 96]
