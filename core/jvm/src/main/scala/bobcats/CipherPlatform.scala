@@ -76,8 +76,8 @@ private final class JavaSecurityCipher[F[_]](providers: Providers)(implicit F: S
             new GCMParameterSpec(tagLength.value, iv.data.toArray))
 
           ad.foreach { data => cipher.updateAAD(data.toByteBuffer) }
-          // TODO: Calculate length properly
-          ???
+          val len = data.length.toInt + tagLength.byteLength
+          (cipher, ByteBuffer.allocate(len))
       }
       cipher.doFinal(data.toByteBuffer, out)
       out.rewind()

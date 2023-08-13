@@ -14,20 +14,48 @@ object AESGCMEncryptTestVectorParser {
       ad: ByteVector,
       plainText: ByteVector,
       cipherText: ByteVector,
-      tag: ByteVector)
+    tag: ByteVector) {
+    //     assignment("Count", Numbers.digits.map(_.toInt)) <* nl,
+    // assignment("Key", hexString) <* nl,
+    // assignment("IV", hexString) <* nl,
+    // assignment("PT", hexString) <* nl,
+    // assignment("AAD", hexString) <* nl,
+    // assignment("CT", hexString) <* nl,
+    // assignment("Tag", hexString)
 
-  case class Section(
-    keyLength: Int,
-    tagLength: Int,
-    testVectors: NonEmptyList[TestVector]
-  )
+
+    def show: String =
+      s"""
+        |Count = ${index}
+        |Key = ${key.toHex}
+        |IV = ${iv.toHex}
+        |PT = ${plainText.toHex}
+        |AAD = ${ad.toHex}
+        |CT = ${cipherText.toHex}
+        |Tag = ${tag.toHex}
+      """.stripMargin
+  }
+
+  case class Section(testVectors: NonEmptyList[TestVector]) {
+    def show: String = {
+      val TestVector(_, key, iv, ad, pt, ct, tag) = testVectors.head
+      s"""
+         |[Keylen = ${key.length * 8}]
+         |[IVlen = ${iv.length * 8}]
+         |[PTlen = ${pt.length * 8}]
+         |[AADlen = ${ad.length * 8}]
+         |[Taglen = ${tag.length * 8}]
+         |${testVectors.map(_.show).toList.mkString("\n")}
+      """.stripMargin
+    }
+  }
 
   private val sectionHeader = 
-    (sectionParam("Keylen", Numbers.digits.map(_.toInt)) <* nl) ~
-  (sectionParam("IVlen", Numbers.digits.void) *> nl *>
-    sectionParam("PTlen", Numbers.digits.void) *> nl *>
-    sectionParam("AADlen", Numbers.digits.void) *> nl *>
-    sectionParam("Taglen", Numbers.digits.map(_.toInt)))
+    (sectionParam("Keylen", Numbers.digits.void) *> nl *>
+      sectionParam("IVlen", Numbers.digits.void) *> nl *>
+      sectionParam("PTlen", Numbers.digits.void) *> nl *>
+      sectionParam("AADlen", Numbers.digits.void) *> nl *>
+      sectionParam("Taglen", Numbers.digits.void))
 
   private val entry = (
     assignment("Count", Numbers.digits.map(_.toInt)) <* nl,
@@ -40,8 +68,8 @@ object AESGCMEncryptTestVectorParser {
   ).mapN(TestVector.apply)
 
   private val section =
-    (sectionHeader ~ entry.surroundedBy(whitespaces).rep).map {
-      case ((keyLength, tagLength), entries) => Section(keyLength, tagLength, entries)
+    (sectionHeader *> entry.surroundedBy(whitespaces).rep).map {
+      case entries => Section(entries)
     }.surroundedBy(whitespaces)
 
   val parser: P[NonEmptyList[Section]] = header *> section.rep

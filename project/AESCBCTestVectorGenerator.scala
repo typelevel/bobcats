@@ -8,11 +8,8 @@ import cats.parse.Parser
 import org.scalafmt.sbt.ScalafmtPlugin
 
 object AESCBCTestVectorGenerator {
-  def hexInterpolate(data: ByteVector): Term =
-    Term.Interpolate(
-      Term.Name("hex"),
-      List(Lit.String(data.toHex(Alphabets.HexLowercase))),
-      List.empty)
+
+  import TestVectorGenerator._
 
   def generate(testDataFiles: Seq[File], targetDir: File, scalafmtConfig: File): Seq[File] = {
     val testFileNameMatcher = """CBC(\w+)256.rsp""".r

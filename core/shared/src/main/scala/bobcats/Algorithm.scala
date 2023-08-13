@@ -156,10 +156,16 @@ object BlockCipherAlgorithm {
       val `256` = new KeyLength(256)
     }
 
-    final class TagLength private[bobcats] (val value: Int) extends AnyVal
+    final class TagLength private[bobcats] (val value: Int) extends AnyVal {
+      private[bobcats] def byteLength: Int = value / 8
+    }
 
     object TagLength {
       val `96` = new TagLength(96)
+      val `104` = new TagLength(104)
+      val `112` = new TagLength(112)
+      val `120` = new TagLength(120)
+      val `128` = new TagLength(128)
     }
 
     sealed trait CBC extends AES[CBC.Params]
@@ -191,6 +197,12 @@ object BlockCipherAlgorithm {
   object AESGCM128 extends AES.GCM {
     val keyLength = AES.KeyLength.`128`
   }
+
+  object AESGCM256 extends AES.GCM {
+    val keyLength = AES.KeyLength.`256`
+    override def toString: String = "AESGCM256"
+  }
+
 }
 
 // case class AES[K <: Singleton, M <: BlockCipher.Mode] private(keyLength: K, mode: M, padding: Boolean) extends CipherAlgorithm

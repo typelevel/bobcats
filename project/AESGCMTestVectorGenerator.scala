@@ -15,12 +15,26 @@ object AESGCMEncryptTestVectorGenerator extends TestVectorGenerator {
 
   def generate(testDataFiles: Seq[File], targetDir: File): Source = {
     val result = testDataFiles.toList.flatTraverse { file =>
-      parser.parseAll(IO.read(file)).map(_.toList)
+      val a = parser.parseAll(IO.read(file)).map(_.toList)
+      // a match {
+      //   case Right(sections) =>
+      //     val content = sections.toList.take(50).map(s =>
+      //       Section(cats.data.NonEmptyList(s.testVectors.head, Nil)).show
+      //     ).mkString("\n")
+      //     IO.write(new File("test.rsp"), content)
+      // }
+      // ???
+      a
     }.map { sections =>
       val testVectors = for {
-        Section(keyLength, tagLength, testVectors) <- sections
+        Section(testVectors) <- sections
         TestVector(count, key, iv, ad, plainText, cipherText, tag) <- testVectors.toList
       } yield {
+        val adTerm = if (ad.isEmpty) {
+          q"None"
+        } else {
+          q"Some(${hexInterpolate(ad)})"
+        }
           q"""
             TestVector(
                 $count,
@@ -29,7 +43,8 @@ object AESGCMEncryptTestVectorGenerator extends TestVectorGenerator {
                 ${hexInterpolate(iv)},
                 ${hexInterpolate(plainText)},
                 ${hexInterpolate(cipherText)},
-                ${hexInterpolate(tag)})
+                ${hexInterpolate(tag)},
+                $adTerm)
             """
       }
       source"""
@@ -48,7 +63,8 @@ object AESGCMEncryptTestVectorGenerator extends TestVectorGenerator {
           iv: ByteVector,
           plainText: ByteVector,
           cipherText: ByteVector,
-          tag: ByteVector
+          tag: ByteVector,
+          ad: Option[ByteVector]
         )
 
         def allTestVectors: Seq[TestVector] = Seq(..${testVectors})

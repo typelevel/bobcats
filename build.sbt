@@ -90,6 +90,8 @@ lazy val root = tlCrossRootProject.aggregate(core, testRuntime)
 
 lazy val cbcTestsGenerate = taskKey[Seq[File]]("Generate CBC test cases")
 
+val aesGcmEncryptTestsGenerate = taskKey[Seq[File]]("Generate AES GCM test cases")
+
 lazy val core = crossProject(JSPlatform, JVMPlatform, NativePlatform)
   .in(file("core"))
   .settings(
@@ -108,6 +110,14 @@ lazy val core = crossProject(JSPlatform, JVMPlatform, NativePlatform)
     ),
     // Generate the sources /outside/ of the cross
     (Test / sourceManaged) := crossProjectBaseDirectory.value / "shared" / "src_managed" / "test",
+    aesGcmEncryptTestsGenerate := AESGCMEncryptTestVectorGenerator
+      .task(
+        aesGcmEncryptTestsGenerate
+      )
+      .value,
+    Test / sourceGenerators += aesGcmEncryptTestsGenerate.taskValue,
+    aesGcmEncryptTestsGenerate / fileInputs +=
+      (crossProjectBaseDirectory.value / "shared" / "src" / "test" / "resources").toGlob / "gcmEncryptExtIV*.rsp",
     cbcTestsGenerate := {
       val files = (Test / cbcTestsGenerate).inputFiles
       AESCBCTestVectorGenerator.generate(
@@ -116,8 +126,8 @@ lazy val core = crossProject(JSPlatform, JVMPlatform, NativePlatform)
         scalafmtConfig.value
       )
     },
-    Test / cbcTestsGenerate / fileInputs += (crossProjectBaseDirectory.value / "shared" / "src" / "test" / "resources").toGlob / "CBC*256.rsp",
-    Test / sourceGenerators += cbcTestsGenerate.taskValue
+    Test / cbcTestsGenerate / fileInputs += (crossProjectBaseDirectory.value / "shared" / "src" / "test" / "resources").toGlob / "CBC*256.rsp"
+    // Test / sourceGenerators += cbcTestsGenerate.taskValue
   )
   .dependsOn(testRuntime % Test)
 

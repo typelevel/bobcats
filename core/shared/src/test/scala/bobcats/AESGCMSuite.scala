@@ -26,22 +26,24 @@ class AESGCMSuite extends CryptoSuite {
   import BlockCipherAlgorithm._
   import AESGCMTestVectors._
 
-          // count: Int,
-          // algorithm: AES.GCM,
-          // key: ByteVector,
-          // iv: ByteVector,
-          // plainText: ByteVector,
-          // cipherText: ByteVector,
-          // tag: ByteVector
+  val supportedTagLengths = {
+    import AES.TagLength._
+    Map(
+      "JVM" -> Set(`96`, `104`, `112`, `120`, `128`)
+    )
+  }
 
   AESGCMTestVectors.allTestVectors.foreach {
-    case TestVector(count, alg, key, iv, plainText, cipherText, tag) =>
-      val tagLength = new AES.TagLength(tag.length.toInt * 8)
-      val ivLength = iv.length * 8
-      test(s"${alg} [count=${count}, tagLen=${tagLength.value}, ivLen=${ivLength}]") {
+    case TestVector(count, alg, key, iv, plainText, cipherText, tag, ad) =>
+      val ptLen = plainText.length.toInt * 8
+      val tagLen = new AES.TagLength(tag.length.toInt * 8)
+      val ivLen = iv.length * 8
+      val adLen = ad.map(_.length * 8).getOrElse(0)
+      test(s"${alg} [count=${count}, ptLen=${ptLen} tagLen=${tagLen.value}, ivLen=${ivLen}, adLen=${adLen}]") {
+        assume(supportedTagLengths(runtime).contains(tagLen))
         for {
           key <- Cipher[IO].importKey(key, alg)
-          obtained <- Cipher[IO].encrypt(key, AES.GCM.Params(new IV(iv), tagLength), plainText)
+          obtained <- Cipher[IO].encrypt(key, AES.GCM.Params(new IV(iv), tagLen, ad), plainText)
         } yield assertEquals(
           obtained,
           cipherText ++ tag
