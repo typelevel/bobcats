@@ -34,7 +34,7 @@ class AESGCMSuite extends CryptoSuite {
     )
   }
 
-  AESGCMTestVectors.allTestVectors.take(200).foreach {
+  AESGCMTestVectors.allTestVectors.foreach {
     case TestVector(count, alg, key, iv, plainText, cipherText, tag, ad) =>
       val ptLen = plainText.length.toInt * 8
       val tagLen = new AES.TagLength(tag.length.toInt * 8)
@@ -42,7 +42,6 @@ class AESGCMSuite extends CryptoSuite {
       val adLen = ad.map(_.length * 8).getOrElse(0)
       test(s"${alg}.encrypt [count=${count}, ptLen=${ptLen} tagLen=${tagLen.value}, ivLen=${ivLen}, adLen=${adLen}]") {
         assume(supportedTagLengths(runtime).contains(tagLen))
-        assume(adLen == 0)
 
         for {
           key <- Cipher[IO].importKey(key, alg)

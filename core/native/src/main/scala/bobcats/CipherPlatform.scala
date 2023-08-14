@@ -37,6 +37,39 @@ private final class EvpCipher[F[_]](ctx: Ptr[OSSL_LIB_CTX])(implicit F: Sync[F])
 
   import BlockCipherAlgorithm._
 
+  private def initKeyIv(
+      ctx: Ptr[EVP_CIPHER_CTX],
+      cipher: Ptr[EVP_CIPHER],
+      key: Array[Byte],
+      iv: Array[Byte],
+      mode: Int
+  ): Unit = {
+    val ivLength = iv.length
+    val ivLen = stackalloc[CUnsignedInt](1)
+    ivLen(0) = ivLength.toUInt
+
+    val params = stackalloc[OSSL_PARAM](3)
+    OSSL_CIPHER_PARAM_IVLEN(params(0), ivLen)
+    OSSL_PARAM_END(params(1))
+
+    // Note: For OpenSSL 3.0.x and below, we /must/ separate out the init calls. See #19822
+    if (EVP_CipherInit_ex2(
+        ctx,
+        cipher,
+        null,
+        null,
+        mode,
+        params
+      ) != 1) {
+      throw Error("EVP_CipherInit_ex2", ERR_get_error())
+    }
+
+    if (EVP_CipherInit_ex2(ctx, null, key.at(0), iv.at(0), mode, null) != 1) {
+      throw Error("EVP_CipherInit_ex2", ERR_get_error())
+    }
+
+  }
+
   def encrypt[P <: CipherParams, A <: CipherAlgorithm[P]](
       key: SecretKey[A],
       params: P,
@@ -44,109 +77,84 @@ private final class EvpCipher[F[_]](ctx: Ptr[OSSL_LIB_CTX])(implicit F: Sync[F])
 
     (key, params) match {
       case (SecretKeySpec(key, gcm: AES.GCM), AES.GCM.Params(iv, tagLength, ad)) =>
-        // FIPS_evp_aes_128_gcm
-        val name = gcm.keyLength.value match {
+        val keyLength = gcm.keyLength.value
+        val name = keyLength match {
           case 128 => c"AES-128-GCM"
           case 192 => c"AES-192-GCM"
           case 256 => c"AES-256-GCM"
-          case _ =>
-            throw new IllegalArgumentException("here")
+          case _ => ???
+        }
+        val cipher = EVP_CIPHER_fetch(ctx, name, null)
+        if (cipher == null) {
+          EVP_CIPHER_free(cipher)
+          F.raiseError(
+            new NoSuchAlgorithmException(null, Error("EVP_CIPHER_fetch", ERR_get_error())))
+        } else {
+          val cipherCtx = EVP_CIPHER_CTX_new()
+          try {
 
-            ???
+            initKeyIv(cipherCtx, cipher, key.toArrayUnsafe, iv.data.toArrayUnsafe, 1)
+
+            val outl = stackalloc[CSize](1)
+            val dataArray = data.toArrayUnsafe
+            val dataLen = dataArray.length
+            val out = new Array[Byte](dataLen + tagLength.byteLength)
+
+            ad match {
+              case Some(ad) =>
+                val adArray = ad.toArrayUnsafe
+                if (EVP_CipherUpdate(
+                    cipherCtx,
+                    null,
+                    outl,
+                    adArray.at(0).asInstanceOf[Ptr[CUnsignedChar]],
+                    adArray.length.toULong
+                  ) != 1) {
+                  throw Error("EVP_CipherUpdate", ERR_get_error())
+                }
+              case _ => ()
+            }
+
+            if (EVP_CipherUpdate(
+                cipherCtx,
+                out.at(0).asInstanceOf[Ptr[CUnsignedChar]],
+                outl,
+                if (dataLen > 0)
+                  dataArray.at(0).asInstanceOf[Ptr[CUnsignedChar]]
+                else null,
+                dataLen.toULong
+              ) != 1) {
+              throw Error("EVP_CipherUpdate", ERR_get_error())
+            }
+
+            if (EVP_CipherFinal(
+                cipherCtx,
+                out.at(outl(0).toInt).asInstanceOf[Ptr[CUnsignedChar]],
+                outl) != 1) {
+              throw Error("EVP_CipherFinal", ERR_get_error())
+            }
+
+            val outParams = stackalloc[OSSL_PARAM](2)
+            OSSL_CIPHER_PARAM_AEAD_TAG(
+              outParams(0),
+              out.at(dataLen),
+              tagLength.byteLength.toULong)
+            OSSL_PARAM_END(outParams(1))
+
+            if (EVP_CIPHER_CTX_get_params(
+                cipherCtx,
+                outParams
+              ) != 1) {
+              throw Error("EVP_CIPHER_CTX_get_params", ERR_get_error())
+            }
+
+            F.pure(ByteVector(out))
+          } finally {
+            EVP_CIPHER_CTX_free(cipherCtx)
+            EVP_CIPHER_free(cipher)
+          }
         }
 
-        val cipherCtx = EVP_CIPHER_CTX_new()
-
-        try {
-
-          val cipher = EVP_CIPHER_fetch(ctx, name, null)
-          if (cipher == null) {
-            throw Error("EVP_CIPHER_fetch", ERR_get_error())
-          }
-
-          val uintParams = stackalloc[CUnsignedInt](4)
-          val ivArray = iv.data.toArrayUnsafe
-          val ivLength = ivArray.length
-          // uintParams(0) = 0.toUInt
-          uintParams(0) = 64.toUInt
-          uintParams(2) = key.size.toUInt
-          val params = stackalloc[OSSL_PARAM](5)
-          // OSSL_CIPHER_PARAM_PADDING(params(0), uintParams + 1)
-          OSSL_CIPHER_PARAM_IVLEN(params(0), uintParams)
-          // OSSL_CIPHER_PARAM_KEYLEN(params(2), uintParams + 3)
-          OSSL_PARAM_END(params(1))
-          if (EVP_CipherInit_ex2(
-              cipherCtx,
-              cipher,
-            null,
-            null,
-            1,
-            null
-              // key.toArrayUnsafe.at(0),
-              // iv.data.toArrayUnsafe.at(0),
-              // 1,
-              ) != 1) {
-            throw Error("EVP_CipherInit_ex2", ERR_get_error())
-          }
-
-
-          if(EVP_CIPHER_CTX_set_params(cipherCtx, params) != 1) {
-            throw Error("EVP_CIPHER_CTX_set_params", ERR_get_error())
-          }
-
-
-          if (EVP_CipherInit_ex2(
-              cipherCtx,
-              cipher,
-              key.toArrayUnsafe.at(0),
-              iv.data.toArrayUnsafe.at(0),
-              1,
-              null) != 1) {
-            throw Error("EVP_CipherInit_ex2", ERR_get_error())
-          }
-
-
-          // TODO: no-copy
-          val outl = stackalloc[CSize](1)
-          val dataArray = data.toArrayUnsafe
-          val dataLen = dataArray.length
-          val out = new Array[Byte](dataLen + tagLength.byteLength)
-
-          if (EVP_CipherUpdate(
-              cipherCtx,
-              out.at(0).asInstanceOf[Ptr[CUnsignedChar]],
-            outl,
-            (if (dataLen > 0)
-              dataArray.at(0).asInstanceOf[Ptr[CUnsignedChar]] else null),
-              dataLen.toULong
-            ) != 1) {
-            throw Error("EVP_CipherUpdate", ERR_get_error())
-          }
-
-          if (EVP_CipherFinal(
-              cipherCtx,
-              out.at(outl(0).toInt).asInstanceOf[Ptr[CUnsignedChar]],
-              outl) != 1) {
-            throw Error("EVP_CipherFinal", ERR_get_error())
-          }
-
-          val outParams = stackalloc[OSSL_PARAM](2)
-          OSSL_CIPHER_PARAM_AEAD_TAG(outParams(0), out.at(dataLen), tagLength.byteLength.toULong)
-          OSSL_PARAM_END(outParams(1))
-
-          if (EVP_CIPHER_CTX_get_params(
-            cipherCtx,
-            outParams
-              ) != 1) {
-            throw Error("EVP_CIPHER_CTX_get_params", ERR_get_error())
-          }
-
-
-          	// EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_GCM_GET_TAG, 16, outbuf);
-          F.pure(ByteVector(out))
-        } finally {
-          EVP_CIPHER_CTX_free(cipherCtx)
-        }
       case _ => ???
     }
   }

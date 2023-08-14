@@ -211,8 +211,6 @@ object BlockCipherAlgorithm {
     val keyLength = AES.KeyLength.`256`
   }
 
-
-
 }
 
 // case class AES[K <: Singleton, M <: BlockCipher.Mode] private(keyLength: K, mode: M, padding: Boolean) extends CipherAlgorithm
