@@ -17,9 +17,6 @@
 package bobcats
 
 import cats.effect.IO
-import cats.syntax.all._
-import munit.CatsEffectSuite
-import cats.effect.kernel.Async
 
 class AESGCMSuite extends CryptoSuite {
 
@@ -39,7 +36,7 @@ class AESGCMSuite extends CryptoSuite {
       val ptLen = plainText.length.toInt * 8
       val tagLen = new AES.TagLength(tag.length.toInt * 8)
       val ivLen = iv.length * 8
-      val adLen = ad.map(_.length * 8).getOrElse(0)
+      val adLen = ad.length * 8
       test(s"${alg}.encrypt [count=${count}, ptLen=${ptLen} tagLen=${tagLen.value}, ivLen=${ivLen}, adLen=${adLen}]") {
         assume(supportedTagLengths(runtime).contains(tagLen))
 
@@ -47,7 +44,6 @@ class AESGCMSuite extends CryptoSuite {
           key <- Cipher[IO].importKey(key, alg)
           obtained <- Cipher[IO].encrypt(key, AES.GCM.Params(new IV(iv), tagLen, ad), plainText)
           expected = cipherText ++ tag
-
         } yield assertEquals(
           obtained,
           expected,

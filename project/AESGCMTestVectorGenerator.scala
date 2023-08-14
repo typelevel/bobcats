@@ -21,11 +21,6 @@ object AESGCMEncryptTestVectorGenerator extends TestVectorGenerator {
         Section(testVectors) <- sections
         TestVector(count, key, iv, ad, plainText, cipherText, tag) <- testVectors.toList
       } yield {
-        val adTerm = if (ad.isEmpty) {
-          q"None"
-        } else {
-          q"Some(${hexInterpolate(ad)})"
-        }
         q"""
             TestVector(
                 $count,
@@ -35,7 +30,7 @@ object AESGCMEncryptTestVectorGenerator extends TestVectorGenerator {
                 ${hexInterpolate(plainText)},
                 ${hexInterpolate(cipherText)},
                 ${hexInterpolate(tag)},
-                $adTerm)
+                ${hexInterpolate(ad)})
             """
       }
       source"""
@@ -55,7 +50,7 @@ object AESGCMEncryptTestVectorGenerator extends TestVectorGenerator {
           plainText: ByteVector,
           cipherText: ByteVector,
           tag: ByteVector,
-          ad: Option[ByteVector]
+          ad: ByteVector
         )
 
         def allTestVectors: Seq[TestVector] = Seq(..${testVectors})

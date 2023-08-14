@@ -100,19 +100,16 @@ private final class EvpCipher[F[_]](ctx: Ptr[OSSL_LIB_CTX])(implicit F: Sync[F])
             val dataLen = dataArray.length
             val out = new Array[Byte](dataLen + tagLength.byteLength)
 
-            ad match {
-              case Some(ad) =>
-                val adArray = ad.toArrayUnsafe
-                if (EVP_CipherUpdate(
-                    cipherCtx,
-                    null,
-                    outl,
-                    adArray.at(0).asInstanceOf[Ptr[CUnsignedChar]],
-                    adArray.length.toULong
-                  ) != 1) {
-                  throw Error("EVP_CipherUpdate", ERR_get_error())
-                }
-              case _ => ()
+            val adArray = ad.toArrayUnsafe
+            if (EVP_CipherUpdate(
+                cipherCtx,
+                null,
+                outl,
+                if (adArray.length > 0) adArray.at(0).asInstanceOf[Ptr[CUnsignedChar]]
+                else null,
+                adArray.length.toULong
+              ) != 1) {
+              throw Error("EVP_CipherUpdate", ERR_get_error())
             }
 
             if (EVP_CipherUpdate(

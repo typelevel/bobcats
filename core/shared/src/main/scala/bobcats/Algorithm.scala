@@ -185,7 +185,7 @@ object BlockCipherAlgorithm {
       final case class Params(
           iv: IV,
           tagLength: TagLength = TagLength.`96`,
-          ad: Option[ByteVector] = None)
+          ad: ByteVector = ByteVector.empty)
           extends CipherParams
     }
 
