@@ -30,7 +30,7 @@ private final class JavaSecurityCipher[F[_]](providers: Providers)(implicit F: S
 
   import BlockCipherAlgorithm._
 
-  // TODO: What to do...
+  // TODO: Is it worth caching this?
   private def aesCipherName(
       keyLength: AES.KeyLength,
       mode: BlockCipherMode,
@@ -85,7 +85,6 @@ private final class JavaSecurityCipher[F[_]](providers: Providers)(implicit F: S
       bv
     }
   }
-
 
   override def encrypt[P <: CipherParams, A <: CipherAlgorithm[P]](
     key: SecretKey[A],

@@ -18,13 +18,13 @@ package bobcats
 
 import scodec.bits.ByteVector
 
-sealed trait Algorithm extends AlgorithmPlatform {
+sealed trait Algorithm {
   private[bobcats] def toStringJava: String
   private[bobcats] def toStringNodeJS: String
   private[bobcats] def toStringWebCrypto: String
 }
 
-sealed trait HashAlgorithm extends Algorithm with HashAlgorithmPlatform
+sealed trait HashAlgorithm extends Algorithm
 
 object HashAlgorithm {
 
@@ -54,7 +54,7 @@ object HashAlgorithm {
   }
 }
 
-sealed trait HmacAlgorithm extends Algorithm with HmacAlgorithmPlatform {
+sealed trait HmacAlgorithm extends Algorithm {
 
   import HmacAlgorithm._
 
@@ -131,7 +131,9 @@ object BlockCipherMode {
   }
 }
 
-final class IV private[bobcats] (val data: ByteVector) extends AnyVal
+final class IV private[bobcats] (val data: ByteVector) extends AnyVal {
+  private[bobcats] def bitLength: Int = data.length.toInt * 8
+}
 
 object BlockCipherAlgorithm {
 
