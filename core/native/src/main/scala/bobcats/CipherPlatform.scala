@@ -22,6 +22,7 @@ import scodec.bits.ByteVector
 import fs2.{Chunk, Pipe, Stream}
 
 import scala.scalanative.unsafe._
+import scala.scalanative.annotation.alwaysinline
 
 import openssl._
 import openssl.evp._
@@ -70,6 +71,60 @@ private final class EvpCipher[F[_]](ctx: Ptr[OSSL_LIB_CTX])(implicit F: Sync[F])
 
   }
 
+  private def updateAD(ctx: Ptr[EVP_CIPHER_CTX], ad: ByteVector): Unit = {
+    val arr = ad.toArrayUnsafe
+    val len = arr.length
+    val outl = stackalloc[CSize](1)
+
+    if (EVP_CipherUpdate(
+        ctx,
+        null,
+        outl,
+        if (len > 0) arr.at(0).asInstanceOf[Ptr[CUnsignedChar]]
+        else null,
+        len.toULong
+      ) != 1) {
+      throw Error("EVP_CipherUpdate", ERR_get_error())
+    }
+  }
+
+  private def updateFinal(
+      ctx: Ptr[EVP_CIPHER_CTX],
+      out: Array[Byte],
+      outl: Ptr[CSize],
+      data: Array[Byte],
+      dataLen: Int) {
+    if (EVP_CipherUpdate(
+        ctx,
+        out.at(0).asInstanceOf[Ptr[CUnsignedChar]],
+        outl,
+        if (dataLen > 0)
+          data.at(0).asInstanceOf[Ptr[CUnsignedChar]]
+        else null,
+        dataLen.toULong
+      ) != 1) {
+      throw Error("EVP_CipherUpdate", ERR_get_error())
+    }
+
+    if (EVP_CipherFinal(
+        ctx,
+        out.at(outl(0).toInt).asInstanceOf[Ptr[CUnsignedChar]],
+        outl) != 1) {
+      throw Error("EVP_CipherFinal", ERR_get_error())
+    }
+  }
+
+  @alwaysinline private def cipherFetch[A](name: CString)(f: Ptr[EVP_CIPHER] => F[A]): F[A] = {
+    val cipher = EVP_CIPHER_fetch(ctx, name, null)
+    if (cipher == null) {
+      EVP_CIPHER_free(cipher)
+      F.raiseError(
+        new NoSuchAlgorithmException(null, Error("EVP_CIPHER_fetch", ERR_get_error())))
+    } else {
+      f(cipher)
+    }
+  }
+
   def encrypt[P <: CipherParams, A <: CipherAlgorithm[P]](
       key: SecretKey[A],
       params: P,
@@ -84,52 +139,19 @@ private final class EvpCipher[F[_]](ctx: Ptr[OSSL_LIB_CTX])(implicit F: Sync[F])
           case 256 => c"AES-256-GCM"
           case _ => ???
         }
-        val cipher = EVP_CIPHER_fetch(ctx, name, null)
-        if (cipher == null) {
-          EVP_CIPHER_free(cipher)
-          F.raiseError(
-            new NoSuchAlgorithmException(null, Error("EVP_CIPHER_fetch", ERR_get_error())))
-        } else {
+        cipherFetch(name) { cipher =>
           val cipherCtx = EVP_CIPHER_CTX_new()
           try {
 
             initKeyIv(cipherCtx, cipher, key.toArrayUnsafe, iv.data.toArrayUnsafe, 1)
+            updateAD(cipherCtx, ad)
 
             val outl = stackalloc[CSize](1)
             val dataArray = data.toArrayUnsafe
             val dataLen = dataArray.length
-            val out = new Array[Byte](dataLen + tagLength.byteLength)
+            val out = new Array[Byte](dataArray.length + tagLength.byteLength)
 
-            val adArray = ad.toArrayUnsafe
-            if (EVP_CipherUpdate(
-                cipherCtx,
-                null,
-                outl,
-                if (adArray.length > 0) adArray.at(0).asInstanceOf[Ptr[CUnsignedChar]]
-                else null,
-                adArray.length.toULong
-              ) != 1) {
-              throw Error("EVP_CipherUpdate", ERR_get_error())
-            }
-
-            if (EVP_CipherUpdate(
-                cipherCtx,
-                out.at(0).asInstanceOf[Ptr[CUnsignedChar]],
-                outl,
-                if (dataLen > 0)
-                  dataArray.at(0).asInstanceOf[Ptr[CUnsignedChar]]
-                else null,
-                dataLen.toULong
-              ) != 1) {
-              throw Error("EVP_CipherUpdate", ERR_get_error())
-            }
-
-            if (EVP_CipherFinal(
-                cipherCtx,
-                out.at(outl(0).toInt).asInstanceOf[Ptr[CUnsignedChar]],
-                outl) != 1) {
-              throw Error("EVP_CipherFinal", ERR_get_error())
-            }
+            updateFinal(cipherCtx, out, outl, dataArray, dataLen)
 
             val outParams = stackalloc[OSSL_PARAM](2)
             OSSL_CIPHER_PARAM_AEAD_TAG(
@@ -146,13 +168,52 @@ private final class EvpCipher[F[_]](ctx: Ptr[OSSL_LIB_CTX])(implicit F: Sync[F])
             }
 
             F.pure(ByteVector(out))
+          } catch {
+            case e: Error => F.raiseError(e)
           } finally {
             EVP_CIPHER_CTX_free(cipherCtx)
             EVP_CIPHER_free(cipher)
           }
-        }
 
-      case _ => ???
+        }
+      case (SecretKeySpec(key, cbc: AES.CBC), AES.CBC.Params(iv)) =>
+        val keyLength = cbc.keyLength.value
+        val name = keyLength match {
+          case 256 => c"AES-256-CBC"
+          case _ => ???
+        }
+        cipherFetch(name) { cipher =>
+          val cipherCtx = EVP_CIPHER_CTX_new()
+          try {
+
+            initKeyIv(cipherCtx, cipher, key.toArrayUnsafe, iv.data.toArrayUnsafe, 1)
+            val outl = stackalloc[CSize](1)
+            val dataArray = data.toArrayUnsafe
+            val dataLen = dataArray.length
+            val out = new Array[Byte](dataArray.length)
+
+            // No need to call `final`, since there's nothing to write
+            if (EVP_CipherUpdate(
+                cipherCtx,
+                out.at(0).asInstanceOf[Ptr[CUnsignedChar]],
+                outl,
+                if (dataLen > 0)
+                  dataArray.at(0).asInstanceOf[Ptr[CUnsignedChar]]
+                else null,
+                dataLen.toULong
+              ) != 1) {
+              throw Error("EVP_CipherUpdate", ERR_get_error())
+            }
+
+            F.pure(ByteVector(out))
+          } catch {
+            case e: Error => F.raiseError(e)
+          } finally {
+            EVP_CIPHER_CTX_free(cipherCtx)
+            EVP_CIPHER_free(cipher)
+          }
+
+        }
     }
   }
 

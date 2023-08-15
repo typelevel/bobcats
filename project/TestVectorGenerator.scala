@@ -9,17 +9,17 @@ import org.scalafmt.sbt.ScalafmtPlugin
 
 trait TestVectorGenerator {
 
-  def generate(testFiles: Seq[File], targetDir: File): Source
+  def generate(testFiles: Seq[File]): Source
 
-  def task(key: TaskKey[Seq[File]]) = {
+  def task(key: TaskKey[Seq[File]], file: String) = {
     import Keys._
     Def.task {
       val files = key.inputFiles
       val targetDir = (Test / sourceManaged).value
       val scalafmtCfg = ScalafmtPlugin.autoImport.scalafmtConfig.value
 
-      val result = generate(files.map(_.toFile), sourceManaged.value)
-      val targetFile = targetDir / "bobcats" / "AESGCMTestVectors.scala"
+      val result = generate(files.map(_.toFile))
+      val targetFile = targetDir / "bobcats" / s"${file}.scala"
 
       val formattedSyntax = ScalafmtPlugin
         .globalInstance

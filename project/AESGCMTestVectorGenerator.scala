@@ -13,20 +13,21 @@ object AESGCMEncryptTestVectorGenerator extends TestVectorGenerator {
   import TestVectorGenerator._
   import AESGCMEncryptTestVectorParser._
 
-  def generate(testDataFiles: Seq[File], targetDir: File): Source = {
+  def generate(testDataFiles: Seq[File]): Source = {
     val result = testDataFiles.toList.flatTraverse { file =>
-      parser.parseAll(IO.read(file)).map(_.toList)
+      parser.parseAll(IO.read(file)).map(_.toList.map((file, _)))
     }.map { sections =>
-      val testVectors = for {
-        Section(testVectors) <- sections
-        TestVector(count, key, iv, ad, plainText, cipherText, tag) <- testVectors.toList
-      } yield {
+        val testVectors = for {
+          (file, Section(testVectors)) <- sections
+          TestVector(count, key, iv, ad, plainText, cipherText, tag) <- testVectors.toList
+        } yield {
         q"""
             TestVector(
+                ${file.getName},
                 $count,
                 ${Term.Name("AESGCM" + key.length * 8L)},
                 ${hexInterpolate(key)},
-                ${hexInterpolate(iv)},
+                new IV(${hexInterpolate(iv)}),
                 ${hexInterpolate(plainText)},
                 ${hexInterpolate(cipherText)},
                 ${hexInterpolate(tag)},
@@ -38,15 +39,16 @@ object AESGCMEncryptTestVectorGenerator extends TestVectorGenerator {
 
       import scodec.bits._
 
-      object AESGCMTestVectors {
+      object AESGCMEncryptTestVectors {
 
         import BlockCipherAlgorithm._
 
         case class TestVector(
+          file: String,
           count: Int,
           algorithm: AES.GCM,
           key: ByteVector,
-          iv: ByteVector,
+          iv: IV,
           plainText: ByteVector,
           cipherText: ByteVector,
           tag: ByteVector,

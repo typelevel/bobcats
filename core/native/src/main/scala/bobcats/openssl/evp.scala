@@ -259,19 +259,4 @@ private[bobcats] object evp {
       inl: CSize
   ): CInt = extern
 
-  // int EVP_CipherUpdate(EVP_CIPHER_CTX *ctx, unsigned char *out,
-  //                      int *outl, const unsigned char *in, int inl);
-
-  // int EVP_CipherFinal(EVP_CIPHER_CTX *ctx, unsigned char *outm, int *outl);
-
-// int EVP_EncryptInit_ex2(EVP_CIPHER_CTX *ctx, const EVP_CIPHER *type,
-//                         const unsigned char *key, const unsigned char *iv,
-//                         const OSSL_PARAM params[]);
-  // int EVP_CipherInit_ex2(EVP_CIPHER_CTX *ctx, const EVP_CIPHER *type,
-  //              const unsigned char *key, const unsigned char *iv,
-  //              int enc, const OSSL_PARAM params[]);
-
-// EVP_CIPHER *EVP_CIPHER_fetch(OSSL_LIB_CTX *ctx, const char *algorithm,
-//                              const char *properties);
-
 }

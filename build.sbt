@@ -88,9 +88,8 @@ val disciplineMUnitVersion = "2.0.0-M2"
 
 lazy val root = tlCrossRootProject.aggregate(core, testRuntime)
 
-lazy val cbcTestsGenerate = taskKey[Seq[File]]("Generate CBC test cases")
-
 val aesGcmEncryptTestsGenerate = taskKey[Seq[File]]("Generate AES GCM test cases")
+val aesCbcTestsGenerate = taskKey[Seq[File]]("Generate AES CBC test cases")
 
 lazy val core = crossProject(JSPlatform, JVMPlatform, NativePlatform)
   .in(file("core"))
@@ -112,25 +111,21 @@ lazy val core = crossProject(JSPlatform, JVMPlatform, NativePlatform)
     (Test / sourceManaged) := crossProjectBaseDirectory.value / "shared" / "src_managed" / "test",
     aesGcmEncryptTestsGenerate := AESGCMEncryptTestVectorGenerator
       .task(
-        aesGcmEncryptTestsGenerate
+        aesGcmEncryptTestsGenerate,
+        "AESGCMEncryptTestVectors"
       )
       .value,
-    Test / sourceGenerators += aesGcmEncryptTestsGenerate.taskValue,
+    aesCbcTestsGenerate := AESCBCTestVectorGenerator
+      .task(
+        aesCbcTestsGenerate,
+        "AESCBCTestVectors"
+      )
+      .value,
     aesGcmEncryptTestsGenerate / fileInputs +=
       (crossProjectBaseDirectory.value / "shared" / "src" / "test" / "resources").toGlob / "gcmEncryptExtIV*.rsp",
-
-    // aesGcmEncryptTestsGenerate / fileInputs +=
-    //   (crossProjectBaseDirectory.value / "shared" / "src" / "test" / "resources").toGlob / "gcmEncryptExtIV*.rsp",
-    // cbctestsgenerate := {
-    //   val files = (Test / cbcTestsGenerate).inputFiles
-    //   AESCBCTestVectorGenerator.generate(
-    //     files.map(_.toFile),
-    //     (Test / sourceManaged).value,
-    //     scalafmtConfig.value
-    //   )
-    // },
-    // Test / cbcTestsGenerate / fileInputs += (crossProjectBaseDirectory.value / "shared" / "src" / "test" / "resources").toGlob / "CBC*256.rsp"
-    // Test / sourceGenerators += cbcTestsGenerate.taskValue
+    aesCbcTestsGenerate / fileInputs +=
+      (crossProjectBaseDirectory.value / "shared" / "src" / "test" / "resources").toGlob / "CBC*256.rsp",
+    Test / sourceGenerators ++= Seq(aesGcmEncryptTestsGenerate.taskValue, aesCbcTestsGenerate.taskValue),
   )
   .dependsOn(testRuntime % Test)
 

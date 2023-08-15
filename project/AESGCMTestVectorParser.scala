@@ -15,14 +15,6 @@ object AESGCMEncryptTestVectorParser {
       plainText: ByteVector,
       cipherText: ByteVector,
     tag: ByteVector) {
-    //     assignment("Count", Numbers.digits.map(_.toInt)) <* nl,
-    // assignment("Key", hexString) <* nl,
-    // assignment("IV", hexString) <* nl,
-    // assignment("PT", hexString) <* nl,
-    // assignment("AAD", hexString) <* nl,
-    // assignment("CT", hexString) <* nl,
-    // assignment("Tag", hexString)
-
 
     def show: String =
       s"""
@@ -72,6 +64,6 @@ object AESGCMEncryptTestVectorParser {
       case entries => Section(entries)
     }.surroundedBy(whitespaces)
 
-  val parser: P[NonEmptyList[Section]] = header *> section.rep
+  val parser = header *> section.rep
 
 }

@@ -21,37 +21,40 @@ import cats.effect.IO
 class AESGCMSuite extends CryptoSuite {
 
   import BlockCipherAlgorithm._
-  import AESGCMTestVectors._
 
   val supportedTagLengths = {
     import AES.TagLength._
     Map(
       "JVM" -> Set(`96`, `104`, `112`, `120`, `128`),
-      "Native" -> Set(`96`, `104`, `112`, `120`, `128`),
+      "Native" -> Set(`32`, `64`, `96`, `104`, `112`, `120`, `128`),
     )
   }
+  {
+    import AESGCMEncryptTestVectors._
 
-  AESGCMTestVectors.allTestVectors.foreach {
-    case TestVector(count, alg, key, iv, plainText, cipherText, tag, ad) =>
-      val ptLen = plainText.length.toInt * 8
-      val tagLen = new AES.TagLength(tag.length.toInt * 8)
-      val ivLen = iv.length * 8
-      val adLen = ad.length * 8
-      test(s"${alg}.encrypt [count=${count}, ptLen=${ptLen} tagLen=${tagLen.value}, ivLen=${ivLen}, adLen=${adLen}]") {
-        assume(supportedTagLengths(runtime).contains(tagLen))
+    allTestVectors.foreach {
+      case TestVector(file, count, alg, key, iv, plainText, cipherText, tag, ad) =>
+        val ptLen = plainText.length.toInt * 8
+        val tagLen = new AES.TagLength(tag.length.toInt * 8)
+        val adLen = ad.length * 8
+        test(s"""${alg}.encrypt(pt=${ptLen}, tag=${tagLen.value}, iv=${iv.bitLength}, ad=${adLen})""") {
+          assume(supportedTagLengths(runtime).contains(tagLen))
 
-        for {
-          key <- Cipher[IO].importKey(key, alg)
-          obtained <- Cipher[IO].encrypt(key, AES.GCM.Params(new IV(iv), tagLen, ad), plainText)
-          expected = cipherText ++ tag
-        } yield assertEquals(
-          obtained,
-          expected,
-          clue(
-            obtained.toHex,
-            expected.toHex
+          for {
+            key <- Cipher[IO].importKey(key, alg)
+            obtained <- Cipher[IO].encrypt(key, AES.GCM.Params(iv, tagLen, ad), plainText)
+            expected = cipherText ++ tag
+          } yield assertEquals(
+            obtained,
+            expected,
+            clue(
+              obtained.toHex,
+              expected.toHex,
+              file,
+              count
+            )
           )
-        )
-      }
+        }
+    }
   }
 }

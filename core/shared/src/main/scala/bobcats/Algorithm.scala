@@ -164,6 +164,8 @@ object BlockCipherAlgorithm {
     }
 
     object TagLength {
+      val `32` = new TagLength(32)
+      val `64` = new TagLength(64)
       val `96` = new TagLength(96)
       val `104` = new TagLength(104)
       val `112` = new TagLength(112)
@@ -171,7 +173,9 @@ object BlockCipherAlgorithm {
       val `128` = new TagLength(128)
     }
 
-    sealed trait CBC extends AES[CBC.Params]
+    sealed trait CBC extends AES[CBC.Params] {
+      override def toString: String = s"AESCBC${keyLength.toInt}"
+    }
 
     object CBC {
       final case class Params(iv: IV) extends CipherParams

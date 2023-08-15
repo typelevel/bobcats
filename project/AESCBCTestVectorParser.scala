@@ -25,10 +25,7 @@ object AESCBCTestVectorParser {
     (assignment("IV", hexString) <* nl),
     (assignment("PLAINTEXT", hexString) <* nl),
     assignment("CIPHERTEXT", hexString)
-  ).mapN {
-    case (index, key, iv, plainText, cipherText) =>
-      TestVector(index, key, iv, plainText, cipherText)
-  }
+  ).mapN(TestVector.apply)
 
   private val decryptEntry = (
     (assignment("COUNT", Numbers.digits.map(_.toInt)) <* nl),
@@ -36,20 +33,14 @@ object AESCBCTestVectorParser {
     (assignment("IV", hexString) <* nl),
     (assignment("CIPHERTEXT", hexString) <* nl),
     assignment("PLAINTEXT", hexString)
-  ).mapN {
-    case (index, key, iv, cipherText, plainText) =>
-      TestVector(index, key, iv, plainText, cipherText)
-  }
+  ).mapN(TestVector.apply)
 
   private val encryptSection = section("ENCRYPT", encryptEntry)
 
   private val decryptSection = section("DECRYPT", decryptEntry)
 
-  private val parser =
+  val parser =
     header *> (encryptSection ~ decryptSection)
       .surroundedBy(whitespaces)
       .map(TestVectors.tupled)
-
-  def parse(input: String) =
-    parser.parseAll(input)
 }

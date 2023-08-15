@@ -42,10 +42,10 @@ private final class JavaSecurityCipher[F[_]](providers: Providers)(implicit F: S
     F.pure(SecretKeySpec(key, algorithm))
 
   private def oneshot[P <: CipherParams, A <: CipherAlgorithm[P]](
-    mode: Int,
-    key: SecretKey[A],
-    params: P,
-    data: ByteVector): F[ByteVector] = {
+      mode: Int,
+      key: SecretKey[A],
+      params: P,
+      data: ByteVector): F[ByteVector] = {
 
     F.catchNonFatal {
       val (cipher, out) = (key.algorithm, params) match {
@@ -56,10 +56,7 @@ private final class JavaSecurityCipher[F[_]](providers: Providers)(implicit F: S
             case Right(p) => p
           }
           val cipher = crypto.Cipher.getInstance(name, provider)
-          cipher.init(
-            mode,
-            key.toJava,
-            new IvParameterSpec(iv.data.toArray))
+          cipher.init(mode, key.toJava, new IvParameterSpec(iv.data.toArray))
           // TODO: Calculate length properly
           val len = data.length.toInt
           (cipher, ByteBuffer.allocate(len))
@@ -70,12 +67,9 @@ private final class JavaSecurityCipher[F[_]](providers: Providers)(implicit F: S
             case Right(p) => p
           }
           val cipher = crypto.Cipher.getInstance(name, provider)
-          cipher.init(
-            mode,
-            key.toJava,
-            new GCMParameterSpec(tagLength.value, iv.data.toArray))
+          cipher.init(mode, key.toJava, new GCMParameterSpec(tagLength.value, iv.data.toArray))
 
-          ad.foreach { data => cipher.updateAAD(data.toByteBuffer) }
+          cipher.updateAAD(ad.toByteBuffer)
           val len = data.length.toInt + tagLength.byteLength
           (cipher, ByteBuffer.allocate(len))
       }
@@ -87,15 +81,15 @@ private final class JavaSecurityCipher[F[_]](providers: Providers)(implicit F: S
   }
 
   override def encrypt[P <: CipherParams, A <: CipherAlgorithm[P]](
-    key: SecretKey[A],
-    params: P,
-    data: ByteVector): F[ByteVector] = 
+      key: SecretKey[A],
+      params: P,
+      data: ByteVector): F[ByteVector] =
     oneshot(crypto.Cipher.ENCRYPT_MODE, key, params, data)
 
   override def decrypt[P <: CipherParams, A <: CipherAlgorithm[P]](
-    key: SecretKey[A],
-    params: P,
-    data: ByteVector): F[ByteVector] = 
+      key: SecretKey[A],
+      params: P,
+      data: ByteVector): F[ByteVector] =
     oneshot(crypto.Cipher.DECRYPT_MODE, key, params, data)
 }
 
