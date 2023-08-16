@@ -18,8 +18,7 @@ package bobcats.facade.browser
 
 import scala.scalajs.js
 
-@js.native
-private[bobcats] sealed trait Algorithm extends js.Any
+private[bobcats] sealed trait Algorithm extends js.Object
 
 // private[bobcats] object Algorithm {
 //   def toWebCrypto[A <: CipherAlgorithm](iv: IvParameterSpec[A]) =
@@ -35,7 +34,6 @@ private[bobcats] sealed trait Algorithm extends js.Any
 //     }
 // }
 
-@js.native
 private[bobcats] sealed trait AesCbcParams extends Algorithm
 
 private[bobcats] object AesCbcParams {
@@ -48,15 +46,19 @@ private[bobcats] object AesCbcParams {
       .asInstanceOf[AesCbcParams]
 }
 
-@js.native
-private[bobcats] sealed trait AesGcmParams extends Algorithm
+trait AesGcmParams extends Algorithm {
+  val name: String
+  val iv: js.typedarray.ArrayBuffer
+  val additionalData: js.UndefOr[js.typedarray.Uint8Array] = js.undefined
+}
 
 private[bobcats] object AesGcmParams {
-  def apply(iv: js.typedarray.ArrayBuffer): AesGcmParams =
-    js.Dynamic
-      .literal(
-        name = "AES-GCM",
-        iv = iv
-      )
-      .asInstanceOf[AesGcmParams]
+  def apply(
+      _iv: js.typedarray.ArrayBuffer,
+      _additionalData: js.UndefOr[js.typedarray.Uint8Array]): AesGcmParams =
+    new AesGcmParams {
+      val name = "AES-GCM"
+      val iv = _iv
+      override val additionalData = _additionalData
+    }
 }

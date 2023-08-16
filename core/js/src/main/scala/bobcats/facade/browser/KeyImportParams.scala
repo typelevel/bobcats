@@ -18,7 +18,9 @@ package bobcats.facade.browser
 
 import scala.scalajs.js
 
-private[bobcats] trait HmacImportParams extends js.Object {
+sealed trait ImportParams extends js.Object
+
+private[bobcats] trait HmacImportParams extends ImportParams {
   val name: String
   val hash: String
   val length: js.UndefOr[Int] = js.undefined
@@ -32,7 +34,6 @@ private[bobcats] object HmacImportParams {
     }
 }
 
-@js.native
-private[bobcats] trait AesImportParams extends js.Object {
+private[bobcats] trait AesImportParams extends ImportParams {
   val name: String
 }

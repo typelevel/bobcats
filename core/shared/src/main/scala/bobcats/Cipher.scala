@@ -16,6 +16,16 @@
 
 package bobcats
 
+object PaddingException
+    extends GeneralSecurityException("Bad padding")
+    with scala.util.control.NoStackTrace
+
+final class MissingAlgorithm[A <: Algorithm](val algorithm: Algorithm)
+    extends GeneralSecurityException
+    with scala.util.control.NoStackTrace {
+  override def getMessage: String = s"Missing ${algorithm}"
+}
+
 import scodec.bits.ByteVector
 
 sealed trait Cipher[F[_]] extends CipherPlatform[F] {

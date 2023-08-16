@@ -16,14 +16,68 @@
 
 package bobcats
 
-import cats.effect.kernel.Sync
+import cats.effect.kernel.{Async, Sync}
 import scodec.bits.ByteVector
+import cats.syntax.all._
 
 import scala.scalajs.js
 
 private[bobcats] trait CipherPlatform[F[_]]
 
-private final class NodeCryptoCipher[F[_]](ciphers: js.Array[String])(implicit F: Sync[F])
+private final class SubtleCryptoCipher[F[_]](implicit F: Async[F]) extends UnsealedCipher[F] {
+
+  import facade.browser.{crypto, AesGcmParams, AesImportParams}
+  import BlockCipherAlgorithm._
+
+  override def importKey[A <: CipherAlgorithm[_]](
+      key: ByteVector,
+      algorithm: A): F[SecretKey[A]] =
+    F.pure(SecretKeySpec(key, algorithm))
+
+  override def encrypt[P <: CipherParams, A <: CipherAlgorithm[P]](
+      key: SecretKey[A],
+      params: P,
+      data: ByteVector): F[ByteVector] =
+    key match {
+      case SecretKeySpec(key, algorithm) =>
+        (algorithm, params) match {
+          case (gcm: AES.GCM, AES.GCM.Params(iv, padding, tagLength, ad)) =>
+            for {
+              key <- F.fromPromise(
+                F.delay(
+                  crypto
+                    .subtle
+                    .importKey(
+                      "raw",
+                      key.toUint8Array,
+                      new AesImportParams {
+                        val name = "AES-GCM"
+                      },
+                      false,
+                      js.Array("encrypt"))))
+              cipherText <- F.fromPromise(
+                F.delay(
+                  crypto
+                    .subtle
+                    .encrypt(
+                      AesGcmParams(
+                        iv.data.toJSArrayBuffer,
+                        if (ad.isEmpty) js.undefined else ad.toUint8Array),
+                      key,
+                      data.toJSArrayBuffer)))
+
+            } yield ByteVector.view(cipherText)
+        }
+    }
+
+  def decrypt[P <: CipherParams, A <: CipherAlgorithm[P]](
+      key: SecretKey[A],
+      params: P,
+      data: ByteVector): F[ByteVector] = ???
+
+}
+
+private final class CryptoCipher[F[_]](ciphers: js.Array[String])(implicit F: Sync[F])
     extends UnsealedCipher[F] {
 
   import facade.node.crypto
@@ -60,7 +114,7 @@ private final class NodeCryptoCipher[F[_]](ciphers: js.Array[String])(implicit F
             case (gcm: AES.GCM, AES.GCM.Params(iv, padding, tagLength, ad)) =>
               val name = aesGcmName(gcm.keyLength)
               if (!ciphers.contains(name)) {
-                throw new NoSuchAlgorithmException(s"${gcm} Cipher not available")
+                throw new MissingAlgorithm(algorithm)
               }
               val cipher = crypto
                 .createCipheriv(
@@ -79,7 +133,7 @@ private final class NodeCryptoCipher[F[_]](ciphers: js.Array[String])(implicit F
             case (cbc: AES.CBC, AES.CBC.Params(iv, padding)) =>
               val name = aesCbcName(cbc.keyLength)
               if (!ciphers.contains(name)) {
-                throw new NoSuchAlgorithmException(s"${cbc} Cipher not available")
+                throw new MissingAlgorithm(cbc)
               }
               val cipher = crypto
                 .createCipheriv(
@@ -107,5 +161,8 @@ private final class NodeCryptoCipher[F[_]](ciphers: js.Array[String])(implicit F
 private[bobcats] trait CipherCompanionPlatform {
 
   private[bobcats] def forCryptoCiphers[F[_]: Sync](ciphers: js.Array[String]): Cipher[F] =
-    new NodeCryptoCipher(ciphers)
+    new CryptoCipher(ciphers)
+
+  private[bobcats] def forSubtleCrypto[F[_]: Async]: Cipher[F] = new SubtleCryptoCipher
+
 }
