@@ -11,7 +11,16 @@ object AESCBCTestVectorGenerator extends TestVectorGenerator {
 
   def generate(testFiles: Seq[File]): Source = {
     val result = testFiles.toList.flatTraverse { file =>
-      parser.parseAll(IO.read(file)).map {
+      val a = parser.parseAll(IO.read(file))
+
+      // a.foreach {
+      //   case TestVectors(e, d) =>
+      //     val pp = TestVectors(cats.data.NonEmptyList(e.head, e.tail.take(16)), cats.data.NonEmptyList(d.head, d.tail.take(16))).show
+      //     println(file)
+      // }
+
+      parser.parseAll(IO.read(file))
+        .map {
         case TestVectors(encrypt, decrypt) =>
           encrypt.map {
             case TestVector(count, key, iv, pt, ct) =>

@@ -31,7 +31,7 @@ class AESCBCSuite extends CryptoSuite {
         test(s"""${alg}.encrypt(pt=${ptLen}, iv=${iv.bitLength})""") {
           for {
             key <- Cipher[IO].importKey(key, alg)
-            obtained <- Cipher[IO].encrypt(key, AES.CBC.Params(iv), plainText)
+            obtained <- Cipher[IO].encrypt(key, AES.CBC.Params(iv, false), plainText)
             expected = cipherText
           } yield assertEquals(
             obtained,

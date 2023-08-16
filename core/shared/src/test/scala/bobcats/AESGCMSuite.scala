@@ -24,9 +24,12 @@ class AESGCMSuite extends CryptoSuite {
 
   val supportedTagLengths = {
     import AES.TagLength._
+    val all = Set(`32`, `64`, `96`, `104`, `112`, `120`, `128`)
+
     Map(
       "JVM" -> Set(`96`, `104`, `112`, `120`, `128`),
-      "Native" -> Set(`32`, `64`, `96`, `104`, `112`, `120`, `128`),
+      "Native" -> all,
+      "NodeJS" -> all
     )
   }
   {
@@ -42,7 +45,7 @@ class AESGCMSuite extends CryptoSuite {
 
           for {
             key <- Cipher[IO].importKey(key, alg)
-            obtained <- Cipher[IO].encrypt(key, AES.GCM.Params(iv, tagLen, ad), plainText)
+            obtained <- Cipher[IO].encrypt(key, AES.GCM.Params(iv, false, tagLen, ad), plainText)
             expected = cipherText ++ tag
           } yield assertEquals(
             obtained,

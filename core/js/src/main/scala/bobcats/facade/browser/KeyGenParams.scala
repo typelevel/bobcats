@@ -21,10 +21,9 @@ import bobcats.CipherAlgorithm
 import java.lang
 
 @js.native
-private[bobcats] sealed trait KeyGenParams extends js.Any
-
-@js.native
-private[bobcats] sealed trait HmacKeyGenParams extends js.Any
+private[bobcats] trait HmacKeyGenParams extends js.Object {
+  val name = "HMAC"
+}
 
 private[bobcats] object HmacKeyGenParams {
   def apply(hash: String): HmacKeyGenParams =
@@ -37,14 +36,17 @@ private[bobcats] object HmacKeyGenParams {
 }
 
 @js.native
-private[bobcats] sealed trait AesKeyGenParams extends js.Any
-
-private[bobcats] object AesKeyGenParams {
-  def apply[A <: CipherAlgorithm](algorithm: A): AesKeyGenParams =
-    js.Dynamic
-      .literal(
-        name = algorithm.toStringWebCrypto,
-        length = algorithm.keyLength * lang.Byte.SIZE
-      )
-      .asInstanceOf[AesKeyGenParams]
+private[bobcats] trait AesKeyGenParams extends js.Object {
+  val name: String
+  val length: Int
 }
+
+// private[bobcats] object AesKeyGenParams {
+//   def apply[A <: CipherAlgorithm](algorithm: A): AesKeyGenParams =
+//     js.Dynamic
+//       .literal(
+//         name = algorithm.toStringWebCrypto,
+//         length = algorithm.keyLength * lang.Byte.SIZE
+//       )
+//       .asInstanceOf[AesKeyGenParams]
+// }

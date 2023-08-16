@@ -23,6 +23,19 @@ import scala.annotation.nowarn
 @nowarn("msg=never used")
 private[bobcats] trait Cipher extends js.Any {
   def update(data: js.typedarray.Uint8Array): js.typedarray.Uint8Array = js.native
+
+  /**
+   * See [[https://nodejs.org/api/crypto.html#ciphersetaadbuffer-options]]
+   */
+  def setAAD(buffer: js.typedarray.Uint8Array): this.type = js.native
+
+  /**
+   * See [[https://nodejs.org/api/crypto.html#ciphergetauthtag]].
+   */
+  def getAuthTag(): js.typedarray.Uint8Array = js.native
+
   def `final`(): js.typedarray.Uint8Array = js.native
+
   def setAutoPadding(autoPadding: Boolean): this.type = js.native
+
 }

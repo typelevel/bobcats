@@ -1,12 +1,9 @@
 import cats.Show
 import cats.syntax.all._
 import sbt._
-import sbt.nio.file.FileTreeView
 import scala.meta._
 import scodec.bits._
-import scodec.bits.Bases.Alphabets
 import cats.parse.Parser
-import org.scalafmt.sbt.ScalafmtPlugin
 
 object AESGCMEncryptTestVectorGenerator extends TestVectorGenerator {
 

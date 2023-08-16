@@ -19,12 +19,24 @@ package bobcats.facade.node
 import scala.annotation.nowarn
 import scala.scalajs.js
 
+trait CipherOptions extends js.Object {
+  val authTagLength: Int
+}
+
 // https://nodejs.org/api/crypto.html
 @js.native
 @nowarn("msg=never used")
 private[bobcats] trait crypto extends js.Any {
 
+  /**
+   * See [[https://nodejs.org/api/crypto.html#cryptogethashes]]
+   */
   def getHashes(): js.Array[String] = js.native
+
+  /**
+   * See [[https://nodejs.org/api/crypto.html#cryptogetciphers]]
+   */
+  def getCiphers(): js.Array[String] = js.native
 
   def createHash(algorithm: String): Hash = js.native
 
@@ -33,7 +45,9 @@ private[bobcats] trait crypto extends js.Any {
   def createCipheriv(
       algorithm: String,
       key: js.typedarray.Uint8Array,
-      iv: js.typedarray.Uint8Array): Cipher = js.native
+      iv: js.typedarray.Uint8Array,
+      options: js.UndefOr[CipherOptions] = js.undefined
+  ): Cipher = js.native
 
   def createDecipheriv(
       algorithm: String,

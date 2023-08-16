@@ -178,7 +178,7 @@ object BlockCipherAlgorithm {
     }
 
     object CBC {
-      final case class Params(iv: IV) extends CipherParams
+      final case class Params(iv: IV, padding: Boolean = true) extends CipherParams
     }
 
     sealed trait GCM extends AES[GCM.Params] {
@@ -188,6 +188,7 @@ object BlockCipherAlgorithm {
     object GCM {
       final case class Params(
           iv: IV,
+          padding: Boolean = true,
           tagLength: TagLength = TagLength.`96`,
           ad: ByteVector = ByteVector.empty)
           extends CipherParams

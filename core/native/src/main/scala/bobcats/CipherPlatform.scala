@@ -96,7 +96,7 @@ private final class EvpCipher[F[_]](ctx: Ptr[OSSL_LIB_CTX])(implicit F: Sync[F])
       out: Array[Byte],
       outl: Ptr[CSize],
       data: Array[Byte],
-      dataLen: Int) {
+      dataLen: Int): Unit = {
     if (EVP_CipherUpdate(
         ctx,
         out.at(0).asInstanceOf[Ptr[CUnsignedChar]],
@@ -138,19 +138,18 @@ private final class EvpCipher[F[_]](ctx: Ptr[OSSL_LIB_CTX])(implicit F: Sync[F])
       data: ByteVector): F[ByteVector] = {
 
     (key, params) match {
-      case (SecretKeySpec(key, gcm: AES.GCM), AES.GCM.Params(iv, tagLength, ad)) =>
+      case (SecretKeySpec(key, gcm: AES.GCM), AES.GCM.Params(iv, padding, tagLength, ad)) =>
         val keyLength = gcm.keyLength.value
         val name = keyLength match {
           case 128 => c"AES-128-GCM"
           case 192 => c"AES-192-GCM"
           case 256 => c"AES-256-GCM"
-          case _ => ???
         }
         cipherFetch(name) { cipher =>
           val cipherCtx = EVP_CIPHER_CTX_new()
           try {
 
-            initKeyIv(cipherCtx, cipher, key.toArrayUnsafe, iv.data.toArrayUnsafe, false, 1)
+            initKeyIv(cipherCtx, cipher, key.toArrayUnsafe, iv.data.toArrayUnsafe, padding, 1)
             updateAD(cipherCtx, ad)
 
             val outl = stackalloc[CSize](1)
@@ -183,17 +182,18 @@ private final class EvpCipher[F[_]](ctx: Ptr[OSSL_LIB_CTX])(implicit F: Sync[F])
           }
 
         }
-      case (SecretKeySpec(key, cbc: AES.CBC), AES.CBC.Params(iv)) =>
+      case (SecretKeySpec(key, cbc: AES.CBC), AES.CBC.Params(iv, padding)) =>
         val keyLength = cbc.keyLength.value
         val name = keyLength match {
+          case 128 => c"AES-128-CBC"
+          case 192 => c"AES-192-CBC"
           case 256 => c"AES-256-CBC"
-          case _ => ???
         }
         cipherFetch(name) { cipher =>
           val cipherCtx = EVP_CIPHER_CTX_new()
           try {
 
-            initKeyIv(cipherCtx, cipher, key.toArrayUnsafe, iv.data.toArrayUnsafe, false, 1)
+            initKeyIv(cipherCtx, cipher, key.toArrayUnsafe, iv.data.toArrayUnsafe, padding, 1)
             val outl = stackalloc[CSize](1)
             val dataArray = data.toArrayUnsafe
             val dataLen = dataArray.length

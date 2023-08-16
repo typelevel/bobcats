@@ -16,179 +16,96 @@
 
 package bobcats
 
-import cats.effect.kernel.Async
-import cats.syntax.all._
+import cats.effect.kernel.Sync
 import scodec.bits.ByteVector
 
 import scala.scalajs.js
-import java.lang
 
 private[bobcats] trait CipherPlatform[F[_]]
 
-private[bobcats] trait CipherCompanionPlatform {
-  implicit def forAsync[F[_]](implicit F: Async[F]): Cipher[F] = {
-    if (facade.isNodeJSRuntime)
-      new UnsealedCipher[F] {
-        import facade.node._
+private final class NodeCryptoCipher[F[_]](ciphers: js.Array[String])(implicit F: Sync[F])
+    extends UnsealedCipher[F] {
 
-        override def generateIv[A <: CipherAlgorithm](algorithm: A): F[IvParameterSpec[A]] =
-          F.async_[IvParameterSpec[A]] { cb =>
-            crypto.randomBytes(
-              algorithm.recommendedIvLength,
-              (err, iv) =>
-                cb(
-                  Option(err)
-                    .map(js.JavaScriptException)
-                    .toLeft(IvParameterSpec(ByteVector.view(iv), algorithm))
+  import facade.node.crypto
+  import facade.node.CipherOptions
+
+  import BlockCipherAlgorithm._
+
+  def importKey[A <: CipherAlgorithm[_]](key: ByteVector, algorithm: A): F[SecretKey[A]] =
+    F.pure(SecretKeySpec(key, algorithm))
+
+  // TODO: Macro
+  private def aesGcmName(keyLength: AES.KeyLength): String =
+    keyLength.value match {
+      case 128 => "aes-128-gcm"
+      case 192 => "aes-192-gcm"
+      case 256 => "aes-256-gcm"
+    }
+
+  private def aesCbcName(keyLength: AES.KeyLength): String =
+    keyLength.value match {
+      case 128 => "aes-128-cbc"
+      case 192 => "aes-192-cbc"
+      case 256 => "aes-256-cbc"
+    }
+
+  override def encrypt[P <: CipherParams, A <: CipherAlgorithm[P]](
+      key: SecretKey[A],
+      params: P,
+      data: ByteVector): F[ByteVector] = {
+    key match {
+      case SecretKeySpec(key, algorithm) =>
+        try {
+          val bytes = (algorithm, params) match {
+            case (gcm: AES.GCM, AES.GCM.Params(iv, padding, tagLength, ad)) =>
+              val name = aesGcmName(gcm.keyLength)
+              if (!ciphers.contains(name)) {
+                throw new NoSuchAlgorithmException(s"${gcm} Cipher not available")
+              }
+              val cipher = crypto
+                .createCipheriv(
+                  name,
+                  key.toUint8Array,
+                  iv.data.toUint8Array,
+                  new CipherOptions {
+                    val authTagLength = tagLength.byteLength
+                  }
                 )
-            )
-          }
-
-        override def generateKey[A <: CipherAlgorithm](algorithm: A): F[SecretKey[A]] =
-          F.async_[SecretKey[A]] { cb =>
-            crypto.generateKey(
-              "aes",
-              GenerateKeyOptions(algorithm.keyLength * lang.Byte.SIZE),
-              (err, key) =>
-                cb(
-                  Option(err)
-                    .map(js.JavaScriptException)
-                    .toLeft(SecretKeySpec(ByteVector.view(key.`export`()), algorithm)))
-            )
-          }
-
-        override def importKey[A <: CipherAlgorithm](
-            key: ByteVector,
-            algorithm: A): F[SecretKey[A]] =
-          F.pure(SecretKeySpec(key, algorithm))
-
-        override def importIv[A <: CipherAlgorithm](
-            key: ByteVector,
-            algorithm: A): F[IvParameterSpec[A]] =
-          F.pure(IvParameterSpec(key, algorithm))
-
-        override def encrypt[A <: CipherAlgorithm](
-            key: SecretKey[A],
-            iv: IvParameterSpec[A],
-            data: ByteVector): F[ByteVector] =
-          key match {
-            case SecretKeySpec(key, algorithm) =>
-              F.catchNonFatal {
-                val cipher = crypto
-                  .createCipheriv(
-                    algorithm.toStringNodeJS,
-                    key.toUint8Array,
-                    iv.initializationVector.toUint8Array
-                  )
-                  .setAutoPadding(algorithm.paddingMode.setAutoPaddingNodeJS)
-                val cipherText = cipher.update(data.toUint8Array)
-                ByteVector.view(cipherText) ++ ByteVector.view(cipher.`final`())
+                .setAutoPadding(padding)
+                .setAAD(ad.toUint8Array)
+              val cipherText = cipher.update(data.toUint8Array)
+              ByteVector.view(cipherText) ++ ByteVector.view(cipher.`final`()) ++ ByteVector
+                .view(cipher.getAuthTag())
+            case (cbc: AES.CBC, AES.CBC.Params(iv, padding)) =>
+              val name = aesCbcName(cbc.keyLength)
+              if (!ciphers.contains(name)) {
+                throw new NoSuchAlgorithmException(s"${cbc} Cipher not available")
               }
-            case _ => F.raiseError(new InvalidKeyException)
+              val cipher = crypto
+                .createCipheriv(
+                  name,
+                  key.toUint8Array,
+                  iv.data.toUint8Array
+                )
+                .setAutoPadding(padding)
+              val cipherText = cipher.update(data.toUint8Array)
+              ByteVector.view(cipherText) ++ ByteVector.view(cipher.`final`())
           }
-
-        override def decrypt[A <: CipherAlgorithm](
-            key: SecretKey[A],
-            iv: IvParameterSpec[A],
-            data: ByteVector): F[ByteVector] =
-          key match {
-            case SecretKeySpec(key, algorithm) =>
-              F.catchNonFatal {
-                val cipher = crypto
-                  .createDecipheriv(
-                    algorithm.toStringNodeJS,
-                    key.toUint8Array,
-                    iv.initializationVector.toUint8Array
-                  )
-                  .setAutoPadding(algorithm.paddingMode.setAutoPaddingNodeJS)
-                val cipherText = cipher.update(data.toUint8Array)
-                ByteVector.view(cipherText) ++ ByteVector.view(cipher.`final`())
-              }
-            case _ => F.raiseError(new InvalidKeyException)
-          }
-      }
-    else
-      new UnsealedCipher[F] {
-        import facade.browser._
-
-        override def generateIv[A <: CipherAlgorithm](algorithm: A): F[IvParameterSpec[A]] =
-          F.pure {
-            val iv = crypto.getRandomValues(
-              new js.typedarray.Uint8Array(algorithm.recommendedIvLength))
-            new IvParameterSpec[A](ByteVector.view(iv), algorithm)
-          }
-
-        override def generateKey[A <: CipherAlgorithm](algorithm: A): F[SecretKey[A]] =
-          for {
-            key <- F.fromPromise(
-              F.delay(crypto
-                .subtle
-                .generateKey(AesKeyGenParams(algorithm), true, js.Array("encrypt", "decrypt"))))
-            exported <- F.fromPromise(F.delay(crypto.subtle.exportKey("raw", key)))
-          } yield SecretKeySpec(ByteVector.view(exported), algorithm)
-
-        override def importKey[A <: CipherAlgorithm](
-            key: ByteVector,
-            algorithm: A): F[SecretKey[A]] =
-          F.pure(SecretKeySpec(key, algorithm))
-
-        override def importIv[A <: CipherAlgorithm](
-            key: ByteVector,
-            algorithm: A): F[IvParameterSpec[A]] =
-          F.pure(IvParameterSpec(key, algorithm))
-
-        override def encrypt[A <: CipherAlgorithm](
-            key: SecretKey[A],
-            iv: IvParameterSpec[A],
-            data: ByteVector): F[ByteVector] =
-          key match {
-            case SecretKeySpec(key, algorithm) =>
-              for {
-                key <- F.fromPromise(
-                  F.delay(
-                    crypto
-                      .subtle
-                      .importKey(
-                        "raw",
-                        key.toUint8Array,
-                        AesImportParams(algorithm),
-                        false,
-                        js.Array("encrypt"))))
-                cipherText <- F.fromPromise(
-                  F.delay(
-                    crypto
-                      .subtle
-                      .encrypt(Algorithm.toWebCrypto(iv), key, data.toUint8Array.buffer)))
-              } yield ByteVector.view(cipherText)
-            case _ => F.raiseError(new InvalidKeyException)
-          }
-
-        override def decrypt[A <: CipherAlgorithm](
-            key: SecretKey[A],
-            iv: IvParameterSpec[A],
-            data: ByteVector): F[ByteVector] =
-          key match {
-            case SecretKeySpec(key, algorithm) =>
-              for {
-                key <- F.fromPromise(
-                  F.delay(
-                    crypto
-                      .subtle
-                      .importKey(
-                        "raw",
-                        key.toUint8Array,
-                        AesImportParams(algorithm),
-                        false,
-                        js.Array("decrypt"))))
-                cipherText <- F.fromPromise(
-                  F.delay(
-                    crypto
-                      .subtle
-                      .decrypt(Algorithm.toWebCrypto(iv), key, data.toUint8Array.buffer)))
-              } yield ByteVector.view(cipherText)
-            case _ => F.raiseError(new InvalidKeyException)
-          }
-
-      }
+          F.pure(bytes)
+        } catch {
+          case e: GeneralSecurityException => F.raiseError(e)
+        }
+    }
   }
+
+  def decrypt[P <: CipherParams, A <: CipherAlgorithm[P]](
+      key: SecretKey[A],
+      params: P,
+      data: ByteVector): F[ByteVector] = ???
+}
+
+private[bobcats] trait CipherCompanionPlatform {
+
+  private[bobcats] def forCryptoCiphers[F[_]: Sync](ciphers: js.Array[String]): Cipher[F] =
+    new NodeCryptoCipher(ciphers)
 }

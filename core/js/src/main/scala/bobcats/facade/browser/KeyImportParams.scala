@@ -17,25 +17,22 @@
 package bobcats.facade.browser
 
 import scala.scalajs.js
-import bobcats.CipherAlgorithm
 
-@js.native
-private[bobcats] sealed trait HmacImportParams extends js.Any
+private[bobcats] trait HmacImportParams extends js.Object {
+  val name: String
+  val hash: String
+  val length: js.UndefOr[Int] = js.undefined
+}
 
 private[bobcats] object HmacImportParams {
-  def apply(hash: String): HmacImportParams =
-    js.Dynamic
-      .literal(
-        name = "HMAC",
-        hash = hash
-      )
-      .asInstanceOf[HmacImportParams]
+  def apply(_hash: String): HmacImportParams =
+    new HmacImportParams {
+      val name = "HMAC"
+      val hash = _hash
+    }
 }
 
 @js.native
-private[bobcats] sealed trait AesImportParams extends js.Any
-
-private[bobcats] object AesImportParams {
-  def apply[A <: CipherAlgorithm](algorithm: A): AesImportParams =
-    js.Dynamic.literal(name = algorithm.toStringWebCrypto).asInstanceOf[AesImportParams]
+private[bobcats] trait AesImportParams extends js.Object {
+  val name: String
 }

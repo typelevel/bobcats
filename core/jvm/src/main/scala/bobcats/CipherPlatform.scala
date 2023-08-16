@@ -30,16 +30,29 @@ private final class JavaSecurityCipher[F[_]](providers: Providers)(implicit F: S
 
   import BlockCipherAlgorithm._
 
-  // TODO: Is it worth caching this?
-  private def aesCipherName(
-      keyLength: AES.KeyLength,
-      mode: BlockCipherMode,
-      padding: Boolean): String =
-    s"AES_${keyLength.toInt.toString}/${mode.toStringUppercase}/" + (if (padding) "PKCS5Padding"
-                                                                     else "NoPadding")
-
   def importKey[A <: CipherAlgorithm[_]](key: ByteVector, algorithm: A): F[SecretKey[A]] =
     F.pure(SecretKeySpec(key, algorithm))
+
+  private def paddingStr(padding: Boolean): String =
+    if (padding) "PKCS5Padding" else "NoPadding"
+
+  private def cbcName(keyLength: AES.KeyLength, padding: Boolean): String =
+    keyLength.value match {
+      case 256 if !padding => "AES_256/CBC/NoPadding"
+      case 256 if padding => "AES_256/CBC/PKCS5Padding"
+      case i => s"AES_${i}/CBC/${paddingStr(padding)}"
+    }
+
+  private def aesName(keyLength: AES.KeyLength, padding: Boolean): String =
+    keyLength.value match {
+      case 256 if !padding => "AES_256/GCM/NoPadding"
+      case 256 if padding => "AES_256/GCM/PKCS5Padding"
+      case 192 if !padding => "AES_192/GCM/NoPadding"
+      case 192 if padding => "AES_192/GCM/PKCS5Padding"
+      case 128 if !padding => "AES_128/GCM/NoPadding"
+      case 128 if padding => "AES_128/GCM/PKCS5Padding"
+      case i => s"AES_${i}/GCM/${paddingStr(padding)}"
+    }
 
   private def oneshot[P <: CipherParams, A <: CipherAlgorithm[P]](
       mode: Int,
@@ -49,8 +62,8 @@ private final class JavaSecurityCipher[F[_]](providers: Providers)(implicit F: S
 
     F.catchNonFatal {
       val (cipher, out) = (key.algorithm, params) match {
-        case (cbc: AES.CBC, AES.CBC.Params(iv)) =>
-          val name = aesCipherName(cbc.keyLength, BlockCipherMode.CBC, false)
+        case (cbc: AES.CBC, AES.CBC.Params(iv, padding)) =>
+          val name = cbcName(cbc.keyLength, padding)
           val provider = providers.cipher(name) match {
             case Left(e) => throw e
             case Right(p) => p
@@ -60,8 +73,8 @@ private final class JavaSecurityCipher[F[_]](providers: Providers)(implicit F: S
           // TODO: Calculate length properly
           val len = data.length.toInt
           (cipher, ByteBuffer.allocate(len))
-        case (gcm: AES.GCM, AES.GCM.Params(iv, tagLength, ad)) =>
-          val name = aesCipherName(gcm.keyLength, BlockCipherMode.GCM, false)
+        case (gcm: AES.GCM, AES.GCM.Params(iv, padding, tagLength, ad)) =>
+          val name = aesName(gcm.keyLength, padding)
           val provider = providers.cipher(name) match {
             case Left(e) => throw e
             case Right(p) => p
