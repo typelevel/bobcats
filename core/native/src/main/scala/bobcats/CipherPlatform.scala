@@ -43,15 +43,18 @@ private final class EvpCipher[F[_]](ctx: Ptr[OSSL_LIB_CTX])(implicit F: Sync[F])
       cipher: Ptr[EVP_CIPHER],
       key: Array[Byte],
       iv: Array[Byte],
+      padding: Boolean,
       mode: Int
   ): Unit = {
     val ivLength = iv.length
-    val ivLen = stackalloc[CUnsignedInt](1)
-    ivLen(0) = ivLength.toUInt
+    val uintParams = stackalloc[CUnsignedInt](2)
+    uintParams(0) = ivLength.toUInt
+    uintParams(1) = (if (padding) 1 else 0).toUInt
 
     val params = stackalloc[OSSL_PARAM](3)
-    OSSL_CIPHER_PARAM_IVLEN(params(0), ivLen)
-    OSSL_PARAM_END(params(1))
+    OSSL_CIPHER_PARAM_IVLEN(params(0), uintParams)
+    OSSL_CIPHER_PARAM_PADDING(params(1), uintParams + 1)
+    OSSL_PARAM_END(params(2))
 
     // Note: For OpenSSL 3.0.x and below, we /must/ separate out the init calls. See #19822
     if (EVP_CipherInit_ex2(
@@ -106,10 +109,14 @@ private final class EvpCipher[F[_]](ctx: Ptr[OSSL_LIB_CTX])(implicit F: Sync[F])
       throw Error("EVP_CipherUpdate", ERR_get_error())
     }
 
-    if (EVP_CipherFinal(
-        ctx,
-        out.at(outl(0).toInt).asInstanceOf[Ptr[CUnsignedChar]],
-        outl) != 1) {
+    // TODO: Remove when `atUnsafe` comes around
+    val ptr = if (outl(0).toInt >= out.size) {
+      null
+    } else {
+      out.at(outl(0).toInt).asInstanceOf[Ptr[CUnsignedChar]]
+    }
+
+    if (EVP_CipherFinal(ctx, ptr, outl) != 1) {
       throw Error("EVP_CipherFinal", ERR_get_error())
     }
   }
@@ -143,7 +150,7 @@ private final class EvpCipher[F[_]](ctx: Ptr[OSSL_LIB_CTX])(implicit F: Sync[F])
           val cipherCtx = EVP_CIPHER_CTX_new()
           try {
 
-            initKeyIv(cipherCtx, cipher, key.toArrayUnsafe, iv.data.toArrayUnsafe, 1)
+            initKeyIv(cipherCtx, cipher, key.toArrayUnsafe, iv.data.toArrayUnsafe, false, 1)
             updateAD(cipherCtx, ad)
 
             val outl = stackalloc[CSize](1)
@@ -186,25 +193,12 @@ private final class EvpCipher[F[_]](ctx: Ptr[OSSL_LIB_CTX])(implicit F: Sync[F])
           val cipherCtx = EVP_CIPHER_CTX_new()
           try {
 
-            initKeyIv(cipherCtx, cipher, key.toArrayUnsafe, iv.data.toArrayUnsafe, 1)
+            initKeyIv(cipherCtx, cipher, key.toArrayUnsafe, iv.data.toArrayUnsafe, false, 1)
             val outl = stackalloc[CSize](1)
             val dataArray = data.toArrayUnsafe
             val dataLen = dataArray.length
             val out = new Array[Byte](dataArray.length)
-
-            // No need to call `final`, since there's nothing to write
-            if (EVP_CipherUpdate(
-                cipherCtx,
-                out.at(0).asInstanceOf[Ptr[CUnsignedChar]],
-                outl,
-                if (dataLen > 0)
-                  dataArray.at(0).asInstanceOf[Ptr[CUnsignedChar]]
-                else null,
-                dataLen.toULong
-              ) != 1) {
-              throw Error("EVP_CipherUpdate", ERR_get_error())
-            }
-
+            updateFinal(cipherCtx, out, outl, dataArray, dataLen)
             F.pure(ByteVector(out))
           } catch {
             case e: Error => F.raiseError(e)
