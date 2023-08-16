@@ -16,8 +16,6 @@
 
 package bobcats
 
-import javax.crypto
-
 private[bobcats] trait AlgorithmPlatform
 private[bobcats] trait HashAlgorithmPlatform
 private[bobcats] trait HmacAlgorithmPlatform

@@ -16,11 +16,8 @@
 
 package bobcats
 
-import cats.effect.kernel.{Async, Sync}
+import cats.effect.kernel.Sync
 import scodec.bits.ByteVector
-import cats.effect.std.SecureRandom
-import cats.syntax.all._
-import java.security.Provider
 import javax.crypto.spec.{GCMParameterSpec, IvParameterSpec}
 import javax.crypto
 import java.nio.ByteBuffer
