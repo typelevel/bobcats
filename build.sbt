@@ -125,7 +125,9 @@ lazy val core = crossProject(JSPlatform, JVMPlatform, NativePlatform)
       (crossProjectBaseDirectory.value / "shared" / "src" / "test" / "resources").toGlob / "gcmEncryptExtIV*.rsp",
     aesCbcTestsGenerate / fileInputs +=
       (crossProjectBaseDirectory.value / "shared" / "src" / "test" / "resources").toGlob / "CBC*256.rsp",
-    Test / sourceGenerators ++= Seq(aesGcmEncryptTestsGenerate.taskValue, aesCbcTestsGenerate.taskValue),
+    Test / sourceGenerators ++= Seq(
+      aesGcmEncryptTestsGenerate.taskValue,
+      aesCbcTestsGenerate.taskValue)
   )
   .dependsOn(testRuntime % Test)
 

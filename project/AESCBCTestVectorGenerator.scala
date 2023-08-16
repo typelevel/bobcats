@@ -10,21 +10,22 @@ object AESCBCTestVectorGenerator extends TestVectorGenerator {
   import AESCBCTestVectorParser._
 
   def generate(testFiles: Seq[File]): Source = {
-    val result = testFiles.toList.flatTraverse { file =>
-      val a = parser.parseAll(IO.read(file))
+    val result = testFiles
+      .toList
+      .flatTraverse { file =>
+        val a = parser.parseAll(IO.read(file))
 
-      // a.foreach {
-      //   case TestVectors(e, d) =>
-      //     val pp = TestVectors(cats.data.NonEmptyList(e.head, e.tail.take(16)), cats.data.NonEmptyList(d.head, d.tail.take(16))).show
-      //     println(file)
-      // }
+        // a.foreach {
+        //   case TestVectors(e, d) =>
+        //     val pp = TestVectors(cats.data.NonEmptyList(e.head, e.tail.take(16)), cats.data.NonEmptyList(d.head, d.tail.take(16))).show
+        //     println(file)
+        // }
 
-      parser.parseAll(IO.read(file))
-        .map {
-        case TestVectors(encrypt, decrypt) =>
-          encrypt.map {
-            case TestVector(count, key, iv, pt, ct) =>
-              q"""
+        parser.parseAll(IO.read(file)).map {
+          case TestVectors(encrypt, decrypt) =>
+            encrypt.map {
+              case TestVector(count, key, iv, pt, ct) =>
+                q"""
               TestVector(
                 true,
                 ${file.getName},
@@ -36,9 +37,9 @@ object AESCBCTestVectorGenerator extends TestVectorGenerator {
                 ${hexInterpolate(ct)},
               )
               """
-          }.toList ++ decrypt.map {
-            case TestVector(count, key, iv, pt, ct) =>
-              q"""
+            }.toList ++ decrypt.map {
+              case TestVector(count, key, iv, pt, ct) =>
+                q"""
               TestVector(
                 false,
                 ${file.getName},
@@ -50,25 +51,27 @@ object AESCBCTestVectorGenerator extends TestVectorGenerator {
                 ${hexInterpolate(ct)},
               )
               """
-          }.toList
+            }.toList
+        }
       }
-    }.map { testVectors =>
+      .map { testVectors =>
+        // TODO: Create utility method....
+        val vectorTerms = testVectors
+          .grouped(128)
+          .zipWithIndex
+          .map {
+            case (vectors, n) =>
+              val termName = Term.Name("testVector" + n)
+              (termName, q"private def $termName: Seq[TestVector] = Seq(..${vectors})")
+          }
+          .toList
 
-      // TODO: Create utility method....
-      val vectorTerms = testVectors.grouped(128)
-        .zipWithIndex
-        .map {
-          case (vectors, n) =>
-            val termName = Term.Name("testVector" + n)
-            (termName, q"private def $termName: Seq[TestVector] = Seq(..${vectors})")
-        }.toList
+        val defns = vectorTerms.map(_._2).toList
+        val term = vectorTerms.foldLeft(q"Seq[TestVector]()") { (b, a) =>
+          q"${b}.concat(${a._1})"
+        }
 
-      val defns = vectorTerms.map(_._2).toList
-      val term = vectorTerms.foldLeft(q"Seq[TestVector]()") { (b, a) =>
-        q"${b}.concat(${a._1})"
-      }
-
-      source"""
+        source"""
       package bobcats
 
       import scodec.bits._
@@ -91,7 +94,7 @@ object AESCBCTestVectorGenerator extends TestVectorGenerator {
         ..${defns}
       }
       """
-    }
+      }
 
     result match {
       case Left(err) => throw new IllegalStateException(cats.Show[Parser.Error].show(err))

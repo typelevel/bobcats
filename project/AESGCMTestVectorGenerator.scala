@@ -11,14 +11,15 @@ object AESGCMEncryptTestVectorGenerator extends TestVectorGenerator {
   import AESGCMEncryptTestVectorParser._
 
   def generate(testDataFiles: Seq[File]): Source = {
-    val result = testDataFiles.toList.flatTraverse { file =>
-      parser.parseAll(IO.read(file)).map(_.toList.map((file, _)))
-    }.map { sections =>
+    val result = testDataFiles
+      .toList
+      .flatTraverse { file => parser.parseAll(IO.read(file)).map(_.toList.map((file, _))) }
+      .map { sections =>
         val testVectors = for {
           (file, Section(testVectors)) <- sections
           TestVector(count, key, iv, ad, plainText, cipherText, tag) <- testVectors.toList
         } yield {
-        q"""
+          q"""
             TestVector(
                 ${file.getName},
                 $count,
@@ -30,8 +31,8 @@ object AESGCMEncryptTestVectorGenerator extends TestVectorGenerator {
                 ${hexInterpolate(tag)},
                 ${hexInterpolate(ad)})
             """
-      }
-      source"""
+        }
+        source"""
       package bobcats
 
       import scodec.bits._
@@ -55,7 +56,7 @@ object AESGCMEncryptTestVectorGenerator extends TestVectorGenerator {
         def allTestVectors: Seq[TestVector] = Seq(..${testVectors})
       }
       """
-    }
+      }
     result match {
       case Left(err) => throw new IllegalStateException(Show[Parser.Error].show(err))
       case Right(source) => source

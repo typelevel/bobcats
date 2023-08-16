@@ -14,17 +14,17 @@ object AESGCMEncryptTestVectorParser {
       ad: ByteVector,
       plainText: ByteVector,
       cipherText: ByteVector,
-    tag: ByteVector) {
+      tag: ByteVector) {
 
     def show: String =
       s"""
-        |Count = ${index}
-        |Key = ${key.toHex}
-        |IV = ${iv.toHex}
-        |PT = ${plainText.toHex}
-        |AAD = ${ad.toHex}
-        |CT = ${cipherText.toHex}
-        |Tag = ${tag.toHex}
+         |Count = ${index}
+         |Key = ${key.toHex}
+         |IV = ${iv.toHex}
+         |PT = ${plainText.toHex}
+         |AAD = ${ad.toHex}
+         |CT = ${cipherText.toHex}
+         |Tag = ${tag.toHex}
       """.stripMargin
   }
 
@@ -42,12 +42,12 @@ object AESGCMEncryptTestVectorParser {
     }
   }
 
-  private val sectionHeader = 
-    (sectionParam("Keylen", Numbers.digits.void) *> nl *>
+  private val sectionHeader =
+    sectionParam("Keylen", Numbers.digits.void) *> nl *>
       sectionParam("IVlen", Numbers.digits.void) *> nl *>
       sectionParam("PTlen", Numbers.digits.void) *> nl *>
       sectionParam("AADlen", Numbers.digits.void) *> nl *>
-      sectionParam("Taglen", Numbers.digits.void))
+      sectionParam("Taglen", Numbers.digits.void)
 
   private val entry = (
     assignment("Count", Numbers.digits.map(_.toInt)) <* nl,
@@ -60,9 +60,9 @@ object AESGCMEncryptTestVectorParser {
   ).mapN(TestVector.apply)
 
   private val section =
-    (sectionHeader *> entry.surroundedBy(whitespaces).rep).map {
-      case entries => Section(entries)
-    }.surroundedBy(whitespaces)
+    (sectionHeader *> entry.surroundedBy(whitespaces).rep)
+      .map { case entries => Section(entries) }
+      .surroundedBy(whitespaces)
 
   val parser = header *> section.rep
 

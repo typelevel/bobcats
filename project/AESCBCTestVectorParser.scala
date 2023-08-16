@@ -13,10 +13,10 @@ object AESCBCTestVectorParser {
   ) {
     def show: String =
       s"""
-        |[ENCRYPT]
-        |${encrypt.map(_.show).toList.mkString("\n")}
-        |[DECRYPT]
-        |${decrypt.map(_.show).toList.mkString("\n")}
+         |[ENCRYPT]
+         |${encrypt.map(_.show).toList.mkString("\n")}
+         |[DECRYPT]
+         |${decrypt.map(_.show).toList.mkString("\n")}
       """.stripMargin
   }
 
@@ -28,16 +28,17 @@ object AESCBCTestVectorParser {
       cipherText: ByteVector) {
     def show: String =
       s"""
-        |COUNT = ${index}
-        |KEY = ${key.toHex}
-        |IV = ${iv.toHex}
-        |PLAINTEXT = ${plainText.toHex}
-        |CIPHERTEXT = ${cipherText.toHex}
+         |COUNT = ${index}
+         |KEY = ${key.toHex}
+         |IV = ${iv.toHex}
+         |PLAINTEXT = ${plainText.toHex}
+         |CIPHERTEXT = ${cipherText.toHex}
       """.stripMargin
   }
 
-  private val entryL = 
-    ((assignment("COUNT", Numbers.digits.map(_.toInt)) <* nl),
+  private val entryL =
+    (
+      (assignment("COUNT", Numbers.digits.map(_.toInt)) <* nl),
       (assignment("KEY", hexString) <* nl),
       (assignment("IV", hexString) <* nl)).mapN((_, _, _))
 
@@ -45,18 +46,13 @@ object AESCBCTestVectorParser {
     entryL,
     (assignment("PLAINTEXT", hexString) <* nl),
     assignment("CIPHERTEXT", hexString)
-  ).mapN {
-    case ((count, key, iv), pt, ct) => TestVector(count, key, iv, pt, ct)
-  }
+  ).mapN { case ((count, key, iv), pt, ct) => TestVector(count, key, iv, pt, ct) }
 
   private val decryptEntry = (
     entryL,
     (assignment("CIPHERTEXT", hexString) <* nl),
     assignment("PLAINTEXT", hexString)
-  ).mapN {
-    case ((count, key, iv), ct, pt) => TestVector(count, key, iv, pt, ct)
-  }
-
+  ).mapN { case ((count, key, iv), ct, pt) => TestVector(count, key, iv, pt, ct) }
 
   private val encryptSection = section("ENCRYPT", encryptEntry)
   private val decryptSection = section("DECRYPT", decryptEntry)
