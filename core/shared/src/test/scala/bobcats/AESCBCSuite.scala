@@ -25,9 +25,9 @@ class AESCBCSuite extends CryptoSuite {
   import AESCBCTestVectors._
 
   allTestVectors.foreach {
-      case TestVector(encrypt, file, count, alg, key, iv, plainText, cipherText) =>
-        val ptLen = plainText.length.toInt * 8
-       if(encrypt) {
+    case TestVector(encrypt, file, count, alg, key, iv, plainText, cipherText) =>
+      val ptLen = plainText.length.toInt * 8
+      if (encrypt) {
         test(s"""${alg}.encrypt(pt=${ptLen}, iv=${iv.bitLength})""") {
           for {
             key <- Cipher[IO].importKey(key, alg)
@@ -44,6 +44,6 @@ class AESCBCSuite extends CryptoSuite {
             )
           )
         }
-       }
-    }
+      }
+  }
 }

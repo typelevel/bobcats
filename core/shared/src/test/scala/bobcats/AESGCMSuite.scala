@@ -40,12 +40,16 @@ class AESGCMSuite extends CryptoSuite {
         val ptLen = plainText.length.toInt * 8
         val tagLen = new AES.TagLength(tag.length.toInt * 8)
         val adLen = ad.length * 8
-        test(s"""${alg}.encrypt(pt=${ptLen}, tag=${tagLen.value}, iv=${iv.bitLength}, ad=${adLen})""") {
+        test(
+          s"""${alg}.encrypt(pt=${ptLen}, tag=${tagLen.value}, iv=${iv.bitLength}, ad=${adLen})""") {
           assume(supportedTagLengths(runtime).contains(tagLen))
 
           for {
             key <- Cipher[IO].importKey(key, alg)
-            obtained <- Cipher[IO].encrypt(key, AES.GCM.Params(iv, false, tagLen, ad), plainText)
+            obtained <- Cipher[IO].encrypt(
+              key,
+              AES.GCM.Params(iv, false, tagLen, ad),
+              plainText)
             expected = cipherText ++ tag
           } yield assertEquals(
             obtained,
