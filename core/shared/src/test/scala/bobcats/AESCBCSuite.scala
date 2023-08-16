@@ -36,7 +36,7 @@ class AESCBCSuite extends CryptoSuite {
           } yield assertEquals(
             obtained,
             expected,
-            clue(
+            clues(
               obtained.toHex,
               expected.toHex,
               file,

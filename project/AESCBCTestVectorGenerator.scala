@@ -67,9 +67,7 @@ object AESCBCTestVectorGenerator extends TestVectorGenerator {
           .toList
 
         val defns = vectorTerms.map(_._2).toList
-        val term = vectorTerms.foldLeft(q"Seq[TestVector]()") { (b, a) =>
-          q"${b}.concat(${a._1})"
-        }
+        val term = vectorTerms.foldLeft(q"Seq[TestVector]()") { (b, a) => q"${b}.++(${a._1})" }
 
         source"""
       package bobcats

@@ -54,7 +54,7 @@ class AESGCMSuite extends CryptoSuite {
           } yield assertEquals(
             obtained,
             expected,
-            clue(
+            clues(
               obtained.toHex,
               expected.toHex,
               file,
