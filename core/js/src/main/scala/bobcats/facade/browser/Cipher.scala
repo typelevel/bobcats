@@ -34,31 +34,36 @@ private[bobcats] sealed trait Algorithm extends js.Object
 //     }
 // }
 
-private[bobcats] sealed trait AesCbcParams extends Algorithm
+private[bobcats] trait AesCbcParams extends Algorithm {
+  val name: String
+  val iv: js.typedarray.ArrayBuffer
+}
 
 private[bobcats] object AesCbcParams {
-  def apply(iv: js.typedarray.ArrayBuffer): AesCbcParams =
-    js.Dynamic
-      .literal(
-        name = "AES-CBC",
-        iv = iv
-      )
-      .asInstanceOf[AesCbcParams]
+  def apply(_iv: js.typedarray.ArrayBuffer): AesCbcParams =
+    new AesCbcParams {
+      val name = "AES-CBC"
+      val iv = _iv
+    }
 }
 
 trait AesGcmParams extends Algorithm {
   val name: String
   val iv: js.typedarray.ArrayBuffer
   val additionalData: js.UndefOr[js.typedarray.Uint8Array] = js.undefined
+  val tagLength: js.UndefOr[Int] = js.undefined
 }
 
 private[bobcats] object AesGcmParams {
   def apply(
       _iv: js.typedarray.ArrayBuffer,
-      _additionalData: js.UndefOr[js.typedarray.Uint8Array]): AesGcmParams =
+      _additionalData: js.UndefOr[js.typedarray.Uint8Array] = js.undefined,
+      _tagLength: js.UndefOr[Int] = js.undefined
+  ): AesGcmParams =
     new AesGcmParams {
       val name = "AES-GCM"
       val iv = _iv
       override val additionalData = _additionalData
+      override val tagLength = _tagLength
     }
 }

@@ -26,7 +26,7 @@ private[bobcats] trait CipherPlatform[F[_]]
 
 private final class SubtleCryptoCipher[F[_]](implicit F: Async[F]) extends UnsealedCipher[F] {
 
-  import facade.browser.{crypto, AesGcmParams, AesImportParams}
+  import facade.browser.{crypto, AesCbcParams, AesGcmParams, AesImportParams}
   import BlockCipherAlgorithm._
 
   override def importKey[A <: CipherAlgorithm[_]](
@@ -40,8 +40,33 @@ private final class SubtleCryptoCipher[F[_]](implicit F: Async[F]) extends Unsea
       data: ByteVector): F[ByteVector] =
     key match {
       case SecretKeySpec(key, algorithm) =>
-        (algorithm, params) match {
-          case (gcm: AES.GCM, AES.GCM.Params(iv, padding, tagLength, ad)) =>
+        params match {
+          case AES.CBC.Params(iv, padding) =>
+            for {
+              key <- F.fromPromise(
+                F.delay(
+                  crypto
+                    .subtle
+                    .importKey(
+                      "raw",
+                      key.toUint8Array,
+                      new AesImportParams {
+                        val name = "AES-CBC"
+                      },
+                      false,
+                      js.Array("encrypt"))))
+              cipherText <- F.fromPromise(
+                F.delay(
+                  crypto
+                    .subtle
+                    .encrypt(AesCbcParams(iv.data.toJSArrayBuffer), key, data.toJSArrayBuffer)))
+            } yield {
+              // TODO: `ArrayBuffer#resize doesn't seem to exist`
+              val bytes = ByteVector.view(cipherText)
+              if (padding) bytes else bytes.take(data.length)
+            }
+
+          case AES.GCM.Params(iv, padding, tagLength, ad) =>
             for {
               key <- F.fromPromise(
                 F.delay(
@@ -62,10 +87,11 @@ private final class SubtleCryptoCipher[F[_]](implicit F: Async[F]) extends Unsea
                     .encrypt(
                       AesGcmParams(
                         iv.data.toJSArrayBuffer,
-                        if (ad.isEmpty) js.undefined else ad.toUint8Array),
+                        if (ad.isEmpty) js.undefined else ad.toUint8Array,
+                        tagLength.byteLength
+                      ),
                       key,
                       data.toJSArrayBuffer)))
-
             } yield ByteVector.view(cipherText)
         }
     }

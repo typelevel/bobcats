@@ -27,7 +27,15 @@ abstract class CryptoSuite extends CatsEffectSuite {
   )
 
   protected def runtime = BuildInfo.runtime
-  protected def isBrowser = Set("Firefox", "Chrome").contains(runtime)
+  protected def browsers: Set[String] = Set(firefox, chrome)
+  protected def isBrowser = browsers.contains(runtime)
+
+  protected val jvm = "JVM"
+  protected val native = "Native"
+  protected val nodeJS = "NodeJS"
+  protected val firefox = "Firefox"
+  protected val chrome = "Chrome"
+
 
   override def munitFixtures = List(cryptoFixture)
 

@@ -27,10 +27,10 @@ class AESGCMSuite extends CryptoSuite {
     val all = Set(`32`, `64`, `96`, `104`, `112`, `120`, `128`)
 
     Map(
-      "JVM" -> Set(`96`, `104`, `112`, `120`, `128`),
-      "Native" -> all,
-      "NodeJS" -> all
-    )
+      jvm -> Set(`96`, `104`, `112`, `120`, `128`),
+      native -> all,
+      nodeJS -> all
+    ) ++ browsers.map(_ -> all).toMap
   }
   {
     import AESGCMEncryptTestVectors._
@@ -42,6 +42,7 @@ class AESGCMSuite extends CryptoSuite {
         val adLen = ad.length * 8
         test(
           s"""${alg}.encrypt(pt=${ptLen}, tag=${tagLen.value}, iv=${iv.bitLength}, ad=${adLen})""") {
+          assume(!isBrowser, "browser does not support no padding for AES-GCM")
           assume(supportedTagLengths(runtime).contains(tagLen))
 
           for {
