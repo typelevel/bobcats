@@ -51,6 +51,18 @@ private[bobcats] object params {
       sizeof[CInt],
       OSSL_PARAM_UNMODIFIED)
 
+  @alwaysinline def OSSL_PARAM_uint(
+      param: OSSL_PARAM,
+      key: CString,
+      data: Ptr[CUnsignedInt]): Unit =
+    OSSL_PARAM.init(
+      param,
+      key,
+      OSSL_PARAM_UNSIGNED_INTEGER,
+      data.asInstanceOf[Ptr[Byte]],
+      sizeof[CUnsignedInt],
+      OSSL_PARAM_UNMODIFIED)
+
   @alwaysinline def OSSL_PARAM_utf8_string(
       param: OSSL_PARAM,
       key: CString,
@@ -72,5 +84,35 @@ private[bobcats] object params {
 
   @alwaysinline def OSSL_MAC_PARAM_DIGEST_ONESHOT(param: OSSL_PARAM, oneshot: Ptr[CInt]): Unit =
     OSSL_PARAM_int(param, c"digest-oneshot", oneshot)
+
+  @alwaysinline def OSSL_CIPHER_PARAM_IVLEN(param: OSSL_PARAM, ivlen: Ptr[CUnsignedInt]): Unit =
+    OSSL_PARAM_uint(param, c"ivlen", ivlen)
+
+  @alwaysinline def OSSL_CIPHER_PARAM_KEYLEN(
+      param: OSSL_PARAM,
+      keylen: Ptr[CUnsignedInt]): Unit =
+    OSSL_PARAM_uint(param, c"keylen", keylen)
+
+  @alwaysinline def OSSL_CIPHER_PARAM_TAGLEN(
+      param: OSSL_PARAM,
+      taglen: Ptr[CUnsignedInt]): Unit =
+    OSSL_PARAM_uint(param, c"taglen", taglen)
+
+  @alwaysinline def OSSL_CIPHER_PARAM_PADDING(
+      param: OSSL_PARAM,
+      padding: Ptr[CUnsignedInt]): Unit =
+    OSSL_PARAM_uint(param, c"padding", padding)
+
+  @alwaysinline def OSSL_CIPHER_PARAM_IV(
+      param: OSSL_PARAM,
+      iv: Ptr[Byte],
+      ivSize: CSize): Unit =
+    OSSL_PARAM_octet_string(param, c"iv", iv, ivSize)
+
+  @alwaysinline def OSSL_CIPHER_PARAM_AEAD_TAG(
+      param: OSSL_PARAM,
+      tag: Ptr[Byte],
+      tagSize: CSize): Unit =
+    OSSL_PARAM_octet_string(param, c"tag", tag, tagSize)
 
 }

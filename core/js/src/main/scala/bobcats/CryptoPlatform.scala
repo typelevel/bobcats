@@ -22,14 +22,22 @@ private[bobcats] trait CryptoCompanionPlatform {
   def forAsync[F[_]](implicit F: Async[F]): Resource[F, Crypto[F]] = {
     Resource.pure(
       if (facade.isNodeJSRuntime) {
+
+        // TODO: Fix
+        import facade.node.crypto
+
+        val ciphers = crypto.getCiphers()
+
         new UnsealedCrypto[F] {
           override def hash: Hash[F] = Hash.forSyncNodeJS
           override def hmac: Hmac[F] = Hmac.forAsyncNodeJS
+          override def cipher: Cipher[F] = Cipher.forCryptoCiphers(ciphers)
         }
       } else {
         new UnsealedCrypto[F] {
           override def hash: Hash[F] = Hash.forAsyncSubtleCrypto
           override def hmac: Hmac[F] = Hmac.forAsyncSubtleCrypto
+          override def cipher: Cipher[F] = Cipher.forSubtleCrypto
         }
       }
     )

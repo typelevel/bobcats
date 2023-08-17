@@ -16,14 +16,15 @@
 
 package bobcats
 
-sealed trait Crypto[F[_]] {
-  def hash: Hash[F]
-  def hmac: Hmac[F]
-  def cipher: Cipher[F]
-}
+private[bobcats] trait AlgorithmPlatform
+private[bobcats] trait HashAlgorithmPlatform
+private[bobcats] trait HmacAlgorithmPlatform
+private[bobcats] trait CipherAlgorithmPlatform
 
-private[bobcats] trait UnsealedCrypto[F[_]] extends Crypto[F]
+// private[bobcats] trait AlgorithmParameterSpecPlatform[+A <: Algorithm]
 
-object Crypto extends CryptoCompanionPlatform {
-  def apply[F[_]](implicit crypto: Crypto[F]): crypto.type = crypto
-}
+// private[bobcats] trait IvParameterSpecPlatform[+A <: CipherAlgorithm] {
+//   self: IvParameterSpec[A] =>
+//   def toJava: crypto.spec.IvParameterSpec =
+//     new crypto.spec.IvParameterSpec(initializationVector.toArray)
+// }
