@@ -50,14 +50,14 @@ private[bobcats] object AesCbcParams {
 trait AesGcmParams extends Algorithm {
   val name: String
   val iv: js.typedarray.ArrayBuffer
-  val additionalData: js.UndefOr[js.typedarray.Uint8Array] = js.undefined
+  val additionalData: js.UndefOr[js.typedarray.ArrayBuffer] = js.undefined
   val tagLength: js.UndefOr[Int] = js.undefined
 }
 
 private[bobcats] object AesGcmParams {
   def apply(
       _iv: js.typedarray.ArrayBuffer,
-      _additionalData: js.UndefOr[js.typedarray.Uint8Array] = js.undefined,
+      _additionalData: js.UndefOr[js.typedarray.ArrayBuffer] = js.undefined,
       _tagLength: js.UndefOr[Int] = js.undefined
   ): AesGcmParams =
     new AesGcmParams {

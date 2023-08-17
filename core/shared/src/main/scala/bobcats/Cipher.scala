@@ -20,11 +20,9 @@ object PaddingException
     extends GeneralSecurityException("Bad padding")
     with scala.util.control.NoStackTrace
 
-final class MissingAlgorithm[A <: Algorithm](val algorithm: Algorithm)
-    extends GeneralSecurityException
-    with scala.util.control.NoStackTrace {
-  override def getMessage: String = s"Missing ${algorithm}"
-}
+final class UnsupportedAlgorithm private[bobcats] (s: String, cause: Throwable = null)
+    extends GeneralSecurityException(s, cause)
+    with scala.util.control.NoStackTrace
 
 import scodec.bits.ByteVector
 

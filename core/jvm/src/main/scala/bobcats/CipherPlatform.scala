@@ -19,8 +19,10 @@ package bobcats
 import cats.effect.kernel.Sync
 import scodec.bits.ByteVector
 import javax.crypto.spec.{GCMParameterSpec, IvParameterSpec}
+import java.security.InvalidAlgorithmParameterException
 import javax.crypto
 import java.nio.ByteBuffer
+import cats.syntax.all._
 
 private final class JavaSecurityCipher[F[_]](providers: Providers)(implicit F: Sync[F])
     extends UnsealedCipher[F] {
@@ -77,7 +79,7 @@ private final class JavaSecurityCipher[F[_]](providers: Providers)(implicit F: S
             case Right(p) => p
           }
           val cipher = crypto.Cipher.getInstance(name, provider)
-          cipher.init(mode, key.toJava, new GCMParameterSpec(tagLength.value, iv.data.toArray))
+          cipher.init(mode, key.toJava, new GCMParameterSpec(tagLength.bitLength, iv.data.toArray))
 
           cipher.updateAAD(ad.toByteBuffer)
           val len = data.length.toInt + tagLength.byteLength
@@ -87,6 +89,8 @@ private final class JavaSecurityCipher[F[_]](providers: Providers)(implicit F: S
       out.rewind()
       val bv = ByteVector.view(out)
       bv
+    }.adaptError {
+      case e: InvalidAlgorithmParameterException => new UnsupportedAlgorithm(null, e)
     }
   }
 

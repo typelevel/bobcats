@@ -39,7 +39,7 @@ private final class SubtleCryptoCipher[F[_]](implicit F: Async[F]) extends Unsea
       params: P,
       data: ByteVector): F[ByteVector] =
     key match {
-      case SecretKeySpec(key, algorithm) =>
+      case SecretKeySpec(key, alg) =>
         params match {
           case AES.CBC.Params(iv, padding) =>
             for {
@@ -68,18 +68,28 @@ private final class SubtleCryptoCipher[F[_]](implicit F: Async[F]) extends Unsea
 
           case AES.GCM.Params(iv, padding, tagLength, ad) =>
             for {
-              key <- F.fromPromise(
-                F.delay(
-                  crypto
-                    .subtle
-                    .importKey(
-                      "raw",
-                      key.toUint8Array,
-                      new AesImportParams {
-                        val name = "AES-GCM"
-                      },
-                      false,
-                      js.Array("encrypt"))))
+              key <-
+                if (!padding) {
+                  F.raiseError(
+                    new UnsupportedAlgorithm(
+                      "`SubtleCrypto` does not support no padding for AEAD ciphers"))
+                } else
+                  F.fromPromise(
+                    F.delay(
+                      crypto
+                        .subtle
+                        .importKey(
+                          "raw",
+                          key.toUint8Array,
+                          new AesImportParams {
+                            val name = "AES-GCM"
+                          },
+                          false,
+                          js.Array("encrypt")))).adaptError {
+                    // This is useless 
+                    case e: js.JavaScriptException => 
+                      new UnsupportedAlgorithm(alg.toString, e)
+                  }
               cipherText <- F.fromPromise(
                 F.delay(
                   crypto
@@ -87,8 +97,8 @@ private final class SubtleCryptoCipher[F[_]](implicit F: Async[F]) extends Unsea
                     .encrypt(
                       AesGcmParams(
                         iv.data.toJSArrayBuffer,
-                        if (ad.isEmpty) js.undefined else ad.toUint8Array,
-                        tagLength.byteLength
+                        if (ad.isEmpty) js.undefined else ad.toJSArrayBuffer,
+                        tagLength.bitLength
                       ),
                       key,
                       data.toJSArrayBuffer)))
@@ -140,7 +150,7 @@ private final class CryptoCipher[F[_]](ciphers: js.Array[String])(implicit F: Sy
             case (gcm: AES.GCM, AES.GCM.Params(iv, padding, tagLength, ad)) =>
               val name = aesGcmName(gcm.keyLength)
               if (!ciphers.contains(name)) {
-                throw new MissingAlgorithm(algorithm)
+                throw new UnsupportedAlgorithm(name)
               }
               val cipher = crypto
                 .createCipheriv(
@@ -159,7 +169,7 @@ private final class CryptoCipher[F[_]](ciphers: js.Array[String])(implicit F: Sy
             case (cbc: AES.CBC, AES.CBC.Params(iv, padding)) =>
               val name = aesCbcName(cbc.keyLength)
               if (!ciphers.contains(name)) {
-                throw new MissingAlgorithm(cbc)
+                throw new UnsupportedAlgorithm(name)
               }
               val cipher = crypto
                 .createCipheriv(

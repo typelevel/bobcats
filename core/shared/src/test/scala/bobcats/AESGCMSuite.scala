@@ -30,7 +30,7 @@ class AESGCMSuite extends CryptoSuite {
       jvm -> Set(`96`, `104`, `112`, `120`, `128`),
       native -> all,
       nodeJS -> all
-    ) ++ browsers.map(_ -> all).toMap
+    ) ++ browsers.map(_ -> Set(`96`)).toMap
   }
   {
     import AESGCMEncryptTestVectors._
@@ -40,8 +40,18 @@ class AESGCMSuite extends CryptoSuite {
         val ptLen = plainText.length.toInt * 8
         val tagLen = new AES.TagLength(tag.length.toInt * 8)
         val adLen = ad.length * 8
-        test(
-          s"""${alg}.encrypt(pt=${ptLen}, tag=${tagLen.value}, iv=${iv.bitLength}, ad=${adLen})""") {
+        val name = s"""${alg}.encrypt(pt=${ptLen}, tag=${tagLen.bitLength}, iv=${iv.bitLength}, ad=${adLen})"""
+
+        test(s"${name} throws `UnsupportedAlgorithm`") {
+          assume(!supportedTagLengths(runtime).contains(tagLen) || isBrowser)
+          interceptIO[UnsupportedAlgorithm] {
+            Cipher[IO].importKey(key, alg).flatMap(
+              Cipher[IO].encrypt(_, AES.GCM.Params(iv, false, tagLen, ad), plainText)
+            ).void
+          }
+        }
+
+        test(name) {
           assume(!isBrowser, "browser does not support no padding for AES-GCM")
           assume(supportedTagLengths(runtime).contains(tagLen))
 

@@ -159,8 +159,8 @@ object BlockCipherAlgorithm {
       val `256` = new KeyLength(256)
     }
 
-    final class TagLength private[bobcats] (val value: Int) extends AnyVal {
-      private[bobcats] def byteLength: Int = value / 8
+    final class TagLength private[bobcats] (val bitLength: Int) extends AnyVal {
+      private[bobcats] def byteLength: Int = bitLength / 8
     }
 
     object TagLength {
