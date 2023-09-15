@@ -81,7 +81,7 @@ val catsVersion = "2.8.0"
 val fs2Version = "3.7.0"
 val catsEffectVersion = "3.5.1"
 val scodecBitsVersion = "1.1.35"
-val munitVersion = "1.0.0-M8"
+val munitVersion = "1.0.0-M10"
 val munitCEVersion = "2.0.0-M3"
 val disciplineMUnitVersion = "2.0.0-M2"
 
