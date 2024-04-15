@@ -14,16 +14,15 @@
  * limitations under the License.
  */
 
-package bobcats
+package bobcats.facade.node
 
-sealed trait Crypto[F[_]] {
-  def hash: Hash[F]
-  def hmac: Hmac[F]
-  def cipher: Cipher[F]
-}
+import scala.scalajs.js
+import scala.annotation.nowarn
 
-private[bobcats] trait UnsealedCrypto[F[_]] extends Crypto[F]
-
-object Crypto extends CryptoCompanionPlatform {
-  def apply[F[_]](implicit crypto: Crypto[F]): crypto.type = crypto
+@js.native
+@nowarn("msg=never used")
+private[bobcats] trait Decipher extends js.Any {
+  def update(data: js.typedarray.Uint8Array): js.typedarray.Uint8Array = js.native
+  def `final`(): js.typedarray.Uint8Array = js.native
+  def setAutoPadding(autoPadding: Boolean): this.type = js.native
 }

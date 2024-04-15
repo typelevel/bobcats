@@ -16,4 +16,6 @@
 
 package object bobcats {
   type GeneralSecurityException = java.security.GeneralSecurityException
+  type NoSuchAlgorithmException = java.security.NoSuchAlgorithmException
+
 }

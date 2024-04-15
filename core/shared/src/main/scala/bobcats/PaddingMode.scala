@@ -16,14 +16,19 @@
 
 package bobcats
 
-sealed trait Crypto[F[_]] {
-  def hash: Hash[F]
-  def hmac: Hmac[F]
-  def cipher: Cipher[F]
+sealed abstract class PaddingMode {
+  private[bobcats] def toStringJava: String
+  private[bobcats] def setAutoPaddingNodeJS: Boolean
 }
 
-private[bobcats] trait UnsealedCrypto[F[_]] extends Crypto[F]
-
-object Crypto extends CryptoCompanionPlatform {
-  def apply[F[_]](implicit crypto: Crypto[F]): crypto.type = crypto
+object PaddingMode {
+  case object None extends PaddingMode {
+    private[bobcats] override def toStringJava: String = "NoPadding"
+    private[bobcats] def setAutoPaddingNodeJS: Boolean = false
+  }
+  case object PKCS7 extends PaddingMode {
+    // The JCA erroneously refers to PKCS#7 padding as PKCS#5
+    private[bobcats] override def toStringJava: String = "PKCS5Padding"
+    private[bobcats] def setAutoPaddingNodeJS: Boolean = true
+  }
 }

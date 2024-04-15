@@ -28,7 +28,7 @@
         };
       in
       rec {
-        devShell = mkShell pkgs.jdk8;
+        devShell = mkShell pkgs.temurin-bin-17;
 
         devShells = {
           "temurin@8" = mkShell pkgs.temurin-bin-8;
