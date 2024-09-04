@@ -200,32 +200,32 @@ jobs:
           tar xf targets.tar
           rm targets.tar
 
-      - name: Download target directories (2.12.17, NodeJS, rootJS)
+      - name: Download target directories (2.12.20, NodeJS, rootJS)
         uses: actions/download-artifact@v3
         with:
-          name: target-${{ matrix.os }}-${{ matrix.java }}-2.12.17-NodeJS-rootJS
+          name: target-${{ matrix.os }}-${{ matrix.java }}-2.12.20-NodeJS-rootJS
 
-      - name: Inflate target directories (2.12.17, NodeJS, rootJS)
+      - name: Inflate target directories (2.12.20, NodeJS, rootJS)
         run: |
           tar xf targets.tar
           rm targets.tar
 
-      - name: Download target directories (2.12.17, NodeJS, rootJVM)
+      - name: Download target directories (2.12.20, NodeJS, rootJVM)
         uses: actions/download-artifact@v3
         with:
-          name: target-${{ matrix.os }}-${{ matrix.java }}-2.12.17-NodeJS-rootJVM
+          name: target-${{ matrix.os }}-${{ matrix.java }}-2.12.20-NodeJS-rootJVM
 
-      - name: Inflate target directories (2.12.17, NodeJS, rootJVM)
+      - name: Inflate target directories (2.12.20, NodeJS, rootJVM)
         run: |
           tar xf targets.tar
           rm targets.tar
 
-      - name: Download target directories (2.12.17, NodeJS, rootNative)
+      - name: Download target directories (2.12.20, NodeJS, rootNative)
         uses: actions/download-artifact@v3
         with:
-          name: target-${{ matrix.os }}-${{ matrix.java }}-2.12.17-NodeJS-rootNative
+          name: target-${{ matrix.os }}-${{ matrix.java }}-2.12.20-NodeJS-rootNative
 
-      - name: Inflate target directories (2.12.17, NodeJS, rootNative)
+      - name: Inflate target directories (2.12.20, NodeJS, rootNative)
         run: |
           tar xf targets.tar
           rm targets.tar
