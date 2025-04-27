@@ -22,8 +22,8 @@ import scodec.bits.ByteVector
 
 private[bobcats] trait HashCompanionPlatform {
 
-  private[bobcats] def forProviders[F[_]](providers: Providers)(
-      implicit F: Sync[F]): Hash[F] = {
+  private[bobcats] def forProviders[F[_]](
+      providers: Providers)(implicit F: Sync[F]): Hash[F] = {
     new UnsealedHash[F] {
       override def digest(algorithm: HashAlgorithm, data: ByteVector): F[ByteVector] = {
         val name = algorithm.toStringJava
