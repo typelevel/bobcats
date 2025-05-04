@@ -19,6 +19,7 @@ import org.openqa.selenium.chrome.{ChromeDriver, ChromeOptions}
 import org.openqa.selenium.firefox.{FirefoxOptions, FirefoxProfile}
 import org.openqa.selenium.remote.server.{DriverFactory, DriverProvider}
 import org.scalajs.jsenv.selenium.SeleniumJSEnv
+import sbt.nio.file.FileTreeView
 
 import JSEnv._
 name := "bobcats"
@@ -87,6 +88,9 @@ val disciplineMUnitVersion = "2.0.0-M3"
 
 lazy val root = tlCrossRootProject.aggregate(core, testRuntime)
 
+val aesGcmEncryptTestsGenerate = taskKey[Seq[File]]("Generate AES GCM test cases")
+val aesCbcTestsGenerate = taskKey[Seq[File]]("Generate AES CBC test cases")
+
 lazy val core = crossProject(JSPlatform, JVMPlatform, NativePlatform)
   .in(file("core"))
   .settings(
@@ -94,6 +98,7 @@ lazy val core = crossProject(JSPlatform, JVMPlatform, NativePlatform)
     libraryDependencies ++= Seq(
       "org.typelevel" %%% "cats-core" % catsVersion,
       "org.typelevel" %%% "cats-effect-kernel" % catsEffectVersion,
+      "org.typelevel" %%% "cats-effect-std" % catsEffectVersion,
       "org.scodec" %%% "scodec-bits" % scodecBitsVersion,
       "co.fs2" %%% "fs2-core" % fs2Version,
       "org.scalameta" %%% "munit" % munitVersion % Test,
@@ -101,7 +106,28 @@ lazy val core = crossProject(JSPlatform, JVMPlatform, NativePlatform)
       "org.typelevel" %%% "cats-effect" % catsEffectVersion % Test,
       "org.typelevel" %%% "discipline-munit" % disciplineMUnitVersion % Test,
       "org.typelevel" %%% "munit-cats-effect" % munitCEVersion % Test
-    )
+    ),
+    // Generate the sources /outside/ of the cross
+    (Test / sourceManaged) := crossProjectBaseDirectory.value / "shared" / "src_managed" / "test",
+    aesGcmEncryptTestsGenerate := AESGCMEncryptTestVectorGenerator
+      .task(
+        aesGcmEncryptTestsGenerate,
+        "AESGCMEncryptTestVectors"
+      )
+      .value,
+    aesCbcTestsGenerate := AESCBCTestVectorGenerator
+      .task(
+        aesCbcTestsGenerate,
+        "AESCBCTestVectors"
+      )
+      .value,
+    aesGcmEncryptTestsGenerate / fileInputs +=
+      (crossProjectBaseDirectory.value / "shared" / "src" / "test" / "resources").toGlob / "gcmEncryptExtIV*.rsp",
+    aesCbcTestsGenerate / fileInputs +=
+      (crossProjectBaseDirectory.value / "shared" / "src" / "test" / "resources").toGlob / "CBC*256.rsp",
+    Test / sourceGenerators ++= Seq(
+      aesGcmEncryptTestsGenerate.taskValue,
+      aesCbcTestsGenerate.taskValue)
   )
   .dependsOn(testRuntime % Test)
 

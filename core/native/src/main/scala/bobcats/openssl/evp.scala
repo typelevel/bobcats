@@ -180,4 +180,83 @@ private[bobcats] object evp {
       addin: Ptr[CUnsignedChar],
       addin_len: CSize): CInt = extern
 
+  type EVP_CIPHER
+  type EVP_CIPHER_CTX
+
+  /**
+   * See [[https://www.openssl.org/docs/man3.1/man3/EVP_CIPHER_fetch.html]]
+   */
+  def EVP_CIPHER_fetch(
+      ctx: Ptr[OSSL_LIB_CTX],
+      algorithm: CString,
+      properties: CString): Ptr[EVP_CIPHER] = extern
+
+  /**
+   * See [[https://www.openssl.org/docs/man3.1/man3/EVP_CIPHER_free.html]]
+   */
+  def EVP_CIPHER_free(ctx: Ptr[EVP_CIPHER]): Unit = extern
+
+  /**
+   * See [[https://www.openssl.org/docs/man3.1/man3/EVP_CIPHER_CTX_new.html]]
+   */
+  def EVP_CIPHER_CTX_new(): Ptr[EVP_CIPHER_CTX] = extern
+
+  /**
+   * See [[https://www.openssl.org/docs/man3.1/man3/EVP_CIPHER_CTX_set_params.html]]
+   */
+  def EVP_CIPHER_CTX_set_params(ctx: Ptr[EVP_CIPHER_CTX], params: Ptr[OSSL_PARAM]): CInt =
+    extern
+
+  /**
+   * See [[https://www.openssl.org/docs/man3.1/man3/EVP_CIPHER_CTX_set_params.html]]
+   */
+  def EVP_CIPHER_CTX_get_params(ctx: Ptr[EVP_CIPHER_CTX], params: Ptr[OSSL_PARAM]): CInt =
+    extern
+
+  /**
+   * See [[https://www.openssl.org/docs/man3.1/man3/EVP_CIPHER_CTX_reset.html]]
+   */
+  def EVP_CIPHER_CTX_reset(ctx: Ptr[EVP_CIPHER_CTX]): CInt = extern
+
+  /**
+   * See [[https://www.openssl.org/docs/man3.1/man3/EVP_CIPHER_CTX_set_padding.html]]
+   */
+  def EVP_CIPHER_CTX_set_padding(ctx: Ptr[EVP_CIPHER_CTX], padding: CInt): CInt = extern
+
+  // TOO: intential
+  def EVP_CIPHER_CTX_get_iv_length(ctx: Ptr[EVP_CIPHER_CTX]): CInt = extern
+
+  /**
+   * See [[https://www.openssl.org/docs/man3.1/man3/EVP_CIPHER_CTX_free.html]]
+   */
+  def EVP_CIPHER_CTX_free(ctx: Ptr[EVP_CIPHER_CTX]): Unit = extern
+
+  def EVP_CipherInit_ex2(
+      ctx: Ptr[EVP_CIPHER_CTX],
+      `type`: Ptr[EVP_CIPHER],
+      key: Ptr[Byte],
+      iv: Ptr[Byte],
+      enc: CInt,
+      params: Ptr[OSSL_PARAM]): CInt = extern
+
+  /**
+   * See [[https://www.openssl.org/docs/man3.1/man3/EVP_CipherFinal.html]]
+   */
+  def EVP_CipherFinal(
+      ctx: Ptr[EVP_CIPHER_CTX],
+      outm: Ptr[CUnsignedChar],
+      outl: Ptr[CSize]
+  ): CInt = extern
+
+  /**
+   * See [[https://www.openssl.org/docs/man3.1/man3/EVP_CipherFinal.html]]
+   */
+  def EVP_CipherUpdate(
+      ctx: Ptr[EVP_CIPHER_CTX],
+      outm: Ptr[CUnsignedChar],
+      outl: Ptr[CSize],
+      in: Ptr[CUnsignedChar],
+      inl: CSize
+  ): CInt = extern
+
 }

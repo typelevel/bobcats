@@ -14,15 +14,28 @@
  * limitations under the License.
  */
 
-package bobcats.facade.browser
+package bobcats.facade.node
 
 import scala.scalajs.js
+import scala.annotation.nowarn
 
 @js.native
-private[bobcats] trait CryptoKey extends js.Any
+@nowarn("msg=never used")
+private[bobcats] trait Cipher extends js.Any {
+  def update(data: js.typedarray.Uint8Array): js.typedarray.Uint8Array = js.native
 
-@js.native
-private[bobcats] trait HmacCryptoKey extends CryptoKey
+  /**
+   * See [[https://nodejs.org/api/crypto.html#ciphersetaadbuffer-options]]
+   */
+  def setAAD(buffer: js.typedarray.Uint8Array): this.type = js.native
 
-@js.native
-private[bobcats] trait AesCryptoKey extends CryptoKey
+  /**
+   * See [[https://nodejs.org/api/crypto.html#ciphergetauthtag]].
+   */
+  def getAuthTag(): js.typedarray.Uint8Array = js.native
+
+  def `final`(): js.typedarray.Uint8Array = js.native
+
+  def setAutoPadding(autoPadding: Boolean): this.type = js.native
+
+}

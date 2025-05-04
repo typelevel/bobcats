@@ -18,31 +18,22 @@ package bobcats.facade.browser
 
 import scala.scalajs.js
 
-@js.native
-private[bobcats] trait HmacCryptoKey extends CryptoKey
+sealed trait ImportParams extends js.Object
 
-@js.native
-private[bobcats] sealed trait HmacImportParams extends js.Any
-
-private[bobcats] object HmacImportParams {
-  def apply(hash: String): HmacImportParams =
-    js.Dynamic
-      .literal(
-        name = "HMAC",
-        hash = hash
-      )
-      .asInstanceOf[HmacImportParams]
+private[bobcats] trait HmacImportParams extends ImportParams {
+  val name: String
+  val hash: String
+  val length: js.UndefOr[Int] = js.undefined
 }
 
-@js.native
-private[bobcats] sealed trait HmacKeyGenParams extends js.Any
+private[bobcats] object HmacImportParams {
+  def apply(_hash: String): HmacImportParams =
+    new HmacImportParams {
+      val name = "HMAC"
+      val hash = _hash
+    }
+}
 
-private[bobcats] object HmacKeyGenParams {
-  def apply(hash: String): HmacKeyGenParams =
-    js.Dynamic
-      .literal(
-        name = "HMAC",
-        hash = hash
-      )
-      .asInstanceOf[HmacKeyGenParams]
+private[bobcats] trait AesImportParams extends ImportParams {
+  val name: String
 }
