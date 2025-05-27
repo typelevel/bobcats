@@ -18,11 +18,9 @@ package bobcats
 package openssl
 
 import scala.scalanative.unsafe._
-import scala.annotation.nowarn
 
 @extern
 @link("crypto")
-@nowarn("msg=never used")
 private[bobcats] object crypto {
 
   /**
