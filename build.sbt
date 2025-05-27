@@ -105,6 +105,9 @@ lazy val core = crossProject(JSPlatform, JVMPlatform, NativePlatform)
       "org.typelevel" %%% "munit-cats-effect" % munitCEVersion % Test
     )
   )
+  .jsSettings(scalacOptions ++= {
+    if (scalaVersion.value.startsWith("2.12")) Seq("-Wconf:cat=unused:s") else Seq.empty
+  })
   .dependsOn(testRuntime % Test)
 
 lazy val testRuntime = crossProject(JSPlatform, JVMPlatform, NativePlatform)
