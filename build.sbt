@@ -31,7 +31,7 @@ ThisBuild / developers := List(
 )
 ThisBuild / startYear := Some(2021)
 
-ThisBuild / crossScalaVersions := Seq("3.3.3", "2.12.17", "2.13.8")
+ThisBuild / crossScalaVersions := Seq("3.3.6", "2.12.20", "2.13.16")
 
 ThisBuild / githubWorkflowBuildPreamble ++= Seq(
   WorkflowStep.Use(
@@ -56,6 +56,8 @@ ThisBuild / githubWorkflowBuildMatrixExclusions ++= {
     jsenv <- jsenvs.tail
   } yield MatrixExclude(Map("project" -> "rootJVM", "jsenv" -> jsenv))
 }
+
+ThisBuild / githubWorkflowScalaVersions := (ThisBuild / crossScalaVersions).value
 
 lazy val useJSEnv =
   settingKey[JSEnv]("Use Node.js or a headless browser for running Scala.js tests")
