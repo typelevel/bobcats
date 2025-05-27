@@ -49,7 +49,7 @@ private[bobcats] trait HmacCompanionPlatform {
             F.catchNonFatal {
               val oneshot = stackalloc[CInt]()
               oneshot(0) = 1
-              val params = stackalloc[OSSL_PARAM](3)
+              val params = stackalloc[OSSL_PARAM](3.toUInt)
               OSSL_MAC_PARAM_DIGEST(params(0), mdName, mdLen)
               OSSL_MAC_PARAM_DIGEST_ONESHOT(params(1), oneshot)
               OSSL_PARAM_END(params(2))
@@ -70,7 +70,7 @@ private[bobcats] trait HmacCompanionPlatform {
                     ) != 1) {
                     throw Error("EVP_MAC_init", ERR_get_error())
                   }
-                  val out = stackalloc[CUnsignedChar](EVP_MAX_MD_SIZE)
+                  val out = stackalloc[CUnsignedChar](EVP_MAX_MD_SIZE.toUInt)
                   val outl = stackalloc[CSize]()
 
                   if (EVP_MAC_update(
@@ -104,8 +104,8 @@ private[bobcats] trait HmacCompanionPlatform {
             throw Error("EVP_RAND_fetch", ERR_get_error())
           } else {
             val ctx = EVP_RAND_CTX_new(rand, null)
-            val params = stackalloc[OSSL_PARAM](2)
-            val out = stackalloc[CUnsignedChar](EVP_MAX_MD_SIZE)
+            val params = stackalloc[OSSL_PARAM](2.toUInt)
+            val out = stackalloc[CUnsignedChar](EVP_MAX_MD_SIZE.toUInt)
             val cipher = c"AES-256-CTR"
 
             OSSL_DBRG_PARAM_CIPHER(params(0), cipher, string.strlen(cipher))

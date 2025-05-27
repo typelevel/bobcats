@@ -55,7 +55,7 @@ private[bobcats] final class NativeEvpDigest[F[_]](digest: Ptr[EVP_MD])(implicit
     }
 
   @alwaysinline private def `final`[A](ctx: Ptr[EVP_MD_CTX], f: (Ptr[Byte], Int) => A): A = {
-    val md = stackalloc[CUnsignedChar](EVP_MAX_MD_SIZE)
+    val md = stackalloc[CUnsignedChar](EVP_MAX_MD_SIZE.toUInt)
     val s = stackalloc[CInt]()
     if (EVP_DigestFinal_ex(ctx, md, s) != 1) {
       throw Error("EVP_DigestFinal_ex", ERR_get_error())
