@@ -18,12 +18,10 @@ package bobcats
 package openssl
 
 import scala.scalanative.unsafe._
-import scala.annotation.nowarn
 import scala.scalanative.unsigned._
 
 @extern
 @link("crypto")
-@nowarn("msg=never used")
 private[bobcats] object err {
 
   def ERR_get_error(): ULong = extern
