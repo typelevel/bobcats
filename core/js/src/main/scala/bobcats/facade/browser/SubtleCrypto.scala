@@ -16,8 +16,10 @@
 
 package bobcats.facade.browser
 
+import scala.annotation.nowarn
 import scala.scalajs.js
 
+@nowarn("cat=unused")
 @js.native
 private[bobcats] trait SubtleCrypto extends js.Any {
 

@@ -16,9 +16,11 @@
 
 package bobcats.facade.node
 
+import scala.annotation.nowarn
 import scala.scalajs.js
 
 // https://nodejs.org/api/crypto.html
+@nowarn("cat=unused")
 @js.native
 private[bobcats] trait crypto extends js.Any {
 
