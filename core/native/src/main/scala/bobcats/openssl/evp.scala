@@ -20,8 +20,7 @@ package openssl
 import scala.scalanative.unsafe._
 
 @extern
-@link("crypto")
-private[bobcats] object evp {
+private[bobcats] trait evp {
 
   type EVP_MD_CTX
   type EVP_MD

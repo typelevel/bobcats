@@ -21,8 +21,7 @@ import scala.scalanative.unsafe._
 import scala.scalanative.unsigned._
 
 @extern
-@link("crypto")
-private[bobcats] object err {
+private[bobcats] trait err {
 
   def ERR_get_error(): ULong = extern
   def ERR_func_error_string(e: ULong): CString = extern

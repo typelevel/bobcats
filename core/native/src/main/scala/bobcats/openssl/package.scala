@@ -18,6 +18,7 @@ package bobcats
 
 import scala.scalanative.annotation.alwaysinline
 import scala.scalanative.unsafe._
+import scala.scalanative.meta.LinktimeInfo.isWindows
 
 package object openssl {
 
@@ -42,4 +43,32 @@ package object openssl {
       param._5 = returnSize
     }
   }
+
+  private[bobcats] object platformCompat {
+    @extern @link("libcrypto")
+    object cryptoWin64 extends crypto
+    @extern @link("libcrypto")
+    object errWin64 extends err
+    @extern @link("libcrypto")
+    object evpWin64 extends evp
+
+    @extern @link("crypto")
+    object cryptoDefault extends crypto
+    @extern @link("crypto")
+    object errDefault extends err
+    @extern @link("crypto")
+    object evpDefault extends evp
+  }
+
+  private[bobcats] final val crypto =
+    if (isWindows) platformCompat.cryptoWin64
+    else platformCompat.cryptoDefault
+
+  private[bobcats] final val err =
+    if (isWindows) platformCompat.errWin64
+    else platformCompat.errDefault
+
+  private[bobcats] final val evp =
+    if (isWindows) platformCompat.evpWin64
+    else platformCompat.evpDefault
 }

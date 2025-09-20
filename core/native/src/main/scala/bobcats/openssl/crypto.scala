@@ -20,8 +20,7 @@ package openssl
 import scala.scalanative.unsafe._
 
 @extern
-@link("crypto")
-private[bobcats] object crypto {
+private[bobcats] trait crypto {
 
   /**
    * See [[https://www.openssl.org/docs/man3.1/man3/OSSL_LIB_CTX_new.html]]
