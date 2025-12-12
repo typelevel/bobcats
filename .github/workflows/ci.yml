@@ -28,7 +28,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-22.04]
-        scala: [3.3.6, 2.12.20, 2.13.16]
+        scala: [3.3.6, 2.12.21, 2.13.16]
         java: [temurin@8]
         jsenv: [NodeJS, Chrome, Firefox]
         project: [rootJS, rootJVM, rootNative]
@@ -37,9 +37,9 @@ jobs:
             jsenv: Chrome
           - scala: 3.3.6
             jsenv: Firefox
-          - scala: 2.12.20
+          - scala: 2.12.21
             jsenv: Chrome
-          - scala: 2.12.20
+          - scala: 2.12.21
             jsenv: Firefox
           - project: rootJVM
             jsenv: Chrome
